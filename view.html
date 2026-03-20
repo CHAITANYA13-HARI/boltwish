@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Your Wish</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family:'Poppins',sans-serif; text-align:center; background:#f3f3f3; padding:40px;}
+#data { margin:20px auto; max-width:400px; width:90%; background:white; padding:30px; border-radius:20px; box-shadow:0 10px 25px rgba(0,0,0,0.25);}
+</style>
+</head>
+<body>
+
+<div id="data">Loading your wish...</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = { apiKey:"YOUR_API_KEY", authDomain:"boltwish-5155c.firebaseapp.com", projectId:"boltwish-5155c"};
+const db = getFirestore(initializeApp(firebaseConfig));
+
+const username = new URLSearchParams(location.search).get("user");
+
+async function load(){
+  const q = query(collection(db,"users"), where("username","==",username));
+  const snap = await getDocs(q);
+  if(snap.empty){ document.getElementById("data").innerText="❌ Wish not found"; return; }
+
+  snap.forEach(async doc=>{
+    const d = doc.data();
+    const res = await fetch(`templates/${d.template}.html`);
+    let html = await res.text();
+    Object.keys(d).forEach(k=>{
+      if(k!=="template" && k!=="timestamp" && k!=="username") html = html.replace(new RegExp(`{{${k}}}`,'g'), d[k]);
+    });
+    document.getElementById("data").innerHTML = html;
+  });
+}
+
+load();
+</script>
+
+</body>
+</html>

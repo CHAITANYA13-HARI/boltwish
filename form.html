@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enter Details</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body {
+  font-family:'Poppins',sans-serif;
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  padding:20px;
+}
+.box {
+  background:white;
+  padding:35px 25px;
+  border-radius:25px;
+  width:100%;
+  max-width:400px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.25);
+  text-align:center;
+}
+input,textarea {
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border-radius:12px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+textarea { resize:none; height:80px; }
+button {
+  width:100%;
+  padding:14px;
+  margin-top:15px;
+  border:none;
+  border-radius:12px;
+  background:#667eea;
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+button:hover{opacity:0.9;}
+label { text-align:left; display:block; margin-top:10px; font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>Enter Your Details</h2>
+<form id="form">
+  <div id="dynamicFields"></div>
+  <button type="submit">Next →</button>
+</form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+  const template = new URLSearchParams(location.search).get("template");
+  const container = document.getElementById("dynamicFields");
+
+  const fields = {
+    birthday: ["name","age","message","from"],
+    anniversary: ["name","years","message","from"],
+    love: ["name","message","from"],
+    congrats: ["name","achievement","message","from"],
+    newbaby: ["babyName","parentName","message","from"],
+    wedding: ["bride","groom","message","from"],
+    friendship: ["name","message","from"],
+    thankyou: ["name","message","from"]
+  };
+
+  const labels = {
+    name:"Name",
+    age:"Age",
+    years:"Years Together",
+    message:"Message",
+    from:"From",
+    achievement:"Achievement",
+    babyName:"Baby Name",
+    parentName:"Parent Name",
+    bride:"Bride Name",
+    groom:"Groom Name"
+  };
+
+  fields[template].forEach(f=>{
+    if(f==="message"){
+      container.innerHTML += `<label>${labels[f]}</label><textarea id="${f}" required></textarea>`;
+    }else{
+      container.innerHTML += `<label>${labels[f]}</label><input type="text" id="${f}" required>`;
+    }
+  });
+
+  const form = document.getElementById("form");
+  form.onsubmit = e=>{
+    e.preventDefault();
+    const data = {};
+    fields[template].forEach(f=>{
+      data[f] = document.getElementById(f).value.trim();
+    });
+    data.template = template;
+    localStorage.setItem("userData", JSON.stringify(data));
+    location.href="edit.html";
+  };
+});
+</script>
+
+</body>
+</html>

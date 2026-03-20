@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Saving...</title>
+<style>
+body { font-family:'Poppins',sans-serif; text-align:center; padding-top:60px; background:#f3f3f3; }
+#status a { display:inline-block; margin-top:20px; padding:14px 25px; background:#667eea; color:white; text-decoration:none; border-radius:12px; font-weight:bold; }
+#status a:hover{opacity:0.9;}
+</style>
+</head>
+<body>
+
+<h2 id="status">Saving your wish...</h2>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "boltwish-5155c.firebaseapp.com",
+  projectId: "boltwish-5155c",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const data = JSON.parse(localStorage.getItem("finalData"));
+if(!data){ document.getElementById("status").innerText="❌ Missing data"; }
+
+const username = (data.name||data.babyName||data.bride||data.groom||data.parentName).toLowerCase().replace(/\s+/g,"") + Math.floor(Math.random()*999);
+
+addDoc(collection(db,"users"), {...data, username, timestamp:new Date()})
+.then(()=>{
+  document.getElementById("status").innerHTML = `<a href="view.html?user=${username}" target="_blank">Open Your Wish 🚀</a>`;
+  localStorage.removeItem("finalData");
+})
+.catch(err=>{
+  console.error(err);
+  document.getElementById("status").innerText="❌ Error saving data";
+});
+</script>
+
+</body>
+</html>

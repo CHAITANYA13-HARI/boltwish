@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body { font-family:'Poppins',sans-serif; background:#eee; text-align:center; padding:30px; }
+#preview { margin:20px auto; max-width:400px; width:90%; background:white; padding:30px; border-radius:20px; box-shadow:0 10px 25px rgba(0,0,0,0.25); text-align:center; }
+[contenteditable]{border-bottom:1px dashed #aaa; padding:2px 4px;}
+button { padding:14px 30px; margin-top:20px; border:none; border-radius:12px; background:#667eea; color:white; font-weight:bold; cursor:pointer; font-size:16px; }
+button:hover{opacity:0.9;}
+</style>
+</head>
+<body>
+
+<h2>Edit Your Wish ✏️</h2>
+<div id="preview"></div>
+<button onclick="finish()">Finish ✅</button>
+
+<script>
+const data = JSON.parse(localStorage.getItem("userData"));
+if(!data){ location.href="form.html"; }
+
+async function load(){
+  const res = await fetch(`templates/${data.template}.html`);
+  let html = await res.text();
+  Object.keys(data).forEach(key=>{
+    if(key !== "template") html = html.replace(new RegExp(`{{${key}}}`,'g'), `<span class="${key}" contenteditable>${data[key]}</span>`);
+  });
+  document.getElementById("preview").innerHTML = html;
+}
+
+function finish(){
+  const finalData = {};
+  Object.keys(data).forEach(key=>{
+    if(key!=="template"){
+      const el = document.querySelector(`.${key}`);
+      finalData[key] = el ? el.innerText.trim() : "";
+    }
+  });
+  finalData.template = data.template;
+  localStorage.setItem("finalData", JSON.stringify(finalData));
+  location.href="save.html";
+}
+
+load();
+</script>
+
+</body>
+</html>
