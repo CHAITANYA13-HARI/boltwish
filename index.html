@@ -3,8 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Pick Your Occasion</title>
+<meta name="description" content="Choose a template for your occasion like birthday, anniversary, love, and more.">
+
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="prefetch" href="form.html">
+
 <style>
 body {
   margin:0;
@@ -15,56 +20,149 @@ body {
   display:flex;
   flex-direction:column;
   min-height:100vh;
+  transition: opacity 0.3s ease;
 }
+
+.fade-out {
+  opacity:0;
+}
+
 h1 {
-  padding:40px 20px 20px 20px;
-  font-size:2rem;
+  padding:50px 20px 30px 20px;
+  font-size:2.2rem;
 }
+
 .templates {
   display:grid;
   grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
+  gap:25px;
   padding:0 20px 40px 20px;
   flex-grow:1;
 }
+
 .card {
-  background:white;
-  color:black;
-  border-radius:20px;
-  padding:25px 15px;
-  cursor:pointer;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  color:white;
+  border-radius:25px;
+  padding:30px 20px;
   font-weight:600;
-  box-shadow:0 10px 25px rgba(0,0,0,0.2);
-  transition:0.3s;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  cursor:pointer;
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
+  border:none;
 }
-.card:hover { transform:scale(1.05); box-shadow:0 15px 35px rgba(0,0,0,0.3); }
-.card h2 { margin:10px 0 5px 0; font-size:1.2rem; }
-.card p { font-size:0.9rem; color:#555; margin:0; }
+
+.card:hover { 
+  transform: translateY(-5px) scale(1.05); 
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
+  background: rgba(255,255,255,0.25);
+}
+
+.card:active {
+  transform: scale(0.98);
+}
+
+.card h2 { 
+  margin:10px 0 5px 0; 
+  font-size:1.3rem;
+  transition: transform 0.3s;
+}
+
+.card:hover h2 {
+  transform: scale(1.2);
+}
+
+.card p { 
+  font-size:0.95rem; 
+  color: #f0f0f0; 
+  margin:0; 
+}
+
+footer {
+  padding:15px;
+  font-size:0.8rem;
+  opacity:0.7;
+}
+
 @media(max-width:500px){
-  h1 { font-size:1.6rem; padding:30px 10px 20px 10px; }
-  .card { padding:20px 10px; }
+  h1 { font-size:1.8rem; padding:30px 10px 20px 10px; }
+  .card { padding:25px 15px; }
 }
 </style>
 </head>
+
 <body>
+
 <h1>✨ Pick a Template</h1>
+
 <div class="templates">
-  <div class="card" onclick="go('birthday')"><h2>🎂 Birthday</h2><p>Fun birthday wishes</p></div>
-  <div class="card" onclick="go('anniversary')"><h2>💖 Anniversary</h2><p>Celebrate love</p></div>
-  <div class="card" onclick="go('love')"><h2>❤️ Love</h2><p>Romantic wishes</p></div>
-  <div class="card" onclick="go('congrats')"><h2>🎊 Congrats</h2><p>Achievement wishes</p></div>
-  <div class="card" onclick="go('newbaby')"><h2>👶 New Baby</h2><p>Welcome your little one</p></div>
-  <div class="card" onclick="go('wedding')"><h2>💍 Wedding</h2><p>Celebrate the couple</p></div>
-  <div class="card" onclick="go('friendship')"><h2>🤗 Friendship</h2><p>Wishes for friends</p></div>
-  <div class="card" onclick="go('thankyou')"><h2>🙏 Thank You</h2><p>Express gratitude</p></div>
+  <button class="card" onclick="go('birthday')">
+    <h2>🎂 Birthday</h2>
+    <p>Fun birthday wishes</p>
+  </button>
+
+  <button class="card" onclick="go('anniversary')">
+    <h2>💖 Anniversary</h2>
+    <p>Celebrate love</p>
+  </button>
+
+  <button class="card" onclick="go('love')">
+    <h2>❤️ Love</h2>
+    <p>Romantic wishes</p>
+  </button>
+
+  <button class="card" onclick="go('congrats')">
+    <h2>🎊 Congrats</h2>
+    <p>Achievement wishes</p>
+  </button>
+
+  <button class="card" onclick="go('newbaby')">
+    <h2>👶 New Baby</h2>
+    <p>Welcome your little one</p>
+  </button>
+
+  <button class="card" onclick="go('wedding')">
+    <h2>💍 Wedding</h2>
+    <p>Celebrate the couple</p>
+  </button>
+
+  <button class="card" onclick="go('friendship')">
+    <h2>🤗 Friendship</h2>
+    <p>Wishes for friends</p>
+  </button>
+
+  <button class="card" onclick="go('thankyou')">
+    <h2>🙏 Thank You</h2>
+    <p>Express gratitude</p>
+  </button>
+   <button class="card">
+    <h2>MORE Templates Soon</h2>
+    <p>many more occasional templates soon </p>
+  </button>
 </div>
 
+<footer>
+  Made with ❤️ for all occasions
+</footer>
+
 <script>
-function go(template){ location.href = `form.html?template=${template}`; }
+function go(template){
+  // store selection (optional feature)
+  localStorage.setItem("selectedTemplate", template);
+
+  // smooth transition
+  document.body.classList.add("fade-out");
+
+  setTimeout(()=>{
+    location.href = `form.html?template=${template}`;
+  }, 300);
+}
 </script>
+
 </body>
 </html>

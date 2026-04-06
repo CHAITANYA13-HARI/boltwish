@@ -6,11 +6,79 @@
 <title>Edit Preview</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-body { font-family:'Poppins',sans-serif; background:#eee; text-align:center; padding:30px; }
-#preview { margin:20px auto; max-width:400px; width:90%; background:white; padding:30px; border-radius:20px; box-shadow:0 10px 25px rgba(0,0,0,0.25); text-align:center; }
-[contenteditable]{border-bottom:1px dashed #aaa; padding:2px 4px;}
-button { padding:14px 30px; margin-top:20px; border:none; border-radius:12px; background:#667eea; color:white; font-weight:bold; cursor:pointer; font-size:16px; }
-button:hover{opacity:0.9;}
+body {
+  font-family:'Poppins',sans-serif;
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  text-align:center;
+  padding:40px 15px;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  color:white;
+}
+
+/* CARD PREVIEW */
+#preview {
+  margin:30px auto;
+  max-width:450px;
+  width:100%;
+  padding:35px 25px;
+  border-radius:25px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+  text-align:center;
+  transition: transform 0.3s;
+}
+#preview:hover { transform: scale(1.02); }
+
+/* EDITABLE FIELDS */
+[contenteditable]{
+  border-bottom:2px dashed rgba(255,255,255,0.7);
+  padding:2px 6px;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  background: rgba(255,255,255,0.05);
+  border-radius:5px;
+  display:inline-block;
+  min-width: 50px;
+}
+[contenteditable]:focus{
+  outline:none;
+  border-color:#fff;
+  box-shadow:0 0 8px rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.15);
+}
+
+/* BUTTON */
+button{
+  margin-top:20px;
+  background: linear-gradient(135deg,#ff7eb3,#ff758c);
+  padding:14px 30px;
+  border-radius:15px;
+  font-weight:bold;
+  cursor:pointer;
+  color:white;
+  font-size:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.3);
+  transition: transform 0.3s, opacity 0.3s;
+}
+button:hover { transform: translateY(-3px); opacity:0.9; }
+
+/* HEADER */
+h2 {
+  font-weight:700;
+  font-size:clamp(22px,5vw,28px);
+  margin-bottom:15px;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width:480px){
+  #preview { padding:25px 15px; }
+  h2 { font-size:20px; }
+  button { width:100%; font-size:16px; padding:12px; }
+}
 </style>
 </head>
 <body>
@@ -24,12 +92,19 @@ const data = JSON.parse(localStorage.getItem("userData"));
 if(!data){ location.href="form.html"; }
 
 async function load(){
-  const res = await fetch(`templates/${data.template}.html`);
-  let html = await res.text();
-  Object.keys(data).forEach(key=>{
-    if(key !== "template") html = html.replace(new RegExp(`{{${key}}}`,'g'), `<span class="${key}" contenteditable>${data[key]}</span>`);
-  });
-  document.getElementById("preview").innerHTML = html;
+  try {
+    const res = await fetch(`templates/${data.template}.html`);
+    let html = await res.text();
+    Object.keys(data).forEach(key=>{
+      if(key !== "template") {
+        html = html.replace(new RegExp(`{{${key}}}`,'g'), `<span class="${key}" contenteditable>${data[key]}</span>`);
+      }
+    });
+    document.getElementById("preview").innerHTML = html;
+  } catch(e) {
+    document.getElementById("preview").innerHTML = "<p style='color:white;'>Error loading template.</p>";
+    console.error(e);
+  }
 }
 
 function finish(){

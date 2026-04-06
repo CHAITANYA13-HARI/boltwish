@@ -17,12 +17,15 @@ body {
 }
 .box {
   background:white;
-  padding:35px 25px;
+  padding:40px 30px;
   border-radius:25px;
   width:100%;
   max-width:400px;
   box-shadow:0 12px 30px rgba(0,0,0,0.25);
   text-align:center;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 input,textarea {
   width:100%;
@@ -31,12 +34,13 @@ input,textarea {
   border-radius:12px;
   border:1px solid #ccc;
   font-size:14px;
+  box-sizing:border-box;
 }
 textarea { resize:none; height:80px; }
 button {
   width:100%;
   padding:14px;
-  margin-top:15px;
+  margin-top:20px;
   border:none;
   border-radius:12px;
   background:#667eea;
@@ -91,9 +95,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   fields[template].forEach(f=>{
     if(f==="message"){
-      container.innerHTML += `<label>${labels[f]}</label><textarea id="${f}" required></textarea>`;
-    }else{
-      container.innerHTML += `<label>${labels[f]}</label><input type="text" id="${f}" required>`;
+      container.innerHTML += `<label>${labels[f]}</label><textarea id="${f}" required maxlength="300" placeholder="Max 300 characters"></textarea>`;
+    } else if(f==="age" || f==="years") {
+      container.innerHTML += `<label>${labels[f]}</label><input type="number" id="${f}" required min="0" max="150" placeholder="Enter a number">`;
+    } else {
+      container.innerHTML += `<label>${labels[f]}</label><input type="text" id="${f}" required maxlength="20" placeholder="Max 20 characters">`;
     }
   });
 
@@ -102,8 +108,21 @@ document.addEventListener("DOMContentLoaded", ()=>{
     e.preventDefault();
     const data = {};
     fields[template].forEach(f=>{
-      data[f] = document.getElementById(f).value.trim();
+      let val = document.getElementById(f).value.trim();
+      if(f==="name" || f==="babyName" || f==="bride" || f==="groom" || f==="parentName" || f==="from"){
+        // limit characters
+        val = val.substring(0,50);
+      }
+      if(f==="age" || f==="years"){
+        val = parseInt(val) || 0;
+      }
+      data[f] = val;
     });
+
+    // Username is first word of name/baby/bride/etc
+    const firstField = data.name || data.babyName || data.bride || data.groom || data.parentName;
+    data.username = firstField.split(" ")[0].toLowerCase();
+
     data.template = template;
     localStorage.setItem("userData", JSON.stringify(data));
     location.href="edit.html";

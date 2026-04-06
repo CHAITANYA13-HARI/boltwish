@@ -3,41 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <title>Saving...</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-body { font-family:'Poppins',sans-serif; text-align:center; padding-top:60px; background:#f3f3f3; }
-#status a { display:inline-block; margin-top:20px; padding:14px 25px; background:#667eea; color:white; text-decoration:none; border-radius:12px; font-weight:bold; }
-#status a:hover{opacity:0.9;}
+body {
+  font-family:'Poppins',sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  margin:0;
+  flex-direction:column;
+  color:white;
+}
+#status {
+  font-size:1.5rem;
+  margin-bottom:30px;
+  text-align:center;
+}
+.loader {
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(255,255,255,0.2);
+  border-top: 6px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 25px;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+button {
+  display:none;
+  padding:14px 25px;
+  border:none;
+  border-radius:12px;
+  background: #fff;
+  color: #667eea;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+  transition: transform 0.3s, opacity 0.3s;
+  margin-top:15px;
+}
+button:hover { transform: translateY(-3px); opacity:0.9; }
 </style>
 </head>
 <body>
 
-<h2 id="status">Saving your wish...</h2>
+<div class="loader" id="loader"></div>
+<div id="status">Saving your wish...</div>
+<button id="openBtn">🚀 Open Your Wish</button>
+<button id="shareBtn">📤 Share Your Wish</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "boltwish-5155c.firebaseapp.com",
   projectId: "boltwish-5155c",
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const data = JSON.parse(localStorage.getItem("finalData"));
-if(!data){ document.getElementById("status").innerText="❌ Missing data"; }
+if(!data){ 
+  document.getElementById("status").innerText="❌ Missing data"; 
+  document.getElementById("loader").style.display="none";
+}
 
 const username = (data.name||data.babyName||data.bride||data.groom||data.parentName).toLowerCase().replace(/\s+/g,"") + Math.floor(Math.random()*999);
 
 addDoc(collection(db,"users"), {...data, username, timestamp:new Date()})
 .then(()=>{
-  document.getElementById("status").innerHTML = `<a href="view.html?user=${username}" target="_blank">Open Your Wish 🚀</a>`;
+  // Stop loader immediately
+  document.getElementById("loader").style.display="none";
+  
+  const status = document.getElementById("status");
+  const url = `${location.origin}/view.html?user=${username}`;
+
+  // Auto copy URL to clipboard
+  navigator.clipboard.writeText(url);
+
+  // Show Open button
+  const openBtn = document.getElementById("openBtn");
+  openBtn.style.display="inline-block";
+  openBtn.onclick = ()=>{ window.open(url,"_blank"); }
+
+  // Show Share button
+  const shareBtn = document.getElementById("shareBtn");
+  shareBtn.style.display="inline-block";
+  shareBtn.onclick = ()=>{
+    if(navigator.share){
+      navigator.share({title:"My Wish", url});
+    } else {
+      navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard!");
+    }
+  }
+
+  // Success message
+  status.innerText = "✅ Your wish is ready!";
   localStorage.removeItem("finalData");
 })
 .catch(err=>{
   console.error(err);
+  document.getElementById("loader").style.display="none";
   document.getElementById("status").innerText="❌ Error saving data";
 });
 </script>
