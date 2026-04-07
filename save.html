@@ -62,7 +62,7 @@ button:hover { transform: translateY(-3px); opacity:0.9; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
-// 🔹 Firebase config
+// 🔹 Firebase config - replace YOUR_API_KEY with your actual key
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "boltwish-5155c.firebaseapp.com",
@@ -72,15 +72,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔹 Get data from previous page
+// 🔹 Get saved data from localStorage
 const data = JSON.parse(localStorage.getItem("finalData"));
 if(!data || Object.keys(data).length === 0){
   document.getElementById("status").innerText="❌ Missing data";
   document.getElementById("loader").style.display="none";
-  throw new Error("No valid data found in localStorage");
+  throw new Error("No valid data in localStorage");
 }
 
-// 🔹 Create friendly unique username
+// 🔹 Create a friendly unique username
 const baseName = data.name || data.babyName || data.bride || data.groom || data.parentName || "user";
 const username = `${baseName.toLowerCase().replace(/\s+/g,"-")}-${Date.now().toString().slice(-4)}`;
 
@@ -91,32 +91,38 @@ addDoc(collection(db,"users"), {
   timestamp: serverTimestamp()
 })
 .then(()=>{
+  // ✅ Stop loader
   document.getElementById("loader").style.display="none";
-
-  const url = `${location.origin}/wish/${username}`;
   const status = document.getElementById("status");
+  const url = `${location.origin}/wish/${username}`;
 
-  // 🔹 Copy URL automatically
+  // ✅ Copy URL automatically
   navigator.clipboard.writeText(url).catch(()=>{});
 
-  // 🔹 Show Open button
+  // ✅ Show Open button
   const openBtn = document.getElementById("openBtn");
   openBtn.style.display="inline-block";
   openBtn.onclick = ()=> window.open(url,"_blank");
 
-  // 🔹 Show Share button
+  // ✅ Show Share button
   const shareBtn = document.getElementById("shareBtn");
   shareBtn.style.display="inline-block";
-  shareBtn.onclick = async ()=>{
+  shareBtn.onclick = async () => {
     try {
-      if(navigator.share){
-        await navigator.share({title:"My Wish", url});
+      if (navigator.share) {
+        await navigator.share({
+          title: "My Wish 🎉",
+          text: "Check out my personalized wish!",
+          url
+        });
       } else {
         await navigator.clipboard.writeText(url);
-        alert("Link copied to clipboard!");
+        alert("Link copied to clipboard! 📋");
       }
     } catch(e){
       console.warn("Share failed:", e);
+      await navigator.clipboard.writeText(url);
+      alert("Unable to share automatically. URL copied to clipboard!");
     }
   };
 
