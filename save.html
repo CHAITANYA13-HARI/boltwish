@@ -15,40 +15,58 @@ body {
   margin:0;
   flex-direction:column;
   color:white;
-}
-#status {
-  font-size:1.5rem;
-  margin-bottom:30px;
+  padding: 20px;
+  box-sizing: border-box;
   text-align:center;
 }
+
+#status {
+  font-size:clamp(1.2rem, 4vw, 1.5rem);
+  margin-bottom:25px;
+}
+
 .loader {
-  width: 60px;
-  height: 60px;
+  width: clamp(40px, 10vw, 60px);
+  height: clamp(40px, 10vw, 60px);
   border: 6px solid rgba(255,255,255,0.2);
   border-top: 6px solid #fff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
 button {
   display:none;
-  padding:14px 25px;
+  padding: clamp(10px,2vw,14px) clamp(20px,4vw,25px);
   border:none;
   border-radius:12px;
   background: #fff;
   color: #667eea;
   font-weight:bold;
   cursor:pointer;
-  font-size:16px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+  font-size: clamp(14px,3vw,16px);
+  box-shadow:0 6px 15px rgba(0,0,0,0.2);
   transition: transform 0.3s, opacity 0.3s;
-  margin-top:15px;
+  margin: 8px 0;
+  min-width: 200px;
 }
 button:hover { transform: translateY(-3px); opacity:0.9; }
+
+/* Mobile responsive tweaks */
+@media (max-width: 480px) {
+  #status {
+    margin-bottom: 20px;
+  }
+  button {
+    min-width: 160px;
+    font-size: 14px;
+    padding: 10px 18px;
+  }
+}
 </style>
 </head>
 <body>
@@ -62,7 +80,7 @@ button:hover { transform: translateY(-3px); opacity:0.9; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
-// 🔹 Firebase config - replace YOUR_API_KEY with your actual key
+// 🔹 Firebase config
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "boltwish-5155c.firebaseapp.com",
@@ -72,7 +90,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔹 Get saved data from localStorage
+// 🔹 Get data from localStorage
 const data = JSON.parse(localStorage.getItem("finalData"));
 if(!data || Object.keys(data).length === 0){
   document.getElementById("status").innerText="❌ Missing data";
@@ -80,7 +98,7 @@ if(!data || Object.keys(data).length === 0){
   throw new Error("No valid data in localStorage");
 }
 
-// 🔹 Create a friendly unique username
+// 🔹 Create friendly username
 const baseName = data.name || data.babyName || data.bride || data.groom || data.parentName || "user";
 const username = `${baseName.toLowerCase().replace(/\s+/g,"-")}-${Date.now().toString().slice(-4)}`;
 
@@ -91,20 +109,19 @@ addDoc(collection(db,"users"), {
   timestamp: serverTimestamp()
 })
 .then(()=>{
-  // ✅ Stop loader
   document.getElementById("loader").style.display="none";
   const status = document.getElementById("status");
   const url = `${location.origin}/wish/${username}`;
 
-  // ✅ Copy URL automatically
+  // 🔹 Copy URL
   navigator.clipboard.writeText(url).catch(()=>{});
 
-  // ✅ Show Open button
+  // 🔹 Open button
   const openBtn = document.getElementById("openBtn");
   openBtn.style.display="inline-block";
   openBtn.onclick = ()=> window.open(url,"_blank");
 
-  // ✅ Show Share button
+  // 🔹 Share button
   const shareBtn = document.getElementById("shareBtn");
   shareBtn.style.display="inline-block";
   shareBtn.onclick = async () => {
