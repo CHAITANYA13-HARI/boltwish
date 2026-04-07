@@ -60,61 +60,88 @@ button:hover { transform: translateY(-3px); opacity:0.9; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
-// Firebase config
+// ✅ Firebase config
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "boltwish-5155c.firebaseapp.com",
   projectId: "boltwish-5155c",
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ✅ Get saved data
 const data = JSON.parse(localStorage.getItem("finalData"));
-if(!data){ 
-  document.getElementById("status").innerText="❌ Missing data"; 
+console.log("FINAL DATA:", data);
+
+// ❌ Stop if no data
+if(!data || Object.keys(data).length === 0){
+  document.getElementById("status").innerText="❌ Missing data";
   document.getElementById("loader").style.display="none";
+  throw new Error("No valid data");
 }
 
-const username = (data.name||data.babyName||data.bride||data.groom||data.parentName).toLowerCase().replace(/\s+/g,"") + Math.floor(Math.random()*999);
+// ✅ Safe username (FIXED)
+const baseName =
+  data.name ||
+  data.babyName ||
+  data.bride ||
+  data.groom ||
+  data.parentName ||
+  "user";
 
-addDoc(collection(db,"users"), {...data, username, timestamp:new Date()})
+const username =
+  baseName.toLowerCase().replace(/\s+/g,"") +
+  Math.floor(Math.random()*999);
+
+// ✅ Save to Firestore
+addDoc(collection(db,"users"), {
+  ...data,
+  username,
+  timestamp: serverTimestamp()
+})
 .then(()=>{
-  // Stop loader immediately
   document.getElementById("loader").style.display="none";
-  
+
   const status = document.getElementById("status");
   const url = `${location.origin}/view.html?user=${username}`;
 
-  // Auto copy URL to clipboard
-  navigator.clipboard.writeText(url);
+  // ✅ Copy link safely
+  navigator.clipboard.writeText(url).catch(()=>{});
 
-  // Show Open button
+  // ✅ Open button
   const openBtn = document.getElementById("openBtn");
   openBtn.style.display="inline-block";
-  openBtn.onclick = ()=>{ window.open(url,"_blank"); }
+  openBtn.onclick = ()=> window.open(url,"_blank");
 
-  // Show Share button
+  // ✅ Share button
   const shareBtn = document.getElementById("shareBtn");
   shareBtn.style.display="inline-block";
-  shareBtn.onclick = ()=>{
-    if(navigator.share){
-      navigator.share({title:"My Wish", url});
-    } else {
-      navigator.clipboard.writeText(url);
-      alert("Link copied to clipboard!");
+  shareBtn.onclick = async ()=>{
+    try{
+      if(navigator.share){
+        await navigator.share({title:"My Wish", url});
+      } else {
+        await navigator.clipboard.writeText(url);
+        alert("Link copied!");
+      }
+    } catch(e){
+      console.warn(e);
     }
-  }
+  };
 
-  // Success message
   status.innerText = "✅ Your wish is ready!";
   localStorage.removeItem("finalData");
 })
 .catch(err=>{
-  console.error(err);
+  console.error("FIREBASE ERROR:", err);
+
   document.getElementById("loader").style.display="none";
   document.getElementById("status").innerText="❌ Error saving data";
+
+  alert("Error: " + err.message); // ✅ shows real error
 });
 </script>
 

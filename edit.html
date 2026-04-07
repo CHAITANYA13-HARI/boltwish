@@ -19,7 +19,6 @@ body {
   color:white;
 }
 
-/* CARD PREVIEW */
 #preview {
   margin:30px auto;
   max-width:450px;
@@ -34,7 +33,6 @@ body {
 }
 #preview:hover { transform: scale(1.02); }
 
-/* EDITABLE FIELDS */
 [contenteditable]{
   border-bottom:2px dashed rgba(255,255,255,0.7);
   padding:2px 6px;
@@ -51,7 +49,6 @@ body {
   background: rgba(255,255,255,0.15);
 }
 
-/* BUTTON */
 button{
   margin-top:20px;
   background: linear-gradient(135deg,#ff7eb3,#ff758c);
@@ -66,14 +63,12 @@ button{
 }
 button:hover { transform: translateY(-3px); opacity:0.9; }
 
-/* HEADER */
 h2 {
   font-weight:700;
   font-size:clamp(22px,5vw,28px);
   margin-bottom:15px;
 }
 
-/* MOBILE RESPONSIVE */
 @media (max-width:480px){
   #preview { padding:25px 15px; }
   h2 { font-size:20px; }
@@ -95,11 +90,16 @@ async function load(){
   try {
     const res = await fetch(`templates/${data.template}.html`);
     let html = await res.text();
+
     Object.keys(data).forEach(key=>{
       if(key !== "template") {
-        html = html.replace(new RegExp(`{{${key}}}`,'g'), `<span class="${key}" contenteditable>${data[key]}</span>`);
+        html = html.replace(
+          new RegExp(`{{${key}}}`,'g'),
+          `<span class="${key}" contenteditable>${data[key]}</span>`
+        );
       }
     });
+
     document.getElementById("preview").innerHTML = html;
   } catch(e) {
     document.getElementById("preview").innerHTML = "<p style='color:white;'>Error loading template.</p>";
@@ -109,15 +109,25 @@ async function load(){
 
 function finish(){
   const finalData = {};
+  
   Object.keys(data).forEach(key=>{
-    if(key!=="template"){
+    if(key !== "template"){
       const el = document.querySelector(`.${key}`);
-      finalData[key] = el ? el.innerText.trim() : "";
+      let value = el ? el.innerText.trim() : "";
+
+      // ✅ FIX: clean number extraction
+      if(key === "age" || key === "years"){
+        const num = value.match(/\d+/); // extract only number
+        value = num ? parseInt(num[0]) : 0;
+      }
+
+      finalData[key] = value;
     }
   });
+
   finalData.template = data.template;
   localStorage.setItem("finalData", JSON.stringify(finalData));
-  location.href="save.html";
+  location.href = "save.html";
 }
 
 load();
