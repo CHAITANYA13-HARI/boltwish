@@ -2,7 +2,7 @@
   "routes": [
     {
       "src": "/wish/([a-zA-Z0-9-]+)",
-      "dest": "/view.html?user=$1"
+      "dest": "/view.html"
     }
   ]
 }

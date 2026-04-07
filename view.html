@@ -35,23 +35,43 @@ body {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
-const firebaseConfig = { apiKey:"YOUR_API_KEY", authDomain:"boltwish-5155c.firebaseapp.com", projectId:"boltwish-5155c"};
+const firebaseConfig = { 
+  apiKey:"YOUR_API_KEY", 
+  authDomain:"boltwish-5155c.firebaseapp.com", 
+  projectId:"boltwish-5155c"
+};
+
 const db = getFirestore(initializeApp(firebaseConfig));
 
-const username = new URLSearchParams(location.search).get("user");
+// ✅ Extract username from URL path (friendly URL)
+const pathParts = location.pathname.split("/");
+const username = pathParts[pathParts.length - 1];
+
+if(!username){
+  document.getElementById("data").innerText = "❌ Invalid wish URL";
+  throw new Error("No username in URL");
+}
 
 async function load(){
   const q = query(collection(db,"users"), where("username","==",username));
   const snap = await getDocs(q);
-  if(snap.empty){ document.getElementById("data").innerText="❌ Wish not found"; return; }
+  
+  if(snap.empty){
+    document.getElementById("data").innerText="❌ Wish not found";
+    return;
+  }
 
   snap.forEach(async doc=>{
     const d = doc.data();
     const res = await fetch(`templates/${d.template}.html`);
     let html = await res.text();
+
     Object.keys(d).forEach(k=>{
-      if(k!=="template" && k!=="timestamp" && k!=="username") html = html.replace(new RegExp(`{{${k}}}`,'g'), d[k]);
+      if(k!=="template" && k!=="timestamp" && k!=="username"){
+        html = html.replace(new RegExp(`{{${k}}}`,'g'), d[k]);
+      }
     });
+
     document.getElementById("data").innerHTML = html;
   });
 }

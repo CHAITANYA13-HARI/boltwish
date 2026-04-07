@@ -62,7 +62,7 @@ button:hover { transform: translateY(-3px); opacity:0.9; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
-// ✅ Firebase config
+// 🔹 Firebase config
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "boltwish-5155c.firebaseapp.com",
@@ -72,31 +72,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ✅ Get saved data
+// 🔹 Get data from previous page
 const data = JSON.parse(localStorage.getItem("finalData"));
-console.log("FINAL DATA:", data);
-
-// ❌ Stop if no data
 if(!data || Object.keys(data).length === 0){
   document.getElementById("status").innerText="❌ Missing data";
   document.getElementById("loader").style.display="none";
-  throw new Error("No valid data");
+  throw new Error("No valid data found in localStorage");
 }
 
-// ✅ Safe username (FIXED)
-const baseName =
-  data.name ||
-  data.babyName ||
-  data.bride ||
-  data.groom ||
-  data.parentName ||
-  "user";
+// 🔹 Create friendly unique username
+const baseName = data.name || data.babyName || data.bride || data.groom || data.parentName || "user";
+const username = `${baseName.toLowerCase().replace(/\s+/g,"-")}-${Date.now().toString().slice(-4)}`;
 
-const username =
-  baseName.toLowerCase().replace(/\s+/g,"") +
-  Math.floor(Math.random()*999);
-
-// ✅ Save to Firestore
+// 🔹 Save to Firestore
 addDoc(collection(db,"users"), {
   ...data,
   username,
@@ -105,30 +93,30 @@ addDoc(collection(db,"users"), {
 .then(()=>{
   document.getElementById("loader").style.display="none";
 
+  const url = `${location.origin}/wish/${username}`;
   const status = document.getElementById("status");
-  const url = `${location.origin}/view.html?user=${username}`;
 
-  // ✅ Copy link safely
+  // 🔹 Copy URL automatically
   navigator.clipboard.writeText(url).catch(()=>{});
 
-  // ✅ Open button
+  // 🔹 Show Open button
   const openBtn = document.getElementById("openBtn");
   openBtn.style.display="inline-block";
   openBtn.onclick = ()=> window.open(url,"_blank");
 
-  // ✅ Share button
+  // 🔹 Show Share button
   const shareBtn = document.getElementById("shareBtn");
   shareBtn.style.display="inline-block";
   shareBtn.onclick = async ()=>{
-    try{
+    try {
       if(navigator.share){
         await navigator.share({title:"My Wish", url});
       } else {
         await navigator.clipboard.writeText(url);
-        alert("Link copied!");
+        alert("Link copied to clipboard!");
       }
     } catch(e){
-      console.warn(e);
+      console.warn("Share failed:", e);
     }
   };
 
@@ -136,12 +124,10 @@ addDoc(collection(db,"users"), {
   localStorage.removeItem("finalData");
 })
 .catch(err=>{
-  console.error("FIREBASE ERROR:", err);
-
+  console.error("FIRESTORE ERROR:", err);
   document.getElementById("loader").style.display="none";
   document.getElementById("status").innerText="❌ Error saving data";
-
-  alert("Error: " + err.message); // ✅ shows real error
+  alert("Error: " + err.message);
 });
 </script>
 
