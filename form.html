@@ -85,6 +85,37 @@ body {
   color: rgba(255,255,255,0.86);
 }
 
+.progress-wrap {
+  margin-top: 22px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.14);
+}
+
+.progress-label {
+  display:flex;
+  justify-content:space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  color: rgba(255,255,255,0.88);
+}
+
+.progress-bar {
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  background: rgba(255,255,255,0.22);
+  overflow:hidden;
+}
+
+.progress-fill {
+  width:50%;
+  height:100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #fff, #d1fae5);
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid rgba(255,255,255,0.7);
@@ -153,12 +184,25 @@ button {
 button:hover { transform: translateY(-2px); }
 
 @media (max-width: 860px) {
-  .shell { grid-template-columns: 1fr; }
+  .shell { grid-template-columns: 1fr; gap: 12px; }
+  body { padding: 16px; }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 640px) {
   body { padding: 12px; }
-  .hero, .panel { padding: 20px; border-radius: 24px; }
+  .hero, .panel { padding: 18px; border-radius: 22px; }
+  .hero h1 { font-size: 1.8rem; }
+  button { padding: 12px 14px; font-size: 15px; }
+}
+
+@media (max-width: 480px) {
+  body { padding: 8px; }
+  .hero { padding: 16px; }
+  .panel { padding: 16px; }
+  .hero h1 { font-size: 1.5rem; }
+  .hero p { font-size: 0.95rem; }
+  input, textarea { padding: 12px 13px; font-size: 14px; }
+  button { padding: 11px 12px; font-size: 14px; }
 }
 </style>
 </head>
@@ -169,6 +213,10 @@ button:hover { transform: translateY(-2px); }
     <div class="eyebrow">Step 2 of 4 · Personalize it</div>
     <h1>Tell us the details.</h1>
     <p>The form changes based on the template you picked, so you only see the fields you actually need.</p>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Step 2 of 4</span><span>50%</span></div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+    </div>
 
   </section>
 

@@ -374,17 +374,32 @@ body::before {
 
 @media (max-width: 920px) {
   .hero { grid-template-columns: 1fr; }
+  .page { width: min(100% - 24px, 1140px); }
 }
 
-@media (max-width: 720px) {
-  .page { width: min(100% - 20px, 1180px); }
-  .topbar,
-  .templates-head,
-  .link-box { flex-direction: column; align-items: flex-start; }
+@media (max-width: 768px) {
+  .page { width: min(100% - 20px, 100%); padding: 16px 0 24px; }
+  .topbar { flex-direction: column; align-items: stretch; gap: 12px; }
+  .topbar .brand { flex: 1; }
+  .topbar button { width: 100%; }
+  .hero { gap: 16px; }
+  .hero-card, .side-card { padding: 20px; border-radius: 24px; }
+  .hero h1 { font-size: 1.8rem; }
   .stats { grid-template-columns: 1fr; }
-  .hero-card,
-  .side-card { padding: 22px; }
-  .template-card { min-height: 138px; }
+  .link-box { flex-direction: column; align-items: stretch; }
+}
+
+@media (max-width: 480px) {
+  .page { width: 100%; padding: 12px 0 18px; }
+  .topbar { padding: 12px 0 8px; }
+  .brand-mark { width: 36px; height: 36px; font-size: 0.95rem; }
+  .brand-copy strong { font-size: 0.9rem; }
+  .brand-copy span { font-size: 0.8rem; }
+  .hero-card, .side-card { padding: 18px; }
+  .hero h1 { font-size: 1.4rem; line-height: 1; }
+  .hero p { font-size: 0.95rem; }
+  .actions { flex-direction: column; }
+  .action-btn { width: 100%; }
 }
 </style>
 </head>

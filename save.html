@@ -72,11 +72,27 @@ button {
 }
 button:hover { transform: translateY(-3px); opacity:0.9; }
 
-/* MOBILE-FRIENDLY */
-@media (max-width:480px){
-  #status { font-size:1.6rem; margin-bottom:18px; }
-  .loader { width:60px; height:60px; border-width:6px; }
-  button { width:90%; font-size:16px; padding:12px 0; }
+:root {
+  --text: #fff;
+  --muted: rgba(255,255,255,0.8);
+  --brand: #e85d04;
+}
+
+@media (max-width: 640px) {
+  .shell { padding: 20px 16px; }
+  #status { font-size: 1.8rem; }
+  .loader { width: 70px; height: 70px; }
+  .progress-wrap { padding: 12px; }
+  .progress-label { font-size: 0.88rem; }
+}
+
+@media (max-width: 480px) {
+  .shell { padding: 16px 12px; }
+  #status { font-size: 1.5rem; margin-bottom: 16px; }
+  .loader { width: 60px; height: 60px; border-width: 5px; }
+  .progress-wrap { max-width: 100%; padding: 10px; margin: 0 auto 18px; }
+  .progress-label { font-size: 0.82rem; }
+  button { width: 95%; font-size: 15px; padding: 10px 0; }
 }
 </style>
 </head>
@@ -84,6 +100,10 @@ button:hover { transform: translateY(-3px); opacity:0.9; }
 
 <div class="shell">
   <div class="loader" id="loader"></div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Step 4 of 4</span><span>100%</span></div>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+  </div>
   <div id="status">Saving your wish...</div>
   <button id="openBtn">🚀 Open Your Wish</button>
   <button id="shareBtn">📤 Share Your Wish</button>

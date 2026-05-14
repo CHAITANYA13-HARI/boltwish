@@ -153,6 +153,16 @@ body::before {
   line-height: 1.7;
 }
 
+.hero-note {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid rgba(31,41,55,0.06);
+  color: var(--text);
+  line-height: 1.65;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -283,15 +293,36 @@ body::before {
 
 @media (max-width: 920px) {
   .hero { grid-template-columns: 1fr; }
+  .page { width: min(100% - 24px, 1140px); }
 }
 
-@media (max-width: 720px) {
-  .page { width: min(100% - 20px, 1180px); }
-  .topbar,
+@media (max-width: 768px) {
+  .page { width: min(100% - 20px, 100%); padding: 16px 0 24px; }
+  .topbar { flex-direction: column; align-items: stretch; gap: 12px; }
+  .topbar .brand { flex: 1; }
+  .topbar button { width: 100%; }
+  .hero { gap: 14px; }
+  .hero-card, .side-card { padding: 20px; border-radius: 24px; }
+  .hero h1 { font-size: 1.8rem; }
+  .actions { flex-direction: column; }
+  .action-btn { width: 100%; }
   .templates-head { flex-direction: column; align-items: flex-start; }
-  .hero-card,
-  .side-card { padding: 22px; }
-  .template-card { min-height: 138px; }
+  .templates { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .template-card { min-height: 130px; padding: 16px; }
+}
+
+@media (max-width: 480px) {
+  .page { width: 100%; padding: 12px 0 18px; }
+  .topbar { padding: 12px 0 8px; }
+  .brand-mark { width: 36px; height: 36px; }
+  .brand-copy strong { font-size: 0.9rem; }
+  .hero-card, .side-card { padding: 16px; }
+  .hero h1 { font-size: 1.4rem; }
+  .hero p { font-size: 0.95rem; }
+  .action-btn { padding: 12px 16px; font-size: 14px; }
+  .hero-note { padding: 12px 14px; font-size: 0.9rem; }
+  .templates { grid-template-columns: 1fr; gap: 10px; }
+  .template-card { min-height: 120px; padding: 14px; }
 }
 </style>
 </head>
@@ -314,9 +345,10 @@ body::before {
       <h1>Choose a template that fits the moment.</h1>
       <p>Select the look first, then we’ll ask for only the details that matter for that occasion.</p>
       <div class="actions">
-        <button class="action-btn action-primary" onclick="pick('birthday')">Birthday</button>
-        <button class="action-btn action-secondary" onclick="location.href='index.html'">Maybe later</button>
+        <a class="action-btn action-primary" href="#templates">Pick a Template</a>
+        <button class="action-btn action-secondary" onclick="location.href='index.html'">Back to welcome</button>
       </div>
+      <div class="hero-note">Browse the cards below and choose the one that matches your occasion. Each template opens a matching form with the right fields.</div>
     </div>
 
     <aside class="side-card">
