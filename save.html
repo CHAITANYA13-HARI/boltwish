@@ -5,39 +5,6 @@
 <title>Saving...</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --muted: rgba(255,255,255,0.82);
-}
-
-* { box-sizing: border-box; }
-
-body {
-  font-family:'Manrope',sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  min-height:100vh;
-  margin:0;
-  color:white;
-  padding:20px;
-  text-align:center;
-  box-sizing:border-box;
-  background:
-    radial-gradient(circle at top left, rgba(255,255,255,0.16), transparent 30%),
-    linear-gradient(135deg,#e85d04,#fb8500);
-}
-
-.shell {
-  width: min(100%, 560px);
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 30px;
-  padding: 28px 22px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.18);
-  backdrop-filter: blur(16px);
-}
-
 #status {
   font-size:2rem;
   margin-bottom:18px;
@@ -117,10 +84,6 @@ button:hover { transform: translateY(-3px); opacity:0.9; }
 
 <div class="shell">
   <div class="loader" id="loader"></div>
-  <div class="progress-wrap">
-    <div class="progress-label"><span>Progress</span><span>100%</span></div>
-    <div class="progress-bar"><div class="progress-fill"></div></div>
-  </div>
   <div id="status">Saving your wish...</div>
   <button id="openBtn">🚀 Open Your Wish</button>
   <button id="shareBtn">📤 Share Your Wish</button>
