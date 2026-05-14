@@ -4,34 +4,109 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Edit Preview</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+:root {
+  --text: #1f2937;
+  --muted: #6b7280;
+  --brand: #e85d04;
+  --accent: #0f766e;
+}
+
+* { box-sizing: border-box; }
+
 body {
-  font-family:'Poppins',sans-serif;
-  background: linear-gradient(135deg,#667eea,#764ba2);
-  text-align:center;
-  padding:40px 15px;
+  margin: 0;
+  font-family:'Manrope',sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(232,93,4,0.15), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(15,118,110,0.12), transparent 26%),
+    linear-gradient(180deg, #fffaf4 0%, #ffe7d8 100%);
   min-height:100vh;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:flex-start;
-  color:white;
+  color:var(--text);
+  padding: 24px 16px 36px;
+}
+
+.hero {
+  width: min(100%, 960px);
+  margin-bottom: 18px;
+}
+
+.hero-card {
+  padding: 22px;
+  border-radius: 28px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: 0 24px 70px rgba(90, 42, 0, 0.13);
+}
+
+.eyebrow {
+  display:inline-flex;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(232,93,4,0.08);
+  color: var(--brand);
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+h2 {
+  margin: 12px 0 8px;
+  font-size: clamp(1.6rem, 4vw, 2.3rem);
+}
+
+.hero-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.progress-wrap {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(15,118,110,0.08);
+}
+
+.progress-label {
+  display:flex;
+  justify-content:space-between;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.progress-bar {
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  background: rgba(31,41,55,0.08);
+  overflow:hidden;
+}
+
+.progress-fill {
+  width: 75%;
+  height:100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), #2dd4bf);
 }
 
 #preview {
-  margin:30px auto;
-  max-width:450px;
-  width:100%;
-  padding:35px 25px;
-  border-radius:25px;
-  background: rgba(255,255,255,0.15);
+  width: min(100%, 960px);
+  padding: 24px 18px;
+  border-radius: 30px;
+  background: rgba(255,255,255,0.68);
   backdrop-filter: blur(12px);
-  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 60px rgba(90, 42, 0, 0.14);
   text-align:center;
-  transition: transform 0.3s;
+  transition: transform 0.24s ease;
+  border: 1px solid rgba(255,255,255,0.72);
 }
-#preview:hover { transform: scale(1.02); }
+#preview:hover { transform: translateY(-2px); }
 
 [contenteditable]{
   border-bottom:2px dashed rgba(255,255,255,0.7);
@@ -44,43 +119,67 @@ body {
 }
 [contenteditable]:focus{
   outline:none;
-  border-color:#fff;
-  box-shadow:0 0 8px rgba(255,255,255,0.6);
+  border-color: rgba(232,93,4,0.8);
+  box-shadow:0 0 0 4px rgba(232,93,4,0.08);
   background: rgba(255,255,255,0.15);
 }
 
 button{
   margin-top:20px;
-  background: linear-gradient(135deg,#ff7eb3,#ff758c);
+  background: linear-gradient(135deg,#e85d04,#fb8500);
   padding:14px 30px;
-  border-radius:15px;
-  font-weight:bold;
+  border-radius:16px;
+  font-weight:800;
   cursor:pointer;
   color:white;
   font-size:16px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.3);
-  transition: transform 0.3s, opacity 0.3s;
+  border:none;
+  box-shadow:0 16px 30px rgba(232,93,4,0.24);
+  transition: transform 0.24s ease, opacity 0.24s ease;
 }
-button:hover { transform: translateY(-3px); opacity:0.9; }
+button:hover { transform: translateY(-3px); opacity:0.95; }
 
-h2 {
-  font-weight:700;
-  font-size:clamp(22px,5vw,28px);
-  margin-bottom:15px;
+.actions {
+  width: min(100%, 960px);
+  display:flex;
+  gap:12px;
+  justify-content:flex-end;
+}
+
+.secondary {
+  background: rgba(255,255,255,0.82);
+  color: var(--text);
+  border: 1px solid rgba(31,41,55,0.08);
+  box-shadow: none;
 }
 
 @media (max-width:480px){
-  #preview { padding:25px 15px; }
-  h2 { font-size:20px; }
+  .hero-card { padding: 18px; }
+  #preview { padding:18px 12px; }
+  .actions { flex-direction: column; }
   button { width:100%; font-size:16px; padding:12px; }
 }
 </style>
 </head>
 <body>
 
-<h2>Edit Your Wish ✏️</h2>
+<div class="hero">
+  <div class="hero-card">
+    <div class="eyebrow">Step 3 of 4 · Fine tune the copy</div>
+    <h2>Edit your wish</h2>
+    <p>Tap the highlighted text in the preview to refine names, messages, and the final greeting before saving.</p>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Progress</span><span>75%</span></div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+    </div>
+  </div>
+</div>
+
 <div id="preview"></div>
-<button onclick="finish()">Finish ✅</button>
+<div class="actions">
+  <button class="secondary" onclick="location.href='form.html?template=' + encodeURIComponent((JSON.parse(localStorage.getItem('userData')) || {}).template || '')">Back</button>
+  <button onclick="finish()">Save wish →</button>
+</div>
 
 <script>
 const data = JSON.parse(localStorage.getItem("userData"));
