@@ -98,15 +98,26 @@ h2 {
 
 #preview {
   width: min(100%, 960px);
+  margin: 24px auto 0;
   padding: 24px 18px;
   border-radius: 30px;
   background: rgba(255,255,255,0.68);
   backdrop-filter: blur(12px);
   box-shadow: 0 20px 60px rgba(90, 42, 0, 0.14);
-  text-align:center;
+  text-align: center;
   transition: transform 0.24s ease;
   border: 1px solid rgba(255,255,255,0.72);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
+
+#preview > * {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 #preview:hover { transform: translateY(-2px); }
 
 [contenteditable]{
@@ -126,7 +137,6 @@ h2 {
 }
 
 button{
-  margin-top:20px;
   background: linear-gradient(135deg,#e85d04,#fb8500);
   padding:14px 30px;
   border-radius:16px;
@@ -145,6 +155,7 @@ button:hover { transform: translateY(-3px); opacity:0.95; }
   display:flex;
   gap:12px;
   justify-content:flex-end;
+  margin-top: 24px;
 }
 
 .secondary {
@@ -152,6 +163,7 @@ button:hover { transform: translateY(-3px); opacity:0.95; }
   color: var(--text);
   border: 1px solid rgba(31,41,55,0.08);
   box-shadow: none;
+  padding: 12px 24px;
 }
 
 @media (max-width:860px){
