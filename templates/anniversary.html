@@ -4,30 +4,43 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Anniversary Wish</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Poppins',sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;background:linear-gradient(135deg,#a1c4fd,#c2e9fb);padding:15px;}
-.card{background:#fff;padding:35px 25px;border-radius:25px;max-width:450px;width:100%;text-align:center;box-shadow:0 15px 50px rgba(0,0,0,0.2);overflow:hidden;animation:slideIn 1s ease forwards;}
-h1{font-size:clamp(28px,6vw,36px);color:#0077b6;margin-bottom:10px;animation:pulse 2s infinite;line-height:1.2;}
-.years{font-size:clamp(20px,4vw,28px);font-weight:700;color:#0096c7;margin:10px 0 20px;line-height:1.3;}
-.message-box{background:linear-gradient(135deg,#e0f7fa,#b2ebf2);border-left:6px solid #0077b6;padding:15px;border-radius:15px;margin:15px 0;font-size:clamp(14px,3vw,16px);color:#006064;line-height:1.6;word-wrap:break-word;}
-.highlight{background:#e1f5fe;padding:12px;border-radius:12px;margin-top:15px;font-size:clamp(13px,2.5vw,14px);font-weight:500;color:#01579b;box-shadow:0 4px 15px rgba(0,0,0,0.05);transform:rotate(-1deg);}
-.quote{font-size:clamp(12px,2vw,14px);color:#777;margin-top:18px;font-style:italic;}
-.footer{margin-top:20px;font-size:clamp(13px,2vw,15px);font-weight:600;color:#333;}
-@keyframes slideIn{0%{opacity:0;transform:translateY(30px) scale(0.95);}100%{opacity:1;transform:translateY(0) scale(1);}}
-@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
-@media(max-width:480px){.card{padding:25px 15px;}h1{font-size:28px;}.years{font-size:20px;}.message-box{font-size:14px;}}
+:root{--ink:#1f2733;--muted:#5b697d;--brand:#0b6aa8;--paper:rgba(255,255,255,0.82);}
+body{min-height:100vh;display:grid;place-items:center;padding:18px;font-family:'Manrope',sans-serif;background:radial-gradient(circle at top left,rgba(255,255,255,0.3),transparent 28%),radial-gradient(circle at bottom right,rgba(11,106,168,0.18),transparent 30%),linear-gradient(135deg,#d6ecff 0%,#c0e3ff 50%,#f3fbff 100%);}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.2) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.12) 1px,transparent 1px);background-size:36px 36px;opacity:.45;}
+.card{width:min(100%,460px);padding:18px;border-radius:32px;background:rgba(255,255,255,0.24);backdrop-filter:blur(18px);box-shadow:0 28px 80px rgba(0,67,120,0.2);overflow:hidden;animation:slideIn .9s ease both;position:relative;}
+.card::before,.card::after{content:"";position:absolute;border-radius:50%;pointer-events:none;}
+.card::before{inset:-70px auto auto -80px;width:180px;height:180px;background:rgba(255,255,255,0.25);}
+.card::after{inset:auto -60px -80px auto;width:180px;height:180px;background:rgba(255,255,255,0.16);}
+.surface{position:relative;z-index:1;padding:30px 24px 24px;border-radius:26px;background:var(--paper);border:1px solid rgba(255,255,255,0.72);text-align:center;}
+.chip{display:inline-flex;padding:8px 12px;border-radius:999px;background:rgba(11,106,168,0.1);color:#0b5c92;font-size:.82rem;font-weight:800;letter-spacing:.02em;}
+h1{margin:16px 0 10px;font-family:'Playfair Display',serif;font-size:clamp(30px,7vw,42px);line-height:1;color:var(--ink);}
+.subtitle{color:var(--muted);font-size:.98rem;line-height:1.6;}
+.years{margin:18px auto 16px;padding:14px 16px;border-radius:18px;background:linear-gradient(135deg,#e8f5ff,#d9f0ff);color:#0c5f94;font-size:clamp(18px,4vw,26px);font-weight:900;line-height:1.3;box-shadow:inset 0 0 0 1px rgba(255,255,255,.55);}
+.message-box{padding:18px;border-radius:20px;background:linear-gradient(180deg,#f2fbff,#e4f5ff);border:1px solid rgba(11,106,168,0.12);border-left:6px solid var(--brand);color:#22475f;line-height:1.75;font-size:clamp(14px,3vw,16px);text-align:left;word-wrap:break-word;}
+.highlight{margin-top:16px;padding:14px 15px;border-radius:16px;background:linear-gradient(135deg,rgba(11,106,168,0.12),rgba(166,221,255,0.24));color:#0c5f94;font-weight:800;font-size:clamp(13px,2.6vw,15px);}
+.quote{margin-top:16px;color:#5d6e7f;font-size:clamp(12px,2vw,14px);font-style:italic;line-height:1.5;}
+.footer{margin-top:18px;color:var(--ink);font-size:clamp(13px,2.2vw,15px);font-weight:800;}
+@keyframes slideIn{0%{opacity:0;transform:translateY(28px) scale(.97);}100%{opacity:1;transform:translateY(0) scale(1);}}
+@media(max-width:480px){.card{padding:12px;border-radius:28px;}.surface{padding:24px 16px 18px;}.years{font-size:19px;}}
 </style>
 </head>
 <body>
 <div class="card">
-<h1>💖Happy Anniversary, {{name}}!💖</h1>
-<div class="years">Celebrating{{years}}'th wonderful years together 🥂</div>
+<div class="surface">
+<div class="chip">💖 Anniversary celebration</div>
+<h1>Happy Anniversary, {{name}}!</h1>
+<div class="subtitle">A refined, romantic design for celebrating another beautiful year together.</div>
+<div class="years">Celebrating {{years}} wonderful years together 🥂</div>
 <div class="message-box">{{message}}</div>
-<div class="highlight">🌹 May our love continue to grow stronger every day! 🌹</div>
+<div class="highlight">May your love continue to grow stronger, softer, and brighter every day.</div>
 <div class="quote">"A successful marriage requires falling in love many times, always with the same person."</div>
 <div class="footer">~ {{from}} ❤️</div>
+</div>
 </div>
 </body>
 </html>
