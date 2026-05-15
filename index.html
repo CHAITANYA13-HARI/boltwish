@@ -60,9 +60,10 @@ body::before {
 .page {
   position: relative;
   z-index: 1;
-  width: min(1180px, calc(100% - 32px));
+  max-width: 1180px;
+  width: 100%;
   margin: 0 auto;
-  padding: 20px 0 36px;
+  padding: 20px;
 }
 
 .topbar {
@@ -124,6 +125,9 @@ img, svg { max-width: 100%; height: auto; display: block; }
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.5);
   box-shadow: var(--shadow);
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0; /* prevent flex/grid overflow on small screens */
 }
 
 .hero-card {
@@ -170,6 +174,9 @@ img, svg { max-width: 100%; height: auto; display: block; }
   font-size: 1.03rem;
   line-height: 1.7;
 }
+
+/* ensure children can shrink inside the grid */
+.hero > * { min-width: 0; }
 
 .actions {
   display: flex;
@@ -343,6 +350,8 @@ img, svg { max-width: 100%; height: auto; display: block; }
   flex-direction: column;
   gap: 10px;
   min-height: 150px;
+  word-wrap: break-word;
+  overflow: hidden;
 }
 
 .template-card strong {
@@ -442,7 +451,7 @@ img, svg { max-width: 100%; height: auto; display: block; }
       <div class="stats">
         <div class="stat"><strong>8</strong><span>TEMPLATES</span></div>
         <div class="stat"><strong>4</strong><span>SIMPLE STEPS</span></div>
-        <div class="stat"><strong>1</strong><span>shareable link</span></div>
+        <div class="stat"><strong>1</strong><span>Shareable Link</span></div>
       </div>
     </div>
 
