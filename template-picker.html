@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="brand-mark.svg">
+  <meta name="theme-color" content="#e85d04">
 <style>
 :root {
   --bg: #fff7f0;
@@ -79,6 +82,13 @@ body::before {
   box-shadow: 0 12px 28px rgba(232, 93, 4, 0.28);
   font-size: 1.15rem;
 }
+
+.brand-mark img { width: 100%; height: 100%; display: block; }
+
+/* Responsive helper rules */
+img, svg { max-width: 100%; height: auto; display: block; }
+.page, .container, .shell { box-sizing: border-box; padding-left: 16px; padding-right: 16px; }
+.action-btn { min-width: 0; }
 
 .brand-copy strong {
   display: block;
@@ -330,25 +340,24 @@ body::before {
 <div class="page">
   <div class="topbar">
     <div class="brand">
-      <div class="brand-mark">✦</div>
+      <div class="brand-mark"><img src="brand-mark.svg" alt="Boltwish logo"></div>
       <div class="brand-copy">
         <strong>Boltwish</strong>
         <span>Pick your template</span>
       </div>
     </div>
-    <button class="action-btn action-secondary" onclick="location.href='index.html'">Back</button>
+    
   </div>
 
   <section class="hero">
     <div class="hero-card">
       <div class="eyebrow">Step 1 of 4 · Choose style</div>
       <h1>Choose a template that fits the moment.</h1>
-      <p>Select the look first, then we’ll ask for only the details that matter for that occasion.</p>
       <div class="actions">
         <a class="action-btn action-primary" href="#templates">Pick a Template</a>
         <button class="action-btn action-secondary" onclick="location.href='index.html'">Back to welcome</button>
       </div>
-      <div class="hero-note">Browse the cards below and choose the one that matches your occasion. Each template opens a matching form with the right fields.</div>
+      <div class="hero-note">Browse the cards below and choose the one that matches your occasion.</div>
     </div>
 
     <aside class="side-card">
@@ -361,7 +370,7 @@ body::before {
     <div class="templates-head">
       <div>
         <h2>Pick a template</h2>
-        <p>Choose a design made for the occasion. The next page will adapt the fields automatically.</p>
+        <p>Choose a design made for the occasion.</p>
       </div>
     </div>
 

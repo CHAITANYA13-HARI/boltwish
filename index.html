@@ -12,6 +12,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <link rel="prefetch" href="form.html">
 
+  <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="brand-mark.svg">
+  <meta name="theme-color" content="#e85d04">
+
 <style>
 :root {
   --bg: #fff7f0;
@@ -86,6 +90,13 @@ body::before {
   box-shadow: 0 12px 28px rgba(232, 93, 4, 0.28);
   font-size: 1.15rem;
 }
+
+.brand-mark img { width: 100%; height: 100%; display: block; }
+
+/* Responsive helper rules */
+img, svg { max-width: 100%; height: auto; display: block; }
+.page, .container, .shell { box-sizing: border-box; padding-left: 16px; padding-right: 16px; }
+.action-btn { min-width: 0; }
 
 .brand-copy strong {
   display: block;
@@ -409,7 +420,7 @@ body::before {
 <div class="page">
   <div class="topbar">
     <div class="brand">
-      <div class="brand-mark">✦</div>
+      <div class="brand-mark"><img src="brand-mark.svg" alt="Boltwish logo"></div>
       <div class="brand-copy">
         <strong>Boltwish</strong>
         <span>Beautiful wishes, made fast</span>
@@ -429,8 +440,8 @@ body::before {
       </div>
 
       <div class="stats">
-        <div class="stat"><strong>8</strong><span>occasions ready</span></div>
-        <div class="stat"><strong>4</strong><span>step flow</span></div>
+        <div class="stat"><strong>8</strong><span>TEMPLATES</span></div>
+        <div class="stat"><strong>4</strong><span>SIMPLE STEPS</span></div>
         <div class="stat"><strong>1</strong><span>shareable link</span></div>
       </div>
     </div>
