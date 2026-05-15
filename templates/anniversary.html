@@ -17,6 +17,17 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;background-im
 .card::before{inset:-70px auto auto -80px;width:180px;height:180px;background:rgba(255,255,255,0.25);}
 .card::after{inset:auto -60px -80px auto;width:180px;height:180px;background:rgba(255,255,255,0.16);}
 .surface{position:relative;z-index:1;padding:30px 24px 24px;border-radius:26px;background:var(--paper);border:1px solid rgba(255,255,255,0.72);text-align:center;}
+
+.decor{position:absolute;inset:0;pointer-events:none;z-index:0}
+.decor span{position:absolute;font-size:30px;opacity:0;transform:translateY(8px) scale(.95) rotate(0deg);animation:decorate 4.6s ease-in-out infinite}
+.decor span:nth-child(1){left:14%;top:20%;animation-delay:0s}
+.decor span:nth-child(2){left:82%;top:14%;animation-delay:.7s}
+.decor span:nth-child(3){left:58%;top:8%;animation-delay:1.4s}
+
+@keyframes decorate{0%{opacity:0;transform:translateY(12px) scale(.9) rotate(-4deg)}14%{opacity:1;transform:translateY(0) scale(1) rotate(0deg)}68%{opacity:1;transform:translateY(-12px) scale(1.05) rotate(6deg)}100%{opacity:0;transform:translateY(-28px) scale(.9) rotate(12deg)}}
+
+.highlight{animation:glow 4s ease-in-out infinite}
+@keyframes glow{0%{box-shadow:0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 14px 40px rgba(11,106,168,0.06)}100%{box-shadow:0 0 0 rgba(0,0,0,0)}}
 .chip{display:inline-flex;padding:8px 12px;border-radius:999px;background:rgba(11,106,168,0.1);color:#0b5c92;font-size:.82rem;font-weight:800;letter-spacing:.02em;}
 h1{margin:16px 0 10px;font-family:'Playfair Display',serif;font-size:clamp(30px,7vw,42px);line-height:1;color:var(--ink);}
 .subtitle{color:var(--muted);font-size:.98rem;line-height:1.6;}
@@ -31,15 +42,48 @@ h1{margin:16px 0 10px;font-family:'Playfair Display',serif;font-size:clamp(30px,
 </head>
 <body>
 <div class="card">
+<div class="decor"><span>🥂</span><span>💖</span><span>✨</span></div>
 <div class="surface">
-<div class="chip">💖 Anniversary celebration</div>
-<h1>Happy Anniversary, {{name}}!</h1>
-<div class="subtitle">A refined, romantic design for celebrating another beautiful year together.</div>
-<div class="years">Celebrating {{years}} wonderful years together 🥂</div>
-<div class="message-box">{{message}}</div>
-<div class="highlight">May your love continue to grow stronger, softer, and brighter every day.</div>
-<div class="quote">"A successful marriage requires falling in love many times, always with the same person."</div>
-<div class="footer">~ {{from}} ❤️</div>
+<div class="chip">💖 Anniversary Celebration</div>
+
+<h1>Happy Anniversary, {{name}}! ✨</h1>
+
+<div class="subtitle">
+  A beautiful celebration of love, togetherness, and the countless memories shared between you and {{from}}.
+</div>
+
+<div class="years">
+  Celebrating {{years}} Amazing Years Together 🥂
+</div>
+
+<!-- Your message -->
+<div class="message-box">
+  Dear {{name}},<br><br>
+  Every love story is special, but yours is truly unforgettable. 
+  Through every smile, every challenge, and every precious moment, 
+  your bond has only grown stronger and more beautiful with time.<br><br>
+  May this anniversary remind you both of the love that brought you together 
+  and the dreams that still lie ahead. 
+  May your hearts always beat as one, filled with endless understanding, 
+  happiness, trust, and affection 💙<br><br>
+  Wishing you countless more years of laughter, romance, adventure, 
+  and magical memories together.
+  <br> 
+  {{message}}
+</div>
+
+
+<div class="highlight">
+  ✨ True love is not measured in years, but in the beautiful moments shared every single day.
+</div>
+
+<div class="quote">
+  "In all the world, there is no heart for me like yours."
+</div>
+
+<div class="footer">
+  With all my love,<br>
+  {{from}} ❤️
 </div>
 </div>
 </body>

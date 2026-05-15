@@ -17,6 +17,17 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;background-im
 .card::before{inset:-70px auto auto -80px;width:180px;height:180px;background:rgba(255,255,255,0.25);}
 .card::after{inset:auto -60px -80px auto;width:180px;height:180px;background:rgba(255,255,255,0.16);}
 .surface{position:relative;z-index:1;padding:30px 24px 24px;border-radius:26px;background:var(--paper);border:1px solid rgba(255,255,255,0.72);text-align:center;}
+
+.decor{position:absolute;inset:0;pointer-events:none;z-index:0}
+.decor span{position:absolute;font-size:32px;opacity:0;transform:translateY(8px) scale(.95) rotate(0deg);animation:decorate 4.8s ease-in-out infinite}
+.decor span:nth-child(1){left:18%;top:18%;animation-delay:0s}
+.decor span:nth-child(2){left:72%;top:12%;animation-delay:.9s}
+.decor span:nth-child(3){left:50%;top:6%;animation-delay:1.8s}
+
+@keyframes decorate{0%{opacity:0;transform:translateY(12px) scale(.9) rotate(-6deg)}12%{opacity:1;transform:translateY(0) scale(1) rotate(0deg)}66%{opacity:1;transform:translateY(-12px) scale(1.08) rotate(8deg)}100%{opacity:0;transform:translateY(-30px) scale(.9) rotate(16deg)}}
+
+.highlight{animation:glow 4.4s ease-in-out infinite}
+@keyframes glow{0%{box-shadow:0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 14px 44px rgba(194,24,91,0.06)}100%{box-shadow:0 0 0 rgba(0,0,0,0)}}
 .chip{display:inline-flex;padding:8px 12px;border-radius:999px;background:rgba(194,24,91,0.1);color:#ad154f;font-size:.82rem;font-weight:800;letter-spacing:.02em;}
 h1{margin:16px 0 10px;font-family:'Playfair Display',serif;font-size:clamp(30px,7vw,42px);line-height:1;color:var(--ink);}
 .subtitle{color:var(--muted);font-size:.98rem;line-height:1.6;}
@@ -30,14 +41,45 @@ h1{margin:16px 0 10px;font-family:'Playfair Display',serif;font-size:clamp(30px,
 </head>
 <body>
 <div class="card">
+<div class="decor"><span>❤️</span><span>💕</span><span>🌹</span></div>
 <div class="surface">
-<div class="chip">💖 Love note</div>
-<h1>To My Love, {{name}}</h1>
-<div class="subtitle">A softer, more elegant card for romantic wishes and personal messages.</div>
-<div class="message-box">{{message}}</div>
-<div class="highlight">Every moment with you feels like a dream come true.</div>
-<div class="quote">"Love is composed of a single soul inhabiting two bodies." – Aristotle</div>
-<div class="footer">~ {{from}} ❤️</div>
+<div class="chip">💖 Love Note</div>
+
+<h1>To My Love, {{name}} ❤️</h1>
+
+<div class="subtitle">
+  A heartfelt message crafted especially for you — filled with love, warmth, and every emotion words can hold.
+</div>
+
+<div class="message-box">
+  My Dearest {{name}},<br><br>
+
+  Loving you has been the most beautiful part of my life. 
+  Every moment spent with you feels magical, every smile of yours brightens my darkest days, 
+  and every heartbeat reminds me how lucky I am to have you.<br><br>
+
+  You are my comfort, my happiness, my safe place, and my greatest adventure all at once. 
+  No matter where life takes us, my heart will always choose you — again and again 💕<br><br>
+
+  Thank you for your love, your care, your patience, and for making ordinary moments feel extraordinary. 
+  I promise to cherish you, support you, and love you more deeply with every passing day.<br><br>
+
+  Forever yours, today and always.
+
+  <br>
+  {{message}}
+</div>
+
+<div class="highlight">
+  ✨ You are not just my favorite person — you are my favorite feeling.
+</div>
+
+<div class="quote">
+  "In your smile, I see something more beautiful than the stars."
+</div>
+
+<div class="footer">
+  ~ {{from}} ❤️
 </div>
 </div>
 </body>
