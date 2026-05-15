@@ -166,19 +166,34 @@ input:focus,textarea:focus {
 
 textarea { resize:none; min-height: 108px; }
 
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
 button {
-  width:100%;
+  flex: 1;
   padding:15px 16px;
-  margin-top:20px;
   border:none;
   border-radius:16px;
-  background: linear-gradient(135deg, #e85d04, #fb8500);
   color:white;
   font-size:16px;
   font-weight:800;
   cursor:pointer;
   transition:transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+button.primary {
+  background: linear-gradient(135deg, #e85d04, #fb8500);
   box-shadow: 0 16px 30px rgba(232,93,4,0.26);
+}
+
+button.secondary {
+  background: rgba(255,255,255,0.82);
+  color: var(--text);
+  border: 1px solid rgba(31,41,55,0.08);
+  box-shadow: none;
 }
 
 button:hover { transform: translateY(-2px); }
@@ -225,7 +240,10 @@ button:hover { transform: translateY(-2px); }
     <p>Keep it short and personal. You can refine the wording on the next step.</p>
     <form id="form">
       <div id="dynamicFields"></div>
-      <button type="submit">Preview wish →</button>
+      <div class="form-actions">
+        <button type="button" class="secondary" onclick="location.href='template-picker.html'">← Back</button>
+        <button type="submit" class="primary">Preview wish →</button>
+      </div>
     </form>
   </section>
 </div>
