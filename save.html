@@ -144,6 +144,23 @@ body {
   margin-top: 24px;
 }
 
+/* Share panel */
+.share-panel-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.36);display:none;align-items:center;justify-content:center;padding:20px;z-index:1200}
+.share-panel{width:100%;max-width:520px;background:linear-gradient(180deg,#ffffff, #fffaf6);border-radius:20px;padding:18px;border:1px solid rgba(15,23,42,0.04);box-shadow:0 20px 50px rgba(15,23,42,0.12)}
+.share-panel h3{margin:0 0 10px;font-size:18px}
+.share-grid{display:flex;gap:10px;flex-wrap:wrap}
+.share-btn{flex:1 1 48%;display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;background:#fff;box-shadow:0 10px 20px rgba(2,6,23,0.06)}
+.share-btn .icon{width:28px;height:28px;flex:0 0 28px;border-radius:8px;display:inline-grid;place-items:center;color:white}
+.share-btn.whatsapp{background:linear-gradient(90deg,#25D366,#128C7E);color:white}
+.share-btn.snapchat{background:linear-gradient(90deg,#FFFC00,#FFDD00);color:#111}
+.share-btn.instagram{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:white}
+.share-btn.twitter{background:linear-gradient(90deg,#1DA1F2,#0d8de6);color:white}
+.share-btn.copy{background:linear-gradient(90deg,#f3f4f6,#ffffff);color:var(--text);border:1px solid rgba(31,41,55,0.06)}
+.share-actions{display:flex;gap:10px;margin-top:12px}
+.share-actions button{flex:1;padding:12px;border-radius:12px;border:none;cursor:pointer}
+.share-close{background:transparent;border:1px solid rgba(15,23,42,0.06)}
+
+
 button {
   display: none;
   padding: 14px 24px;
@@ -215,6 +232,32 @@ button.primary:hover {
     <button id="openBtn" class="primary">🚀 Open Your Wish</button>
     <button id="shareBtn" class="secondary">📤 Share Your Wish</button>
   </div>
+
+  <!-- Share panel -->
+  <div id="shareOverlay" class="share-panel-overlay" aria-hidden="true">
+    <div class="share-panel" role="dialog" aria-modal="true">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3>Share your wish</h3>
+        <button id="shareClose" class="share-close">Close</button>
+      </div>
+
+      <div id="shareHint" style="color:var(--muted);font-size:0.95rem;margin-bottom:8px">Share a beautiful message with a link directly to your wish.</div>
+
+      <div class="share-grid">
+        <button id="shareWhatsApp" class="share-btn whatsapp"><span class="icon">📱</span>WhatsApp</button>
+        <button id="shareSnapchat" class="share-btn snapchat"><span class="icon">👻</span>Snapchat</button>
+        <button id="shareInstagram" class="share-btn instagram"><span class="icon">📷</span>Instagram</button>
+        <button id="shareTwitter" class="share-btn twitter"><span class="icon">🐦</span>Twitter</button>
+        <button id="shareCopy" class="share-btn copy"><span class="icon">📋</span>Copy Message</button>
+        <button id="shareNative" class="share-btn copy"><span class="icon">🔗</span>Native Share</button>
+      </div>
+
+      <div class="share-actions">
+        <button id="shareCloseBottom" class="share-close">Close</button>
+        <button id="shareDone" class="primary">Done</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -267,21 +310,96 @@ addDoc(collection(db,"users"),{...data,username,timestamp:serverTimestamp()})
   const openBtn = document.getElementById("openBtn");
   openBtn.style.display="block";
   openBtn.onclick = ()=> window.open(url,"_blank");
-
-  // Share button
+  // Share button — open a styled share panel with per-app handlers
   const shareBtn = document.getElementById("shareBtn");
-  shareBtn.style.display="block";
-  shareBtn.onclick = async ()=>{
-    try {
+  shareBtn.style.display = "block";
+
+  const shareOverlay = document.getElementById('shareOverlay');
+  const shareClose = document.getElementById('shareClose');
+  const shareCloseBottom = document.getElementById('shareCloseBottom');
+  const shareDone = document.getElementById('shareDone');
+  const shareWhatsApp = document.getElementById('shareWhatsApp');
+  const shareSnapchat = document.getElementById('shareSnapchat');
+  const shareInstagram = document.getElementById('shareInstagram');
+  const shareTwitter = document.getElementById('shareTwitter');
+  const shareCopy = document.getElementById('shareCopy');
+  const shareNative = document.getElementById('shareNative');
+
+  const nameLabel = data.name || data.babyName || data.bride || data.groom || data.parentName || '';
+  const sender = data.from || 'Someone';
+  const templateLabel = data.template ? data.template.charAt(0).toUpperCase() + data.template.slice(1) : 'Wish';
+  const fullMsg = (data.message || '').trim();
+  const excerpt = fullMsg ? (fullMsg.length > 120 ? fullMsg.slice(0,117) + '…' : fullMsg) : '';
+  const shareMessage = excerpt
+    ? `Hey ${nameLabel || 'there'} \n\nOpen this link to a beautiful wish ${sender} created for You: ${url}`
+    : `${sender} created a ${templateLabel}${nameLabel?` for ${nameLabel}`:''} on BoltWish — take a look: ${url}`;
+
+  function openShare(){ shareOverlay.style.display = 'flex'; shareOverlay.setAttribute('aria-hidden','false'); }
+  function closeShare(){ shareOverlay.style.display = 'none'; shareOverlay.setAttribute('aria-hidden','true'); }
+
+  shareBtn.onclick = ()=> openShare();
+  shareClose.onclick = closeShare;
+  shareCloseBottom.onclick = closeShare;
+  shareDone.onclick = ()=> closeShare();
+
+  shareWhatsApp.onclick = ()=>{
+    const w = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+    window.open(w,'_blank');
+  };
+
+  shareTwitter.onclick = ()=>{
+    const t = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`;
+    window.open(t,'_blank');
+  };
+
+  shareInstagram.onclick = async ()=>{
+    try{
       if(navigator.share){
-        await navigator.share({title:"My Wish 🎉",text:"Check out my wish!",url});
+        await navigator.share({text: shareMessage, url});
       } else {
-        await navigator.clipboard.writeText(url);
-        alert("Link copied! 📋");
+        await navigator.clipboard.writeText(shareMessage);
+        alert('Message copied — open Instagram and paste.');
+        window.open('https://www.instagram.com/','_blank');
       }
-    } catch(e){
-      await navigator.clipboard.writeText(url);
-      alert("Unable to share automatically. URL copied! 📋");
+    }catch(e){
+      await navigator.clipboard.writeText(shareMessage);
+      alert('Message copied — open Instagram and paste.');
+      window.open('https://www.instagram.com/','_blank');
+    }
+  };
+
+  shareSnapchat.onclick = async ()=>{
+    try{
+      if(navigator.share){
+        await navigator.share({text: shareMessage, url});
+      } else {
+        await navigator.clipboard.writeText(shareMessage);
+        alert('Message copied — open Snapchat and paste.');
+        window.open('https://www.snapchat.com/','_blank');
+      }
+    }catch(e){
+      await navigator.clipboard.writeText(shareMessage);
+      alert('Message copied — open Snapchat and paste.');
+      window.open('https://www.snapchat.com/','_blank');
+    }
+  };
+
+  shareCopy.onclick = async ()=>{
+    await navigator.clipboard.writeText(shareMessage);
+    alert('Message copied to clipboard 📋');
+  };
+
+  shareNative.onclick = async ()=>{
+    try{
+      if(navigator.share){
+        await navigator.share({title:`${templateLabel} on BoltWish`, text: shareMessage, url});
+      } else {
+        await navigator.clipboard.writeText(shareMessage);
+        alert('No native share available — message copied 📋');
+      }
+    }catch(e){
+      await navigator.clipboard.writeText(shareMessage);
+      alert('Share failed — message copied 📋');
     }
   };
 

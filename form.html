@@ -265,14 +265,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
   };
 
   const labels = {
-    name:"Name",
+    name:"Recipient's Name",
     age:"Age",
     years:"Years Together",
     message:"Message",
-    from:"From",
+    from:"Your Name",
     achievement:"Achievement",
     babyName:"Baby Name",
-    parentName:"Parent Name",
+    parentName:"Parent(s) Name",
     bride:"Bride Name",
     groom:"Groom Name"
   };
@@ -284,12 +284,21 @@ document.addEventListener("DOMContentLoaded", ()=>{
   }
 
   fields[template].forEach(f=>{
+    // Build clearer placeholders per field
     if(f==="message"){
-      container.innerHTML += `<label>${labels[f]}</label><textarea id="${f}" required maxlength="300" placeholder="Max 300 characters"></textarea>`;
+      container.innerHTML += `<label>${labels[f]}</label><textarea id="${f}" required maxlength="300" placeholder="Write a short personal message (max 300 characters)"></textarea>`;
     } else if(f==="age" || f==="years") {
-      container.innerHTML += `<label>${labels[f]}</label><input type="number" id="${f}" required min="0" max="150" placeholder="Enter a number">`;
+      container.innerHTML += `<label>${labels[f]}</label><input type="number" id="${f}" required min="0" max="150" placeholder="Enter a number (e.g. 30)">`;
     } else {
-      container.innerHTML += `<label>${labels[f]}</label><input type="text" id="${f}" required maxlength="20" placeholder="Max 20 characters">`;
+      // Descriptive placeholders for name-like fields and others
+      let ph = "Max 20 characters";
+      if(f==="name") ph = "e.g., John Smith";
+      if(f==="from") ph = "e.g., Alex";
+      if(f==="babyName") ph = "e.g., Baby Liam";
+      if(f==="parentName") ph = "e.g., Sarah & Tom";
+      if(f==="achievement") ph = "e.g., New job, Graduation";
+      if(f==="bride" || f==="groom") ph = "e.g., Jane";
+      container.innerHTML += `<label>${labels[f]}</label><input type="text" id="${f}" required maxlength="50" placeholder="${ph}">`;
     }
   });
 
@@ -309,9 +318,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
       data[f] = val;
     });
 
-    // Username is first word of name/baby/bride/etc
-    const firstField = data.name || data.babyName || data.bride || data.groom || data.parentName;
-    data.username = firstField.split(" ")[0].toLowerCase();
+    // Username is first word of name/baby/bride/etc (safe fallback)
+    const firstField = data.name || data.babyName || data.bride || data.groom || data.parentName || "";
+    data.username = (firstField.split(" ")[0] || "").toLowerCase();
 
     data.template = template;
     localStorage.setItem("userData", JSON.stringify(data));
