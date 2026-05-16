@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -515,4 +516,523 @@ renderLastWish();
 </script>
 
 </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Boltwish | Create a Wish</title>
+<meta name="description" content="Create and share a beautiful wish card in a few steps.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="prefetch" href="form.html">
+
+  <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="brand-mark.svg">
+  <meta name="theme-color" content="#e85d04">
+
+<style>
+:root {
+  --bg: #fff7f0;
+  --bg-2: #ffe4cf;
+  --panel: rgba(255, 255, 255, 0.74);
+  --panel-strong: rgba(255, 255, 255, 0.92);
+  --text: #1f2937;
+  --muted: #6b7280;
+  --brand: #e85d04;
+  --brand-2: #fb8500;
+  --accent: #0f766e;
+  --line: rgba(31, 41, 55, 0.09);
+  --shadow: 0 24px 70px rgba(90, 42, 0, 0.15);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(251, 133, 0, 0.2), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.14), transparent 28%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.35), transparent 85%);
+  opacity: 0.55;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  box-shadow: 0 12px 28px rgba(232, 93, 4, 0.28);
+  font-size: 1.15rem;
+}
+
+.brand-mark img { width: 100%; height: 100%; display: block; }
+
+/* Responsive helper rules */
+img, svg { max-width: 100%; height: auto; display: block; }
+.page, .container, .shell { box-sizing: border-box; padding-left: 16px; padding-right: 16px; }
+.action-btn { min-width: 0; }
+
+.brand-copy strong {
+  display: block;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.brand-copy span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 22px;
+  align-items: stretch;
+  margin-top: 12px;
+}
+
+.hero-card,
+.side-card,
+.template-card {
+  background: var(--panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.5);
+  box-shadow: var(--shadow);
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0; /* prevent flex/grid overflow on small screens */
+}
+
+.hero-card {
+  border-radius: 32px;
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -70px -80px auto;
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251,133,0,0.22), transparent 65%);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: rgba(232, 93, 4, 0.08);
+  color: var(--brand);
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.hero h1 {
+  margin: 16px 0 12px;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 5vw, 4.3rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.hero p {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--muted);
+  font-size: 1.03rem;
+  line-height: 1.7;
+}
+
+/* ensure children can shrink inside the grid */
+.hero > * { min-width: 0; }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.action-btn,
+.template-card {
+  cursor: pointer;
+  border: none;
+  transition: transform 0.24s ease, box-shadow 0.24s ease, background 0.24s ease;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.action-primary {
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color: #fff;
+  box-shadow: 0 16px 30px rgba(232, 93, 4, 0.24);
+}
+
+.action-secondary {
+  background: rgba(255,255,255,0.75);
+  color: var(--text);
+  border: 1px solid rgba(31,41,55,0.08);
+}
+
+.action-btn:hover,
+.template-card:hover {
+  transform: translateY(-4px);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.stat {
+  padding: 16px 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(31,41,55,0.05);
+}
+
+.stat strong {
+  display: block;
+  font-size: 1.4rem;
+}
+
+.stat span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.side-card {
+  border-radius: 28px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.recent-link {
+  padding: 18px;
+  border-radius: 22px;
+  background: var(--panel-strong);
+  border: 1px solid rgba(31,41,55,0.06);
+}
+
+.recent-link h2,
+.templates-head h2 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.recent-link p {
+  margin: 8px 0 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.link-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(15, 118, 110, 0.06);
+  border: 1px solid rgba(15, 118, 110, 0.08);
+}
+
+.link-text {
+  min-width: 0;
+  color: var(--text);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.mini-btn {
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(31,41,55,0.08);
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mini-btn.primary {
+  background: linear-gradient(135deg, rgba(232,93,4,0.1), rgba(251,133,0,0.18));
+  color: var(--brand);
+}
+
+.templates-section {
+  margin-top: 28px;
+  padding-bottom: 8px;
+}
+
+.templates-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.templates-head p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.template-card {
+  border-radius: 24px;
+  padding: 20px;
+  text-align: left;
+  background: rgba(255,255,255,0.72);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 150px;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+.template-card strong {
+  font-size: 1.06rem;
+}
+
+.template-card span {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.template-card .chip {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.ghost-card {
+  border-style: dashed;
+  opacity: 0.92;
+}
+
+.footer {
+  margin-top: 24px;
+  padding: 18px 2px 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.92rem;
+}
+
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+@media (max-width: 920px) {
+  .hero { grid-template-columns: 1fr; }
+  .page { width: min(100% - 24px, 1140px); }
+}
+
+@media (max-width: 768px) {
+  .page { width: min(100% - 20px, 100%); padding: 16px 0 24px; }
+  .topbar { flex-direction: column; align-items: stretch; gap: 12px; }
+  .topbar .brand { flex: 1; }
+  .topbar button { width: 100%; }
+  .hero { gap: 16px; }
+  .hero-card, .side-card { padding: 20px; border-radius: 24px; }
+  .hero h1 { font-size: 1.8rem; }
+  .stats { grid-template-columns: 1fr; }
+  .link-box { flex-direction: column; align-items: stretch; }
+}
+
+@media (max-width: 480px) {
+  .page { width: 100%; padding: 12px 0 18px; }
+  .topbar { padding: 12px 0 8px; }
+  .brand-mark { width: 36px; height: 36px; font-size: 0.95rem; }
+  .brand-copy strong { font-size: 0.9rem; }
+  .brand-copy span { font-size: 0.8rem; }
+  .hero-card, .side-card { padding: 18px; }
+  .hero h1 { font-size: 1.4rem; line-height: 1; }
+  .hero p { font-size: 0.95rem; }
+  .actions { flex-direction: column; }
+  .action-btn { width: 100%; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><img src="brand-mark.svg" alt="Boltwish logo"></div>
+      <div class="brand-copy">
+        <strong>Boltwish</strong>
+        <span>Beautiful wishes, made fast</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-card">
+      <div class="eyebrow">Welcome</div>
+      <h1>Create a wish people actually want to open.</h1>
+      <p>Your last created wish stays on this device only, so you can open it again anytime.</p>
+
+      <div class="actions">
+        <button class="action-btn action-primary" onclick="startNewWish()">Create New Wish</button>
+        <button class="action-btn action-secondary" onclick="scrollToRecent()">View last wish</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><strong>8</strong><span>TEMPLATES</span></div>
+        <div class="stat"><strong>4</strong><span>SIMPLE STEPS</span></div>
+        <div class="stat"><strong>1</strong><span>Shareable Link</span></div>
+      </div>
+    </div>
+
+    <aside class="side-card">
+      <div class="recent-link" id="recentWishCard">
+        <h2>Last created wish</h2>
+        <p id="recentWishMeta">Your latest share link will appear here after you save one.</p>
+        <div class="link-box" id="recentWishLinkWrap" style="display:none;">
+          <div class="link-text" id="recentWishLinkText"></div>
+        </div>
+        <div class="link-actions" id="recentWishActions" style="display:none;">
+          <button class="mini-btn primary" id="openLastWishBtn">Open wish</button>
+          <button class="mini-btn" id="copyLastWishBtn">Copy link</button>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <div class="footer">Made with love <br>&copy;Team Boltwish</div>
+</div>
+
+<script>
+function startNewWish(){
+  localStorage.removeItem("selectedTemplate");
+  localStorage.removeItem("userData");
+  localStorage.removeItem("finalData");
+  location.href = "template-picker.html";
+}
+
+function scrollToRecent(){
+  document.getElementById("recentWishCard").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function copyText(value){
+  navigator.clipboard.writeText(value).catch(()=>{});
+}
+
+function renderLastWish(){
+  const link = localStorage.getItem("lastWishLink");
+  const meta = JSON.parse(localStorage.getItem("lastWishMeta") || "null");
+  const metaNode = document.getElementById("recentWishMeta");
+  const linkWrap = document.getElementById("recentWishLinkWrap");
+  const linkText = document.getElementById("recentWishLinkText");
+  const actions = document.getElementById("recentWishActions");
+
+  if(!link){
+    metaNode.textContent = "Your latest share link will appear here after you save one.";
+    return;
+  }
+
+  metaNode.textContent = meta ? `${meta.templateLabel || "Your last wish"} saved on this device.` : "Your latest wish is ready on this device.";
+  linkText.textContent = link;
+  linkWrap.style.display = "flex";
+  actions.style.display = "flex";
+
+  document.getElementById("openLastWishBtn").onclick = ()=> window.open(link, "_blank");
+  document.getElementById("copyLastWishBtn").onclick = ()=> copyText(link);
+}
+
+renderLastWish();
+</script>
+
+</body>
+>>>>>>> cef14ff (Add favicons to templates and inject into view.html)
 </html>

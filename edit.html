@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -274,4 +275,282 @@ load();
 </script>
 
 </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="brand-mark.svg">
+  <meta name="theme-color" content="#e85d04">
+<style>
+:root {
+  --text: #1f2937;
+  --muted: #6b7280;
+  --brand: #e85d04;
+  --accent: #0f766e;
+}
+
+* { box-sizing: border-box; }
+
+/* Responsive helper rules */
+img, svg { max-width: 100%; height: auto; display: block; }
+.container, .page, .shell { box-sizing: border-box; padding-left: 16px; padding-right: 16px; }
+.action-btn { min-width: 0; }
+
+body {
+  margin: 0;
+  font-family:'Manrope',sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(232,93,4,0.15), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(15,118,110,0.12), transparent 26%),
+    linear-gradient(180deg, #fffaf4 0%, #ffe7d8 100%);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  color:var(--text);
+  padding: 24px 16px 36px;
+}
+
+.hero {
+  width: min(100%, 960px);
+  margin-bottom: 18px;
+}
+
+.hero-card {
+  padding: 22px;
+  border-radius: 28px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: 0 24px 70px rgba(90, 42, 0, 0.13);
+  text-align: center;
+}
+
+.eyebrow {
+  display:inline-flex;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(232,93,4,0.08);
+  color: var(--brand);
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+h2 {
+  margin: 12px 0 8px;
+  font-size: clamp(1.6rem, 4vw, 2.3rem);
+}
+
+.hero-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.progress-wrap {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(232,93,4,0.08);
+}
+
+.progress-label {
+  display:flex;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.progress-bar {
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  background: rgba(31,41,55,0.08);
+  overflow:hidden;
+}
+
+.progress-fill {
+  width: 75%;
+  height:100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand), #2dd4bf);
+}
+
+#preview {
+  width: min(100%, 960px);
+  margin: 24px auto 0;
+    max-width: 100%; /* Changed to explicit max-width */
+  padding: 24px 18px;
+  border-radius: 30px;
+  background: rgba(255,255,255,0.68);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 60px rgba(90, 42, 0, 0.14);
+  text-align: center;
+  transition: transform 0.24s ease;
+  border: 1px solid rgba(255,255,255,0.72);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#preview > * {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#preview:hover { transform: translateY(-2px); }
+
+[contenteditable]{
+  border-bottom:2px dashed rgba(255,255,255,0.7);
+  padding:2px 6px;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  background: rgba(255,255,255,0.05);
+  border-radius:5px;
+  display:inline-block;
+  min-width: 50px;
+}
+[contenteditable]:focus{
+  outline:none;
+  border-color: rgba(232,93,4,0.8);
+  box-shadow:0 0 0 4px rgba(232,93,4,0.08);
+  background: rgba(255,255,255,0.15);
+}
+
+button{
+  background: linear-gradient(135deg,#e85d04,#fb8500);
+  padding:14px 30px;
+  border-radius:16px;
+  font-weight:800;
+  cursor:pointer;
+  color:white;
+  font-size:16px;
+  border:none;
+  box-shadow:0 16px 30px rgba(232,93,4,0.24);
+  transition: transform 0.24s ease, opacity 0.24s ease;
+}
+button:hover { transform: translateY(-3px); opacity:0.95; }
+
+.actions {
+  width: min(100%, 960px);
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  margin-top: 24px;
+}
+
+.secondary {
+  background: rgba(255,255,255,0.82);
+  color: var(--text);
+  border: 1px solid rgba(31,41,55,0.08);
+  box-shadow: none;
+  padding: 12px 24px;
+}
+
+@media (max-width:860px){
+  body { padding: 16px; }
+}
+
+@media (max-width:640px){
+  body { padding: 12px; }
+  .hero-card { padding: 18px; border-radius: 22px; }
+  .hero-card h2 { font-size: 1.6rem; }
+  #preview { padding: 18px 14px; }
+  .actions { width: calc(100% + 24px); margin: 20px -12px 0; padding: 16px 12px; gap: 8px; }
+  button { width: calc(50% - 4px); padding: 12px 10px; font-size: 14px; }
+}
+
+@media (max-width:480px){
+  body { padding: 8px; }
+  .hero-card { padding: 14px; border-radius: 20px; }
+  .hero-card h2 { font-size: 1.3rem; }
+  .eyebrow { font-size: 0.78rem; padding: 6px 10px; }
+  .hero-card p { font-size: 0.92rem; }
+  #preview { padding: 14px 10px; border-radius: 20px; }
+  .actions { width: 100%; margin: 16px 0 0; padding: 12px 0; flex-direction: column; }
+  button { width: 100%; font-size: 15px; padding: 10px; }
+  [contenteditable] { min-width: 30px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-card">
+    <div class="eyebrow">Step 3 of 4 · Fine tune the copy</div>
+    <h2>Edit your wish</h2>
+    <p>Tap the highlighted text in the preview to refine names, messages, and the final greeting before saving.</p>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Step 3 of 4</span><span>75%</span></div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="preview"></div>
+<div class="actions">
+  <button class="secondary" onclick="location.href='form.html?template=' + encodeURIComponent((JSON.parse(localStorage.getItem('userData')) || {}).template || '')">Back</button>
+  <button onclick="finish()">Save wish →</button>
+</div>
+
+<script>
+const data = JSON.parse(localStorage.getItem("userData"));
+if(!data){ location.href="form.html"; }
+
+async function load(){
+  try {
+    const res = await fetch(`templates/${data.template}.html`);
+    let html = await res.text();
+
+    Object.keys(data).forEach(key=>{
+      if(key !== "template") {
+        html = html.replace(
+          new RegExp(`{{${key}}}`,'g'),
+          `<span class="${key}" contenteditable>${data[key]}</span>`
+        );
+      }
+    });
+
+    document.getElementById("preview").innerHTML = html;
+  } catch(e) {
+    document.getElementById("preview").innerHTML = "<p style='color:white;'>Error loading template.</p>";
+    console.error(e);
+  }
+}
+
+function finish(){
+  const finalData = {};
+  
+  Object.keys(data).forEach(key=>{
+    if(key !== "template"){
+      const el = document.querySelector(`.${key}`);
+      let value = el ? el.innerText.trim() : "";
+
+      // ✅ FIX: clean number extraction
+      if(key === "age" || key === "years"){
+        const num = value.match(/\d+/); // extract only number
+        value = num ? parseInt(num[0]) : 0;
+      }
+
+      finalData[key] = value;
+    }
+  });
+
+  finalData.template = data.template;
+  localStorage.setItem("finalData", JSON.stringify(finalData));
+  location.href = "save.html";
+}
+
+load();
+</script>
+
+</body>
+>>>>>>> cef14ff (Add favicons to templates and inject into view.html)
 </html>

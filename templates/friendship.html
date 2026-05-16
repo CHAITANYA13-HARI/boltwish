@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -82,4 +83,93 @@ h1{margin:16px 0 10px;font-family:'Playfair Display',serif;font-size:clamp(30px,
 </div>
 </div>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Friendship Wish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="brand-mark.svg">
+  <meta name="theme-color" content="#e85d04">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--ink:#16314f;--muted:#5a7288;--brand:#1d6fd6;--paper:rgba(255,255,255,0.82);}
+body{min-height:100vh;display:grid;place-items:center;padding:18px;font-family:'Manrope',sans-serif;background:radial-gradient(circle at top left,rgba(255,255,255,0.3),transparent 28%),radial-gradient(circle at bottom right,rgba(29,111,214,0.16),transparent 30%),linear-gradient(135deg,#d8f6ff 0%,#b8dcff 50%,#eef8ff 100%);}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.18) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.12) 1px,transparent 1px);background-size:36px 36px;opacity:.45;}
+.card{width:min(100%,460px);padding:18px;border-radius:32px;background:rgba(255,255,255,0.24);backdrop-filter:blur(18px);box-shadow:0 28px 80px rgba(21,64,124,0.18);overflow:hidden;animation:slideIn .9s ease both;position:relative;}
+.card::before,.card::after{content:"";position:absolute;border-radius:50%;pointer-events:none;}
+.card::before{inset:-70px auto auto -80px;width:180px;height:180px;background:rgba(255,255,255,0.25);}
+.card::after{inset:auto -60px -80px auto;width:180px;height:180px;background:rgba(255,255,255,0.16);}
+.surface{position:relative;z-index:1;padding:30px 24px 24px;border-radius:26px;background:var(--paper);border:1px solid rgba(255,255,255,0.72);text-align:center;}
+
+.decor{position:absolute;inset:0;pointer-events:none;z-index:0}
+.decor span{position:absolute;font-size:28px;opacity:0;transform:translateY(8px) scale(.95) rotate(0deg);animation:decorate 4.6s ease-in-out infinite}
+.decor span:nth-child(1){left:8%;top:18%;animation-delay:0s}
+.decor span:nth-child(2){left:76%;top:10%;animation-delay:.8s}
+.decor span:nth-child(3){left:52%;top:6%;animation-delay:1.6s}
+
+@keyframes decorate{0%{opacity:0;transform:translateY(12px) scale(.9) rotate(-6deg)}12%{opacity:1;transform:translateY(0) scale(1) rotate(0deg)}62%{opacity:1;transform:translateY(-10px) scale(1.05) rotate(6deg)}100%{opacity:0;transform:translateY(-24px) scale(.9) rotate(10deg)}}
+
+.highlight{animation:glow 4s ease-in-out infinite}
+@keyframes glow{0%{box-shadow:0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 10px 30px rgba(29,111,214,0.06)}100%{box-shadow:0 0 0 rgba(0,0,0,0)}}
+.chip{display:inline-flex;padding:8px 12px;border-radius:999px;background:rgba(29,111,214,0.1);color:#155fb7;font-size:.82rem;font-weight:800;letter-spacing:.02em;}
+h1{margin:16px 0 10px;font-family:'Playfair Display',serif;font-size:clamp(30px,7vw,42px);line-height:1;color:var(--ink);}
+.subtitle{color:var(--muted);font-size:.98rem;line-height:1.6;}
+.message-box{margin:18px auto 16px;padding:18px;border-radius:20px;background:linear-gradient(180deg,#f3faff,#e3f2ff);border:1px solid rgba(29,111,214,0.12);border-left:6px solid var(--brand);color:#214a72;line-height:1.75;font-size:clamp(14px,3vw,16px);text-align:left;word-wrap:break-word;}
+.highlight{margin-top:16px;padding:14px 15px;border-radius:16px;background:linear-gradient(135deg,rgba(29,111,214,0.12),rgba(193,227,255,0.34));color:#155fb7;font-weight:800;font-size:clamp(13px,2.6vw,15px);}
+.quote{margin-top:16px;color:#61778d;font-size:clamp(12px,2vw,14px);font-style:italic;line-height:1.5;}
+.footer{margin-top:18px;color:var(--ink);font-size:clamp(13px,2.2vw,15px);font-weight:800;}
+@keyframes slideIn{0%{opacity:0;transform:translateY(28px) scale(.97);}100%{opacity:1;transform:translateY(0) scale(1);}}
+@media(max-width:480px){.card{padding:12px;border-radius:28px;}.surface{padding:24px 16px 18px;}}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="decor"><span>🌟</span><span>🤗</span><span>☀️</span></div>
+<div class="surface">
+<div class="chip">🌟 Friendship card</div>
+
+<h1>To My Friend, {{name}}</h1>
+
+<div class="subtitle">
+  A special note for {{name}} — because friends like you make every day brighter and every challenge lighter.
+</div>
+
+<div class="message-box">
+  Hey {{name}},<br><br>
+
+  I just wanted to take a moment to celebrate our friendship. 
+  From the laughs that make our stomachs hurt, to the late-night chats, 
+  to the endless support you’ve shown me — every memory we share is a treasure.<br><br>
+
+  Thank you for being the amazing, kind, and sometimes wonderfully silly person that you are. 
+  Life is better, funnier, and brighter with you by my side.<br><br>
+
+  Here’s to many more adventures, inside jokes, and moments that only we understand. 
+  You’re more than a friend — you’re family of the heart! 💛
+
+  <br>
+  {{message}}
+</div>
+
+<div class="highlight">
+  ✨ Your friendship is a gift that keeps on giving — and I’m endlessly grateful for you.
+</div>
+
+<div class="quote">
+  "A friend is someone who knows all about you and still loves you." – Elbert Hubbard
+</div>
+
+<div class="footer">
+  With love and gratitude,<br>
+  {{from}} 💛
+</div>
+</div>
+</body>
+>>>>>>> cef14ff (Add favicons to templates and inject into view.html)
 </html>
