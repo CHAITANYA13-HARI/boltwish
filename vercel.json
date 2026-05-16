@@ -1,5 +1,12 @@
+<<<<<<< HEAD
 {
   "rewrites": [
     { "source": "/wish/:user", "destination": "/view.html" }
   ]
+=======
+{
+  "rewrites": [
+    { "source": "/wish/:user", "destination": "/view.html" }
+  ]
+>>>>>>> cef14ff (Add favicons to templates and inject into view.html)
 }

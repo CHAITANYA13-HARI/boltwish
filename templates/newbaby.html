@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -78,4 +79,89 @@ h1{margin:16px 0 10px;font-family:'Playfair Display',serif;font-size:clamp(30px,
 </div>
 </div>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Baby</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  <link rel="icon" href="brand-mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="brand-mark.svg">
+  <meta name="theme-color" content="#e85d04">
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--ink:#23332a;--muted:#5f7168;--brand:#3ba55d;--paper:rgba(255,255,255,0.82);}
+body{min-height:100vh;display:grid;place-items:center;padding:18px;font-family:'Manrope',sans-serif;background:radial-gradient(circle at top left,rgba(255,255,255,0.3),transparent 28%),radial-gradient(circle at bottom right,rgba(59,165,93,0.16),transparent 30%),linear-gradient(135deg,#dfffe9 0%,#f6ffd8 50%,#f8fff5 100%);}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.18) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.12) 1px,transparent 1px);background-size:36px 36px;opacity:.45;}
+.card{width:min(100%,460px);padding:18px;border-radius:32px;background:rgba(255,255,255,0.24);backdrop-filter:blur(18px);box-shadow:0 28px 80px rgba(36,78,44,0.18);overflow:hidden;animation:slideIn .9s ease both;position:relative;}
+.card::before,.card::after{content:"";position:absolute;border-radius:50%;pointer-events:none;}
+.card::before{inset:-70px auto auto -80px;width:180px;height:180px;background:rgba(255,255,255,0.25);}
+.card::after{inset:auto -60px -80px auto;width:180px;height:180px;background:rgba(255,255,255,0.16);}
+.surface{position:relative;z-index:1;padding:30px 24px 24px;border-radius:26px;background:var(--paper);border:1px solid rgba(255,255,255,0.72);text-align:center;}
+
+.decor{position:absolute;inset:0;pointer-events:none;z-index:0}
+.decor span{position:absolute;font-size:28px;opacity:0;transform:translateY(8px) scale(.95) rotate(0deg);animation:decorate 5s ease-in-out infinite}
+.decor span:nth-child(1){left:12%;top:20%;animation-delay:0s}
+.decor span:nth-child(2){left:76%;top:12%;animation-delay:.9s}
+.decor span:nth-child(3){left:54%;top:6%;animation-delay:1.8s}
+
+@keyframes decorate{0%{opacity:0;transform:translateY(12px) scale(.9) rotate(-4deg)}15%{opacity:1;transform:translateY(0) scale(1) rotate(0deg)}70%{opacity:1;transform:translateY(-10px) scale(1.06) rotate(6deg)}100%{opacity:0;transform:translateY(-26px) scale(.9) rotate(12deg)}}
+
+.highlight{animation:glow 4.8s ease-in-out infinite}
+@keyframes glow{0%{box-shadow:0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 12px 34px rgba(59,165,93,0.06)}100%{box-shadow:0 0 0 rgba(0,0,0,0)}}
+.chip{display:inline-flex;padding:8px 12px;border-radius:999px;background:rgba(59,165,93,0.1);color:#2f8a4a;font-size:.82rem;font-weight:800;letter-spacing:.02em;}
+h1{margin:16px 0 10px;font-family:'Playfair Display',serif;font-size:clamp(30px,7vw,42px);line-height:1;color:var(--ink);}
+.subtitle{color:var(--muted);font-size:.98rem;line-height:1.6;}
+.message-box{margin:18px auto 16px;padding:18px;border-radius:20px;background:linear-gradient(180deg,#f6fff4,#eafbe4);border:1px solid rgba(59,165,93,0.12);border-left:6px solid var(--brand);color:#34583f;line-height:1.75;font-size:clamp(14px,3vw,16px);text-align:left;word-wrap:break-word;}
+.highlight{margin-top:16px;padding:14px 15px;border-radius:16px;background:linear-gradient(135deg,rgba(59,165,93,0.12),rgba(225,250,212,0.34));color:#2f8a4a;font-weight:800;font-size:clamp(13px,2.6vw,15px);}
+.quote{margin-top:16px;color:#64766c;font-size:clamp(12px,2vw,14px);font-style:italic;line-height:1.5;}
+.footer{margin-top:18px;color:var(--ink);font-size:clamp(13px,2.2vw,15px);font-weight:800;}
+@keyframes slideIn{0%{opacity:0;transform:translateY(28px) scale(.97);}100%{opacity:1;transform:translateY(0) scale(1);}}
+@media(max-width:480px){.card{padding:12px;border-radius:28px;}.surface{padding:24px 16px 18px;}}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="decor"><span>👶</span><span>🍼</span><span>🎈</span></div>
+<div class="surface">
+<div class="chip">👶 New arrival</div>
+
+<h1>Welcome, {{babyName}}!</h1>
+
+<div class="subtitle">
+  A gentle, joyful welcome for little {{babyName}} — celebrating {{parentName}}'s beautiful new chapter.
+</div>
+
+<div class="message-box">
+  Dear {{parentName}},<br><br>
+
+  Congratulations on the arrival of your precious little one! 
+  {{babyName}} is already so loved and cherished. May every tiny giggle, sleepy yawn, and new milestone 
+  bring joy and wonder into your days.<br><br>
+
+  Parenthood is an incredible adventure — full of laughter, cuddles, and unforgettable memories. 
+  Wishing your family an abundance of happiness, health, and love as you start this amazing journey together.
+  <br>
+  {{message}}
+</div>
+
+<div class="highlight">
+  🌿 Little {{babyName}} is a blessing — may every moment with your new bundle of joy be magical.
+</div>
+
+<div class="quote">
+  "Every child begins the world anew." – Anonymous
+</div>
+
+<div class="footer">
+  With love,<br>
+  {{from}} 💖
+</div>
+</div>
+</body>
+>>>>>>> cef14ff (Add favicons to templates and inject into view.html)
 </html>
