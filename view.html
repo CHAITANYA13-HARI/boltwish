@@ -64,7 +64,6 @@
     position: relative;
     width: 100%;
     min-height: 560px;
-    perspective: 1600px;
     opacity: 0;
     animation: slideIn 0.9s ease both;
   }
@@ -74,24 +73,10 @@
     100% { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  .wish-card-inner {
-    position: relative;
-    width: 100%;
-    min-height: inherit;
-    transform-style: preserve-3d;
-    transition: transform 0.9s cubic-bezier(0.2, 0.75, 0.15, 1);
-  }
-
-  #data.is-open .wish-card-inner {
-    transform: rotateY(180deg);
-  }
-
   .wish-face {
-    position: absolute;
-    inset: 0;
+    position: relative;
     border-radius: 32px;
     overflow: hidden;
-    backface-visibility: hidden;
     box-shadow: var(--card-shadow);
   }
 
@@ -196,7 +181,6 @@
   }
 
   .wish-back {
-    transform: rotateY(180deg);
     background: linear-gradient(180deg, #ffffff 0%, #fffaf4 100%);
     border: 1px solid rgba(255,255,255,0.72);
     display: flex;
@@ -410,49 +394,24 @@ async function loadWish(){
     const templateLabel = getTemplateLabel(d.template);
 
     dataHost.innerHTML = `
-      <div class="wish-card-inner">
-        <section class="wish-face wish-front" aria-label="Preview card">
-          <div class="wish-front-panel">
-            <div class="wish-pill">${templateLabel} card</div>
-            <h2>${recipient}</h2>
-            <p class="recipient">A real wish is tucked inside this card. Tap to unfold it.</p>
-            <div class="tap-hint">Tap anywhere on the card to reveal the wish.</div>
-            <div class="from-chip">From ${sender}</div>
-          </div>
-        </section>
-
-        <section class="wish-face wish-back" aria-label="Opened wish card">
-          <div class="wish-back-bar">
-            <div class="label">✨ Unfolded wish</div>
-            <button type="button" id="foldBtn">Fold card</button>
-          </div>
-          <div class="wish-frame-wrap">
-            <iframe id="wishFrame" title="Real wish"></iframe>
-          </div>
-        </section>
+      <div class="wish-face wish-back" aria-label="Wish card">
+        <div class="wish-back-bar">
+          <div class="label">${templateLabel} card</div>
+        </div>
+        <div class="wish-front-panel" style="margin-bottom:12px">
+          <div class="wish-pill">For ${recipient}</div>
+          <h2 style="margin-top:16px">A wish from ${sender}</h2>
+          <p class="recipient">The full message is shown below as a complete card block. No extra tapping or dragging needed.</p>
+        </div>
+        <div class="wish-frame-wrap">
+          <iframe id="wishFrame" title="Real wish"></iframe>
+        </div>
       </div>
     `;
 
     const frame = document.getElementById("wishFrame");
-    const foldBtn = document.getElementById("foldBtn");
 
     frame.srcdoc = html;
-    dataHost.classList.add("ready");
-
-    const toggleCard = () => {
-      dataHost.classList.toggle("is-open");
-    };
-
-    dataHost.addEventListener("click", (event) => {
-      if(event.target.closest("button")) return;
-      if(!dataHost.classList.contains("ready")) return;
-      toggleCard();
-    });
-
-    foldBtn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      dataHost.classList.remove("is-open");
-    });
 
   } catch(e){
     console.error("Error loading wish:", e);
