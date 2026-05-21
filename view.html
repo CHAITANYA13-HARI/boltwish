@@ -11,102 +11,336 @@
   <meta name="theme-color" content="#e85d04">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* Responsive helper rules */
-img, svg { max-width: 100%; height: auto; display: block; }
-.container, .page, .shell { box-sizing: border-box; padding-left: 16px; padding-right: 16px; }
-.action-btn { min-width: 0; }
+  /* Responsive helper rules */
+  img, svg, iframe { max-width: 100%; display: block; }
+  .container, .page, .shell { box-sizing: border-box; padding-left: 16px; padding-right: 16px; }
+  .action-btn { min-width: 0; }
 
-:root {
-  --bg: #fffaf4;
-  --bg-gradient: linear-gradient(135deg, #ffc48a 0%, #ffb347 52%, #ff9f5a 100%);
-  --text: #1f2937;
-  --muted: #6b7280;
-  --shadow: 0 24px 70px rgba(90, 42, 0, 0.15);
-}
+  :root {
+    --bg: #fffaf4;
+    --bg-gradient: linear-gradient(135deg, #ffc48a 0%, #ffb347 52%, #ff9f5a 100%);
+    --text: #1f2937;
+    --muted: #6b7280;
+    --shadow: 0 24px 70px rgba(90, 42, 0, 0.15);
+    --card-shadow: 0 28px 90px rgba(90, 42, 0, 0.18);
+  }
 
-html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; }
 
-body {
-  font-family: 'Manrope', sans-serif;
-  color: var(--text);
-  background: 
-    radial-gradient(circle at top left, rgba(255,255,255,0.28), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(255, 123, 24, 0.22), transparent 30%),
-    var(--bg-gradient);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
+  body {
+    font-family: 'Manrope', sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at top left, rgba(255,255,255,0.28), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(255, 123, 24, 0.22), transparent 30%),
+      var(--bg-gradient);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image: linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px);
-  background-size: 36px 36px;
-  opacity: 0.45;
-}
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px);
+    background-size: 36px 36px;
+    opacity: 0.45;
+  }
 
-.container {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 520px;
-}
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+  }
 
-#data {
-  padding: 0;
-  border-radius: 32px;
-  background: rgba(255, 255, 255, 0.24);
-  backdrop-filter: blur(18px);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  opacity: 0;
-  animation: slideIn 0.9s ease both;
-}
+  #data {
+    position: relative;
+    width: 100%;
+    min-height: 560px;
+    perspective: 1600px;
+    opacity: 0;
+    animation: slideIn 0.9s ease both;
+  }
 
-@keyframes slideIn {
-  0% { opacity: 0; transform: translateY(28px) scale(0.97); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
+  @keyframes slideIn {
+    0% { opacity: 0; transform: translateY(28px) scale(0.97); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
 
-.error-state {
-  padding: 48px 28px;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(255,255,255,0.7);
-}
+  .wish-card-inner {
+    position: relative;
+    width: 100%;
+    min-height: inherit;
+    transform-style: preserve-3d;
+    transition: transform 0.9s cubic-bezier(0.2, 0.75, 0.15, 1);
+  }
 
-.error-state h2 {
-  font-size: 1.3rem;
-  margin-bottom: 12px;
-  color: #d97706;
-}
+  #data.is-open .wish-card-inner {
+    transform: rotateY(180deg);
+  }
 
-.error-state p {
-  color: var(--muted);
-  font-size: 0.95rem;
-}
+  .wish-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 32px;
+    overflow: hidden;
+    backface-visibility: hidden;
+    box-shadow: var(--card-shadow);
+  }
 
-@media (max-width: 640px) {
-  body { padding: 12px; }
-  #data { border-radius: 24px; }
-}
+  .wish-front {
+    background:
+      radial-gradient(circle at top left, rgba(255,255,255,0.32), transparent 26%),
+      radial-gradient(circle at bottom right, rgba(255,255,255,0.12), transparent 30%),
+      linear-gradient(160deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+    border: 1px solid rgba(255,255,255,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+
+  .wish-front::before,
+  .wish-front::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .wish-front::before {
+    width: 180px;
+    height: 180px;
+    left: -70px;
+    top: -60px;
+    background: rgba(255,255,255,0.16);
+  }
+
+  .wish-front::after {
+    width: 210px;
+    height: 210px;
+    right: -90px;
+    bottom: -90px;
+    background: rgba(255,255,255,0.12);
+  }
+
+  .wish-front-panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    background: rgba(255,255,255,0.86);
+    border: 1px solid rgba(255,255,255,0.72);
+    border-radius: 28px;
+    padding: 34px 26px 28px;
+    text-align: center;
+    box-shadow: 0 22px 50px rgba(90, 42, 0, 0.16);
+  }
+
+  .wish-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(232,93,4,0.11);
+    color: #9a3412;
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  .wish-front h2 {
+    margin: 18px 0 8px;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    line-height: 0.98;
+    color: #1f2937;
+  }
+
+  .wish-front .recipient {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .wish-front .recipient strong {
+    color: var(--text);
+  }
+
+  .wish-front .tap-hint {
+    margin: 20px auto 0;
+    max-width: 28ch;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(232,93,4,0.12), rgba(253,186,116,0.2));
+    color: #9a3412;
+    font-weight: 800;
+    line-height: 1.5;
+  }
+
+  .wish-front .from-chip {
+    display: inline-flex;
+    margin-top: 18px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(31,41,55,0.06);
+    color: #374151;
+    font-weight: 700;
+  }
+
+  .wish-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(180deg, #ffffff 0%, #fffaf4 100%);
+    border: 1px solid rgba(255,255,255,0.72);
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .wish-back-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .wish-back-bar .label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(232,93,4,0.08);
+    color: #9a3412;
+    font-size: 0.84rem;
+    font-weight: 800;
+  }
+
+  .wish-back-bar button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(31,41,55,0.08);
+    color: var(--text);
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.24s ease, background 0.24s ease;
+  }
+
+  .wish-back-bar button:hover {
+    transform: translateY(-1px);
+    background: rgba(31,41,55,0.12);
+  }
+
+  .wish-frame-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 500px;
+    border-radius: 24px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.9);
+    box-shadow: inset 0 0 0 1px rgba(31,41,55,0.06);
+  }
+
+  .wish-frame-wrap iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: white;
+  }
+
+  .loading-state,
+  .error-state {
+    width: 100%;
+    min-height: 560px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .loading-card,
+  .error-card {
+    width: 100%;
+    max-width: 520px;
+    background: rgba(255,255,255,0.84);
+    border: 1px solid rgba(255,255,255,0.72);
+    border-radius: 28px;
+    padding: 42px 28px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+  }
+
+  .loading-card h2,
+  .error-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin-bottom: 10px;
+    color: #1f2937;
+  }
+
+  .loading-card p,
+  .error-card p {
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .loading-spot {
+    width: 74px;
+    height: 74px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    border: 7px solid rgba(232,93,4,0.14);
+    border-top-color: #e85d04;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 12px; }
+    #data { min-height: 520px; }
+    .wish-face { border-radius: 24px; }
+    .wish-front-panel { padding: 28px 18px 22px; }
+    .wish-frame-wrap { min-height: 440px; }
+    .loading-state,
+    .error-state { min-height: 520px; }
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 8px; }
+    .wish-front h2 { font-size: 1.9rem; }
+    .wish-front .tap-hint { font-size: 0.95rem; }
+    .wish-back { padding: 10px; }
+    .wish-back-bar { flex-wrap: wrap; }
+    .wish-frame-wrap { min-height: 400px; }
+  }
 </style>
 </head>
 <body>
 
 <div class="container">
   <div id="data">
-    <div class="error-state">
-      <h2>Loading your wish...</h2>
-      <p>Please wait while we fetch your card.</p>
+      <div class="loading-state">
+        <div class="loading-card">
+          <div class="loading-spot"></div>
+          <h2>Loading your wish...</h2>
+          <p>Please wait while we prepare the folded card.</p>
+        </div>
     </div>
   </div>
 </div>
@@ -122,11 +356,29 @@ const firebaseConfig = {
 };
 
 const db = getFirestore(initializeApp(firebaseConfig));
-const username = location.pathname.split("/").pop();
+const username = decodeURIComponent(location.pathname.split("/").filter(Boolean).pop() || "");
+const dataHost = document.getElementById("data");
 
 if(!username){
-  document.getElementById("data").innerHTML = `<div class="error-state"><h2>❌ Invalid URL</h2><p>No wish ID found in the link.</p></div>`;
+  dataHost.innerHTML = `<div class="error-state"><div class="error-card"><h2>Invalid URL</h2><p>No wish ID was found in the link.</p></div></div>`;
   throw new Error("No username in URL");
+}
+
+function getRecipientLabel(d){
+  if(d.bride && d.groom) return `${d.bride} & ${d.groom}`;
+  return d.name || d.babyName || d.bride || d.groom || d.parentName || "Someone special";
+}
+
+function getSenderLabel(d){
+  return d.from || "With love";
+}
+
+function getTemplateLabel(template){
+  return template ? template.charAt(0).toUpperCase() + template.slice(1) : "Wish";
+}
+
+function showError(title, message){
+  dataHost.innerHTML = `<div class="error-state"><div class="error-card"><h2>${title}</h2><p>${message}</p></div></div>`;
 }
 
 async function loadWish(){
@@ -135,32 +387,76 @@ async function loadWish(){
     const snap = await getDocs(q);
 
     if(snap.empty){
-      document.getElementById("data").innerHTML = `<div class="error-state"><h2>❌ Wish Not Found</h2><p>This wish may have expired or the link is incorrect.</p></div>`;
+      showError("Wish Not Found", "This wish may have expired or the link is incorrect.");
       return;
     }
 
-    snap.forEach(async doc => {
-      const d = doc.data();
-      const res = await fetch(`/templates/${d.template}.html`);
-      
-      if(!res.ok){
-        document.getElementById("data").innerHTML = `<div class="error-state"><h2>❌ Template Error</h2><p>We couldn't load the template for this wish.</p></div>`;
-        return;
+    const d = snap.docs[0].data();
+    const res = await fetch(`/templates/${d.template}.html`);
+
+    if(!res.ok){
+      showError("Template Error", "We couldn't load the template for this wish.");
+      return;
+    }
+
+    let html = await res.text();
+    Object.keys(d).forEach((key) => {
+      if (!["template", "timestamp", "username"].includes(key)) {
+        html = html.split(`{{${key}}}`).join(String(d[key] ?? ""));
       }
+    });
+    const recipient = getRecipientLabel(d);
+    const sender = getSenderLabel(d);
+    const templateLabel = getTemplateLabel(d.template);
 
-      let html = await res.text();
-      Object.keys(d).forEach(k => {
-        if(!["template","timestamp","username"].includes(k)){
-          html = html.replace(new RegExp(`{{${k}}}`, 'g'), d[k]);
-        }
-      });
+    dataHost.innerHTML = `
+      <div class="wish-card-inner">
+        <section class="wish-face wish-front" aria-label="Preview card">
+          <div class="wish-front-panel">
+            <div class="wish-pill">${templateLabel} card</div>
+            <h2>${recipient}</h2>
+            <p class="recipient">A real wish is tucked inside this card. Tap to unfold it.</p>
+            <div class="tap-hint">Tap anywhere on the card to reveal the wish.</div>
+            <div class="from-chip">From ${sender}</div>
+          </div>
+        </section>
 
-      document.getElementById("data").innerHTML = html;
+        <section class="wish-face wish-back" aria-label="Opened wish card">
+          <div class="wish-back-bar">
+            <div class="label">✨ Unfolded wish</div>
+            <button type="button" id="foldBtn">Fold card</button>
+          </div>
+          <div class="wish-frame-wrap">
+            <iframe id="wishFrame" title="Real wish"></iframe>
+          </div>
+        </section>
+      </div>
+    `;
+
+    const frame = document.getElementById("wishFrame");
+    const foldBtn = document.getElementById("foldBtn");
+
+    frame.srcdoc = html;
+    dataHost.classList.add("ready");
+
+    const toggleCard = () => {
+      dataHost.classList.toggle("is-open");
+    };
+
+    dataHost.addEventListener("click", (event) => {
+      if(event.target.closest("button")) return;
+      if(!dataHost.classList.contains("ready")) return;
+      toggleCard();
+    });
+
+    foldBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      dataHost.classList.remove("is-open");
     });
 
   } catch(e){
     console.error("Error loading wish:", e);
-    document.getElementById("data").innerHTML = `<div class="error-state"><h2>❌ Error</h2><p>Something went wrong loading your wish.</p></div>`;
+    showError("Error", "Something went wrong loading your wish.");
   }
 }
 
