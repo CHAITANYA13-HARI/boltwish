@@ -468,23 +468,23 @@ function HomePage({ templatesState }) {
       <main className="landing-main">
         <section className="hero-grid home-grid landing-hero">
           <MotionPanel className="hero-card hero-accent hero-glass">
-            <div className="eyebrow"><Sparkles size={14} /> Wish studio</div>
-            <h1>Generate personalized wishes in 4 easy steps.</h1>
-            <p className="lead">Create beautiful, personalized wishes in minutes.</p>
+            <div className="eyebrow"><Sparkles size={14} /> Make Any Occasion Unforgettable</div>
+            <h1>Create stunning, interactive wishes in 30 seconds.</h1>
+            <p className="lead">Splash effects, music, and animated reveals to make moments unforgettable — no design skills required.</p>
             <div className="actions-row">
-              <AppButton onClick={() => navigate('/template-picker')}>Create your wish <ArrowRight size={16} /></AppButton>
-              <AppButton variant="secondary" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>See how it works</AppButton>
+              <AppButton onClick={() => navigate('/template-picker')}>Create Wish →</AppButton>
+              <AppButton variant="secondary" onClick={() => navigate('/template-picker')}>Explore community</AppButton>
             </div>
             <div className="stats-grid">
-              <div className="stat-card"><strong>{templatesState.loading ? '...' : templatesState.templates.length}</strong><span>Templates</span></div>
-              <div className="stat-card"><strong>4</strong><span>Simple steps</span></div>
-              <div className="stat-card"><strong>Instant</strong><span>Sharing</span></div>
+              <div className="stat-card"><strong>50,000+</strong><span>Wishes created</span></div>
+              <div className="stat-card"><strong>30s</strong><span>Create a wish</span></div>
+              <div className="stat-card"><strong>Anywhere</strong><span>Share on WhatsApp & Instagram</span></div>
             </div>
           </MotionPanel>
 
                   <MotionPanel className="side-panel hero-glass" id="recent-wish">
                     <div className="eyebrow"><BadgeCheck size={14} /> Recent activity</div>
-                    <h2>Your recent wishes</h2>
+                        <h2>Explore public wishes</h2>
                     <div className="recent-hero-card">
                       {recentWishes.length ? (
                         <>
@@ -623,7 +623,7 @@ function Footer() {
         <button className="footer-link" type="button" onClick={() => navigate('/vision')}>Vision</button>
       </div>
       <div className="footer-socials">
-        <a className="footer-social" href="mailto:rlmsgames.help@gmail.com" aria-label="Email rlmsgames"><Mail size={16} /></a>
+        <a className="footer-social" href="mailto:rlmsgames.help@gmail.com" aria-label="RLMSgames"><Mail size={16} /></a>
         <a className="footer-social" href="https://instagram.com/rlmsgames" target="_blank" rel="noreferrer" aria-label="Instagram rlmsgames"><MessageSquareMore size={16} /></a>
         <a className="footer-social" href="https://x.com/rlmsgames" target="_blank" rel="noreferrer" aria-label="X (formerly Twitter) rlmsgames"><Globe2 size={16} /></a>
       </div>
