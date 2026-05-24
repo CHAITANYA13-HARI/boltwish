@@ -623,9 +623,9 @@ function Footer() {
         <button className="footer-link" type="button" onClick={() => navigate('/vision')}>Vision</button>
       </div>
       <div className="footer-socials">
-        <a className="footer-social" href="mailto:rlmsgames.help@gmail.com" aria-label="Email support"><Mail size={16} /></a>
-        <a className="footer-social" href="https://instagram.com/rlmsgames" target="_blank" rel="noreferrer" aria-label="Instagram"><MessageSquareMore size={16} /></a>
-        <a className="footer-social" href="https://x.com/RLMSGames" target="_blank" rel="noreferrer" aria-label="Twitter"><Globe2 size={16} /></a>
+        <a className="footer-social" href="mailto:rlmsgames.help@gmail.com" aria-label="Email rlmsgames"><Mail size={16} /></a>
+        <a className="footer-social" href="https://instagram.com/rlmsgames" target="_blank" rel="noreferrer" aria-label="Instagram rlmsgames"><MessageSquareMore size={16} /></a>
+        <a className="footer-social" href="https://x.com/rlmsgames" target="_blank" rel="noreferrer" aria-label="X (formerly Twitter) rlmsgames"><Globe2 size={16} /></a>
       </div>
     </footer>
   );
