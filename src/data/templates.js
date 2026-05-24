@@ -243,17 +243,18 @@ export function splitParagraphs(text) {
  * @param {object} template
  * @param {object} wishData
  */
-export function composeWishPreview(template = {}, wishData = {}) {
+export function composeWishPreview(template, wishData = {}) {
+  const safeTemplate = template || {};
   const recipientData = wishData.recipientData || {};
-  const content = { ...getContentFieldDefaults(template), ...(wishData.content || {}) };
+  const content = { ...getContentFieldDefaults(safeTemplate), ...(wishData.content || {}) };
   const contentContext = { ...recipientData, ...content };
   const displayName = recipientData.name || recipientData.babyName || recipientData.parentName || recipientData.bride || recipientData.groom || 'there';
   const countdown = getCountdownInfo(recipientData.eventDate);
 
   const resolved = {
-    chip: template.chip || 'Special Wish',
-    title: resolveTemplateText(content.title || `${template.label || 'Wish'} wish`, contentContext),
-    subtitle: resolveTemplateText(content.subtitle || template.summary || '', contentContext),
+    chip: safeTemplate.chip || 'Special Wish',
+    title: resolveTemplateText(content.title || `${safeTemplate.label || 'Wish'} wish`, contentContext),
+    subtitle: resolveTemplateText(content.subtitle || safeTemplate.summary || '', contentContext),
     body: splitParagraphs(resolveTemplateText(content.body, contentContext)),
     highlight: resolveTemplateText(content.highlight || '', contentContext),
     quote: resolveTemplateText(content.quote || '', contentContext),
@@ -272,7 +273,7 @@ export function composeWishPreview(template = {}, wishData = {}) {
 
   resolved.countdown = countdown;
 
-  if (!resolved.body.length && template.summary) resolved.body = [template.summary];
+  if (!resolved.body.length && safeTemplate.summary) resolved.body = [safeTemplate.summary];
 
   return resolved;
 }

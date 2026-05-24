@@ -207,7 +207,7 @@ function useFirestoreTemplates() {
         const initialTemplates = initialSnapshot.docs
           .map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, docSnapshot.data()))
           .filter((template) => template.enabled !== false)
-          .sort((left, right) => (left.order ?? 0) - (right.order ?? 0) || left.label.localeCompare(right.label));
+          .sort(sortTemplates);
 
         if (active) {
           setState({
@@ -223,7 +223,7 @@ function useFirestoreTemplates() {
             const templates = snapshot.docs
               .map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, docSnapshot.data()))
               .filter((template) => template.enabled !== false)
-              .sort((left, right) => (left.order ?? 0) - (right.order ?? 0) || left.label.localeCompare(right.label));
+              .sort(sortTemplates);
 
             if (active) {
               setState({
@@ -266,6 +266,12 @@ function useFirestoreTemplates() {
 
 function resolveTemplate(templates, templateId) {
   return templates.find((template) => template.id === templateId) || null;
+}
+
+function sortTemplates(left, right) {
+  const leftLabel = String(left?.label || left?.id || '');
+  const rightLabel = String(right?.label || right?.id || '');
+  return (left?.order ?? 0) - (right?.order ?? 0) || leftLabel.localeCompare(rightLabel);
 }
 
 function Brand() {
@@ -407,6 +413,14 @@ function useCountdownRemaining(eventDate) {
   }, [eventDate]);
 
   return remainingMs;
+}
+
+function CountdownBadge({ eventDate }) {
+  const remainingMs = useCountdownRemaining(eventDate);
+
+  if (!remainingMs) return null;
+
+  return <div className="countdown-badge">Reveal in {formatCountdownDuration(remainingMs)}</div>;
 }
 
 function RevealCountdownScreen({ remainingMs }) {
@@ -618,8 +632,6 @@ function Footer() {
 }
 
 function PageShell({ kicker, title, description, actions, children, aside }) {
-  const navigate = useNavigate();
-
   return (
     <div className="page-shell">
       <header className="topbar">
@@ -732,7 +744,7 @@ function AdminPage({ templatesState }) {
     setTemplates((current) => {
       const next = current.filter((item) => item.id !== template.id);
       next.push(template);
-      return next.sort((left, right) => (left.order ?? 0) - (right.order ?? 0) || left.label.localeCompare(right.label));
+      return next.sort(sortTemplates);
     });
     setNotice(`Saved ${template.label}.`);
   };
@@ -792,6 +804,13 @@ function AdminPage({ templatesState }) {
     setTemplates((current) => [draft, ...current]);
     setEditingId(draft.id);
   };
+
+  useEffect(() => {
+    const onResize = () => setShowPreview(window.innerWidth >= 900);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   if (!isUnlocked) {
     return (
       <div className="page-shell admin-shell">
@@ -803,12 +822,6 @@ function AdminPage({ templatesState }) {
       </div>
     );
   }
-
-  useEffect(() => {
-    const onResize = () => setShowPreview(window.innerWidth >= 900);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
 
   const logoutAdmin = () => {
     localStorage.removeItem('adminUnlocked');
@@ -1296,10 +1309,8 @@ function WishViewPage({ templatesState }) {
 
   // Compute template/preview early so hooks are called consistently
   const template = wishData ? (wishData.templateSnapshot || resolveTemplate(templatesState.templates, wishData.templateId)) : null;
-  const preview = template ? composeWishPreview(template, wishData) : null;
+  const preview = composeWishPreview(template || {}, wishData || {});
   const theme = template?.theme || {};
-  const recipientName = preview?.displayName || 'there';
-  const senderName = wishData?.recipientData?.from || 'Someone';
   const remainingMs = useCountdownRemaining(wishData?.recipientData?.eventDate);
 
   // SEO: set page title and description for public wish view
