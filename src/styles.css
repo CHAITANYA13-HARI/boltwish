@@ -201,6 +201,31 @@ svg {
 }
 .footer-link:hover { color: var(--brand); transform: translateY(-2px); }
 
+/* Footer social link fallbacks for adblockers */
+.footer-icon-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.footer-icon-link svg { flex: 0 0 18px; }
+.footer-icon-link:hover { color: var(--brand); }
+
+.footer-social-text {
+  display: inline-block;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+/* If adblock hides icons, ensure the text remains visible */
+.footer-icon-link svg[aria-hidden="true"] + .footer-social-text,
+.footer-icon-link svg[style*="display:none"] + .footer-social-text {
+  display: inline-block;
+}
+
 .eyebrow {
   display: inline-flex;
   align-items: center;

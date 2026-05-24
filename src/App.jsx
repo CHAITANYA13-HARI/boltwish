@@ -44,6 +44,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage templatesState={templatesState} />} />
+      <Route path="/social" element={<SocialPage />} />
       <Route path="/template-picker" element={<TemplatePickerPage templatesState={templatesState} />} />
       <Route path="/template/:templateId" element={<WishFormPage templatesState={templatesState} />} />
       <Route
@@ -623,11 +624,34 @@ function Footer() {
         <button className="footer-link" type="button" onClick={() => navigate('/vision')}>Vision</button>
       </div>
       <div className="footer-socials">
-        <a className="footer-social" href="mailto:rlmsgames.help@gmail.com" aria-label="RLMSgames"><Mail size={16} /></a>
-        <a className="footer-social" href="https://instagram.com/rlmsgames" target="_blank" rel="noreferrer" aria-label="Instagram rlmsgames"><MessageSquareMore size={16} /></a>
-        <a className="footer-social" href="https://x.com/rlmsgames" target="_blank" rel="noreferrer" aria-label="X (formerly Twitter) rlmsgames"><Globe2 size={16} /></a>
+        <a className="footer-icon-link" href="mailto:rlmsgames.help@gmail.com" aria-label="Email rlmsgames" title="Email rlmsgames">
+          <Mail size={16} />
+          <span className="footer-social-text">rlmsgames.help@gmail.com</span>
+        </a>
+        <button className="footer-icon-link" type="button" onClick={() => navigate('/social')} aria-label="Social links" title="Social links">
+          <MessageSquareMore size={16} />
+          <span className="footer-social-text">Social</span>
+        </button>
       </div>
     </footer>
+  );
+}
+
+function SocialPage() {
+  const navigate = useNavigate();
+  return (
+    <PageShell title="Social" description="Find and follow RLMS Games on social platforms." actions={<AppButton variant="secondary" onClick={() => navigate('/')}>Back</AppButton>}>
+      <MotionPanel className="glass-card static-card">
+        <div className="eyebrow"><Sparkles size={14} /> Follow RLMS Games</div>
+        <h2>Find us on these platforms</h2>
+        <div style={{ marginTop: 12, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <a className="action-btn action-primary" href="https://instagram.com/rlmsgames?utm_source=boltwish&utm_medium=social_page&utm_campaign=follow" target="_blank" rel="noopener noreferrer">Instagram</a>
+          <a className="action-btn action-primary" href="https://x.com/rlmsgames?utm_source=boltwish&utm_medium=social_page&utm_campaign=follow" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
+          <a className="action-btn action-secondary" href="mailto:rlmsgames.help@gmail.com?subject=Hello%20RLMS%20Games%20from%20Boltwish">Email</a>
+        </div>
+        <p style={{ marginTop: 14, color: 'var(--muted)' }}>If adblock hides icons in the footer, use this page to access social profiles.</p>
+      </MotionPanel>
+    </PageShell>
   );
 }
 
@@ -959,9 +983,32 @@ function WishFormPage({ templatesState }) {
     const previousDesc = meta.getAttribute('content') || '';
     document.title = `${preview.title} — ${template.label || 'Boltwish'}`;
     meta.setAttribute('content', preview.subtitle || template.summary || 'Create and share a personalised wish');
+
+    // Add JSON-LD for template page
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      'name': `${template.label} template — Boltwish`,
+      'description': template.summary || preview.subtitle || '',
+      'url': `${window.location.origin}/template/${template.id}`,
+      'mainEntity': {
+        '@type': 'CreativeWork',
+        'headline': template.label,
+        'description': template.summary || '',
+      },
+    };
+    const existingLd = document.getElementById('template-json-ld');
+    if (existingLd) existingLd.remove();
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'template-json-ld';
+    script.text = JSON.stringify(ld);
+    document.head.appendChild(script);
     return () => {
       document.title = previousTitle;
       meta.setAttribute('content', previousDesc);
+      const ldEl = document.getElementById('template-json-ld');
+      if (ldEl) ldEl.remove();
     };
   }, [preview, template]);
 
@@ -1319,11 +1366,73 @@ function WishViewPage({ templatesState }) {
     const previousTitle = document.title;
     const meta = document.querySelector('meta[name="description"]') || (() => { const m = document.createElement('meta'); m.name = 'description'; document.head.appendChild(m); return m; })();
     const previousDesc = meta.getAttribute('content') || '';
+    const prevOgImage = document.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
+    const prevOgTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
+    const prevOgDesc = document.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+    const prevTwitterImage = document.querySelector('meta[name="twitter:image"]')?.getAttribute('content') || '';
+
+    const wishUrl = `${window.location.origin}/wish/${wishData?.username || username}`;
+    // Use dynamic OG endpoint when wishData is available
+    const imageUrl = wishData?.username
+      ? `${window.location.origin}/api/og/wish/${wishData.username}?title=${encodeURIComponent(preview.title)}&subtitle=${encodeURIComponent(preview.subtitle)}&chip=${encodeURIComponent(preview.chip)}`
+      : `${window.location.origin}/brand-mark.svg`;
+
     document.title = `${preview.title} — ${preview.displayName || template.label || 'Wish'}`;
     meta.setAttribute('content', preview.subtitle || template.summary || 'A personalised wish');
+
+    // Set Open Graph and Twitter meta tags (create if missing)
+    const setMeta = (selector, attr, value) => {
+      let el = document.querySelector(selector);
+      if (!el) {
+        el = document.createElement('meta');
+        if (selector.includes('property')) el.setAttribute('property', selector.match(/property=\"([^\"]+)\"/)[1]);
+        else el.setAttribute('name', selector.match(/name=\"([^\"]+)\"/)[1]);
+        document.head.appendChild(el);
+      }
+      el.setAttribute(attr, value);
+      return el;
+    };
+
+    setMeta('meta[property="og:title"]', 'content', `${preview.title} — ${preview.displayName || template.label || 'Wish'}`);
+    setMeta('meta[property="og:description"]', 'content', preview.subtitle || template.summary || 'A personalised wish');
+    setMeta('meta[property="og:url"]', 'content', wishUrl);
+    setMeta('meta[property="og:image"]', 'content', imageUrl);
+    setMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
+    setMeta('meta[name="twitter:image"]', 'content', imageUrl);
+
+    // JSON-LD structured data for the wish page
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      'name': `${preview.title} — ${preview.displayName || template.label || 'Wish'}`,
+      'description': preview.subtitle || template.summary || '',
+      'url': wishUrl,
+      'image': imageUrl,
+      'mainEntity': {
+        '@type': 'CreativeWork',
+        'headline': preview.title,
+        'author': { '@type': 'Person', 'name': preview.displayName || '' },
+      },
+    };
+
+    const existingLd = document.getElementById('wish-json-ld');
+    if (existingLd) existingLd.remove();
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'wish-json-ld';
+    script.text = JSON.stringify(ld);
+    document.head.appendChild(script);
+
     return () => {
       document.title = previousTitle;
       meta.setAttribute('content', previousDesc);
+      // restore previous og/twitter tags when possible
+      if (prevOgImage) setMeta('meta[property="og:image"]', 'content', prevOgImage);
+      if (prevOgTitle) setMeta('meta[property="og:title"]', 'content', prevOgTitle);
+      if (prevOgDesc) setMeta('meta[property="og:description"]', 'content', prevOgDesc);
+      if (prevTwitterImage) setMeta('meta[name="twitter:image"]', 'content', prevTwitterImage);
+      const ldEl = document.getElementById('wish-json-ld');
+      if (ldEl) ldEl.remove();
     };
   }, [preview, template]);
 
