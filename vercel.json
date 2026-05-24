@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/wish/:user", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
