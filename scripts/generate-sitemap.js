@@ -44,7 +44,8 @@ function buildUrlXml(loc, changefreq = 'monthly', priority = '0.5') {
 }
 
 async function main() {
-  const siteUrl = process.env.SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://boltwish.vercel.app');
+  const deploymentHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  const siteUrl = process.env.SITE_URL || (deploymentHost ? `https://${deploymentHost}` : 'https://boltwish.vercel.app');
   const staticRoutes = ['/', '/template-picker', '/terms', '/contact', '/vision', '/save', '/admin'];
 
   const urls = [];
