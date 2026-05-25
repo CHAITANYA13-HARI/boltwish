@@ -951,6 +951,7 @@ function AdminPage({ templatesState }) {
 function WishFormPage({ templatesState }) {
   const navigate = useNavigate();
   const params = useParams();
+  const formId = 'wish-editor-form';
   const templateId = params.templateId || readJson('selectedTemplateId', '');
   const template = useMemo(() => resolveTemplate(templatesState.templates, templateId), [templatesState.templates, templateId]);
   const [recipientData, setRecipientData] = useState({});
@@ -1087,7 +1088,7 @@ function WishFormPage({ templatesState }) {
         ))}
       </div>
 
-      <form className="editor-layout wizard-layout" onSubmit={handleSubmit}>
+      <form id={formId} className="editor-layout wizard-layout" onSubmit={handleSubmit}>
         <AnimatePresence mode="wait">
           {currentStep === 2 ? (
             <motion.section key="recipient" className="editor-card glass-card wizard-card" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.28 }}>
@@ -1175,7 +1176,14 @@ function WishFormPage({ templatesState }) {
         </div>
         <div className="mobile-sticky-actions">
           <AppButton variant="secondary" type="button" onClick={goBack}>Back</AppButton>
-          <AppButton type={currentStep === 4 ? 'submit' : 'button'} onClick={currentStep === 4 ? undefined : goNext} disabled={!canContinue}>{currentStep === 4 ? 'Save' : 'Next'}</AppButton>
+          <AppButton
+            type={currentStep === 4 ? 'submit' : 'button'}
+            form={currentStep === 4 ? formId : undefined}
+            onClick={currentStep === 4 ? undefined : goNext}
+            disabled={!canContinue}
+          >
+            {currentStep === 4 ? 'Save' : 'Next'}
+          </AppButton>
         </div>
       </div>
     </PageShell>
@@ -1302,7 +1310,7 @@ function ShareDialog({ message, link, onClose, onCopy, onOpenNative }) {
         <div className="share-grid">
           <a className="share-btn whatsapp" href={channelLinks.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
           <button className="share-btn snapchat" type="button" onClick={onOpenNative}>Snapchat</button>
-          <button className="share-btn instagram" type="button" onClick={onCopy}>Instagram</button>
+          <button className="share-btn instagram" type="button" onClick={onOpenNative}>Instagram</button>
           <a className="share-btn twitter" href={channelLinks.twitter} target="_blank" rel="noreferrer">Twitter</a>
           <button className="share-btn copy" type="button" onClick={onCopy}>Copy Message</button>
           <button className="share-btn copy" type="button" onClick={onOpenNative}>Native Share</button>
