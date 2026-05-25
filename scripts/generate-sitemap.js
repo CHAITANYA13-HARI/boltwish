@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { templateSeed } from '../src/data/templateSeed.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,16 +45,11 @@ function buildUrlXml(loc, changefreq = 'monthly', priority = '0.5') {
 async function main() {
   const deploymentHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
   const siteUrl = process.env.SITE_URL || (deploymentHost ? `https://${deploymentHost}` : 'https://boltwish.vercel.app');
-  const staticRoutes = ['/', '/template-picker', '/terms', '/contact', '/vision', '/save', '/admin'];
+  const staticRoutes = ['/', '/template-picker', '/terms', '/contact', '/vision', '/social'];
 
   const urls = [];
   // static
   for (const r of staticRoutes) urls.push({ path: r, changefreq: r === '/' ? 'daily' : 'monthly', priority: r === '/' ? '1.0' : '0.5' });
-
-  // templates from local seed
-  for (const t of templateSeed) {
-    urls.push({ path: `/template/${t.id}`, changefreq: 'weekly', priority: '0.8' });
-  }
 
   // optional: fetch wishes from Firestore when FETCH_WISHES=true and credentials are supplied
   const wishPaths = await fetchWishesFromFirestore();

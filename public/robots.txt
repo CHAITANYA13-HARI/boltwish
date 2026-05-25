@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /save
 Sitemap: https://boltwish.vercel.app/sitemap.xml
 # If you deploy to a different domain, update the Sitemap URL above.

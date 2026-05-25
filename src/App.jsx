@@ -37,6 +37,116 @@ import {
 import { templateSeed } from './data/templateSeed';
 import { readJson, slugify, writeJson } from './lib/storage';
 const ADMIN_CODE = import.meta.env.VITE_ADMIN_CODE || 'boltwish-admin';
+const SITE_NAME = 'Boltwish';
+const SITE_DESCRIPTION = 'Create and share beautiful wish cards with personalized templates, live previews, and one-tap sharing.';
+const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://boltwish.vercel.app').replace(/\/$/, '');
+const DEFAULT_OG_IMAGE = `${SITE_URL}/brand-mark.svg`;
+
+function toAbsoluteUrl(pathname = '/') {
+  if (!pathname) return SITE_URL;
+  if (/^https?:\/\//i.test(pathname)) return pathname;
+  return `${SITE_URL}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
+}
+
+function upsertMeta(selector, attribute, value) {
+  let element = document.querySelector(selector);
+  if (!element) {
+    element = document.createElement('meta');
+    const nameMatch = selector.match(/name="([^"]+)"/);
+    const propertyMatch = selector.match(/property="([^"]+)"/);
+    if (nameMatch) element.setAttribute('name', nameMatch[1]);
+    if (propertyMatch) element.setAttribute('property', propertyMatch[1]);
+    document.head.appendChild(element);
+  }
+  element.setAttribute(attribute, value);
+  return element;
+}
+
+function upsertCanonical(href) {
+  let element = document.querySelector('link[rel="canonical"]');
+  if (!element) {
+    element = document.createElement('link');
+    element.setAttribute('rel', 'canonical');
+    document.head.appendChild(element);
+  }
+  element.setAttribute('href', href);
+  return element;
+}
+
+function useSeoMeta({
+  title,
+  description,
+  canonicalPath = '/',
+  image = DEFAULT_OG_IMAGE,
+  type = 'website',
+  robots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
+  jsonLd,
+  jsonLdId = 'page-json-ld',
+}) {
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const previousTitle = document.title;
+    const previousDescription = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+    const previousRobots = document.querySelector('meta[name="robots"]')?.getAttribute('content') || '';
+    const previousCanonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '';
+    const previousOgTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
+    const previousOgDescription = document.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+    const previousOgUrl = document.querySelector('meta[property="og:url"]')?.getAttribute('content') || '';
+    const previousOgImage = document.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
+    const previousOgType = document.querySelector('meta[property="og:type"]')?.getAttribute('content') || '';
+    const previousOgSiteName = document.querySelector('meta[property="og:site_name"]')?.getAttribute('content') || '';
+    const previousTwitterCard = document.querySelector('meta[name="twitter:card"]')?.getAttribute('content') || '';
+    const previousTwitterTitle = document.querySelector('meta[name="twitter:title"]')?.getAttribute('content') || '';
+    const previousTwitterDescription = document.querySelector('meta[name="twitter:description"]')?.getAttribute('content') || '';
+    const previousTwitterImage = document.querySelector('meta[name="twitter:image"]')?.getAttribute('content') || '';
+
+    document.title = title || SITE_NAME;
+    upsertMeta('meta[name="description"]', 'content', description || SITE_DESCRIPTION);
+    upsertMeta('meta[name="robots"]', 'content', robots);
+    upsertCanonical(toAbsoluteUrl(canonicalPath));
+    upsertMeta('meta[property="og:title"]', 'content', title || SITE_NAME);
+    upsertMeta('meta[property="og:description"]', 'content', description || SITE_DESCRIPTION);
+    upsertMeta('meta[property="og:url"]', 'content', toAbsoluteUrl(canonicalPath));
+    upsertMeta('meta[property="og:image"]', 'content', image);
+    upsertMeta('meta[property="og:type"]', 'content', type);
+    upsertMeta('meta[property="og:site_name"]', 'content', SITE_NAME);
+    upsertMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
+    upsertMeta('meta[name="twitter:title"]', 'content', title || SITE_NAME);
+    upsertMeta('meta[name="twitter:description"]', 'content', description || SITE_DESCRIPTION);
+    upsertMeta('meta[name="twitter:image"]', 'content', image);
+
+    const existingLd = document.getElementById(jsonLdId);
+    if (existingLd) existingLd.remove();
+
+    if (jsonLd) {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = jsonLdId;
+      script.text = JSON.stringify(jsonLd);
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      document.title = previousTitle;
+      upsertMeta('meta[name="description"]', 'content', previousDescription || SITE_DESCRIPTION);
+      upsertMeta('meta[name="robots"]', 'content', previousRobots || 'index,follow');
+      upsertCanonical(previousCanonical || toAbsoluteUrl('/'));
+      upsertMeta('meta[property="og:title"]', 'content', previousOgTitle || SITE_NAME);
+      upsertMeta('meta[property="og:description"]', 'content', previousOgDescription || SITE_DESCRIPTION);
+      upsertMeta('meta[property="og:url"]', 'content', previousOgUrl || toAbsoluteUrl(canonicalPath));
+      upsertMeta('meta[property="og:image"]', 'content', previousOgImage || DEFAULT_OG_IMAGE);
+      upsertMeta('meta[property="og:type"]', 'content', previousOgType || 'website');
+      upsertMeta('meta[property="og:site_name"]', 'content', previousOgSiteName || SITE_NAME);
+      upsertMeta('meta[name="twitter:card"]', 'content', previousTwitterCard || 'summary_large_image');
+      upsertMeta('meta[name="twitter:title"]', 'content', previousTwitterTitle || SITE_NAME);
+      upsertMeta('meta[name="twitter:description"]', 'content', previousTwitterDescription || SITE_DESCRIPTION);
+      upsertMeta('meta[name="twitter:image"]', 'content', previousTwitterImage || DEFAULT_OG_IMAGE);
+      const ldEl = document.getElementById(jsonLdId);
+      if (ldEl) ldEl.remove();
+    };
+  }, [canonicalPath, description, image, jsonLd, jsonLdId, title, type, robots]);
+}
 
 function App() {
   const templatesState = useFirestoreTemplates();
@@ -275,6 +385,28 @@ function sortTemplates(left, right) {
   return (left?.order ?? 0) - (right?.order ?? 0) || leftLabel.localeCompare(rightLabel);
 }
 
+function getStaticPageMeta(title) {
+  const map = {
+    'Terms & Conditions': {
+      description: 'Read the terms for using Boltwish, including content rules, liability, and service availability.',
+      canonicalPath: '/terms',
+    },
+    'Contact Us': {
+      description: 'Contact the Boltwish team for support, feedback, and feature requests.',
+      canonicalPath: '/contact',
+    },
+    'Our Vision': {
+      description: 'See how Boltwish helps people create thoughtful wishes quickly with a clean, mobile-friendly flow.',
+      canonicalPath: '/vision',
+    },
+  };
+
+  return map[title] || {
+    description: SITE_DESCRIPTION,
+    canonicalPath: '/',
+  };
+}
+
 function Brand() {
   return (
     <div className="brand">
@@ -461,6 +593,25 @@ function HomePage({ templatesState }) {
     content: buildContentDraft(liveTemplate),
   }) : null;
 
+  useSeoMeta({
+    title: 'Boltwish | Beautiful wishes, made fast',
+    description: SITE_DESCRIPTION,
+    canonicalPath: '/',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: SITE_NAME,
+      url: toAbsoluteUrl('/'),
+      description: SITE_DESCRIPTION,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${toAbsoluteUrl('/template-picker')}?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    jsonLdId: 'home-json-ld',
+  });
+
   return (
     <div className="page-shell landing-shell">
       <header className="topbar topbar-home">
@@ -603,6 +754,14 @@ function HomePage({ templatesState }) {
 }
 
 function StaticPage({ title, children }) {
+  const meta = getStaticPageMeta(title);
+
+  useSeoMeta({
+    title: `${title} | Boltwish`,
+    description: meta.description,
+    canonicalPath: meta.canonicalPath,
+  });
+
   return (
     <PageShell title={title} description="">
       <MotionPanel className="glass-card static-card">
@@ -639,6 +798,13 @@ function Footer() {
 
 function SocialPage() {
   const navigate = useNavigate();
+
+  useSeoMeta({
+    title: 'Social links | Boltwish',
+    description: 'Find Boltwish on social platforms and email support.',
+    canonicalPath: '/social',
+  });
+
   return (
     <PageShell title="Social" description="Find and follow RLMS Games on social platforms." actions={<AppButton variant="secondary" onClick={() => navigate('/')}>Back</AppButton>}>
       <MotionPanel className="glass-card static-card">
@@ -681,6 +847,20 @@ function PageShell({ kicker, title, description, actions, children, aside }) {
 
 function TemplatePickerPage({ templatesState }) {
   const navigate = useNavigate();
+
+  useSeoMeta({
+    title: 'Choose a template | Boltwish',
+    description: 'Browse wish templates for birthdays, anniversaries, weddings, congratulations, and more.',
+    canonicalPath: '/template-picker',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Template picker | Boltwish',
+      description: 'Browse wish templates for birthdays, anniversaries, weddings, congratulations, and more.',
+      url: toAbsoluteUrl('/template-picker'),
+    },
+    jsonLdId: 'template-picker-json-ld',
+  });
 
   return (
     <PageShell
@@ -854,6 +1034,13 @@ function AdminPage({ templatesState }) {
     navigate('/');
   };
 
+  useSeoMeta({
+    title: 'Admin | Boltwish',
+    description: 'Private template management area for Boltwish.',
+    canonicalPath: '/admin',
+    robots: 'noindex,nofollow',
+  });
+
   return (
     <div className="page-shell admin-shell">
       <header className="topbar">
@@ -976,42 +1163,25 @@ function WishFormPage({ templatesState }) {
     { step: 4, label: 'Preview', done: false, active: currentStep === 4 },
   ];
 
-  // SEO: update page title and meta description based on live preview
-  useEffect(() => {
-    if (!preview || !template) return;
-    const previousTitle = document.title;
-    const meta = document.querySelector('meta[name="description"]') || (() => { const m = document.createElement('meta'); m.name = 'description'; document.head.appendChild(m); return m; })();
-    const previousDesc = meta.getAttribute('content') || '';
-    document.title = `${preview.title} — ${template.label || 'Boltwish'}`;
-    meta.setAttribute('content', preview.subtitle || template.summary || 'Create and share a personalised wish');
-
-    // Add JSON-LD for template page
-    const ld = {
+  useSeoMeta({
+    title: template ? `${template.label} template | Boltwish` : 'Boltwish',
+    description: template?.summary || preview.subtitle || SITE_DESCRIPTION,
+    canonicalPath: template ? `/template/${template.id}` : '/template-picker',
+    robots: 'noindex,follow',
+    jsonLd: template ? {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
-      'name': `${template.label} template — Boltwish`,
-      'description': template.summary || preview.subtitle || '',
-      'url': `${window.location.origin}/template/${template.id}`,
-      'mainEntity': {
+      name: `${template.label} template | Boltwish`,
+      description: template.summary || preview.subtitle || '',
+      url: toAbsoluteUrl(`/template/${template.id}`),
+      mainEntity: {
         '@type': 'CreativeWork',
-        'headline': template.label,
-        'description': template.summary || '',
+        headline: template.label,
+        description: template.summary || '',
       },
-    };
-    const existingLd = document.getElementById('template-json-ld');
-    if (existingLd) existingLd.remove();
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.id = 'template-json-ld';
-    script.text = JSON.stringify(ld);
-    document.head.appendChild(script);
-    return () => {
-      document.title = previousTitle;
-      meta.setAttribute('content', previousDesc);
-      const ldEl = document.getElementById('template-json-ld');
-      if (ldEl) ldEl.remove();
-    };
-  }, [preview, template]);
+    } : null,
+    jsonLdId: 'template-json-ld',
+  });
 
   if (templatesState.loading) {
     return <div className="center-screen"><Panel className="fallback-panel"><h1>Loading templates...</h1><p>Waiting for Firebase to return the available templates.</p></Panel></div>;
@@ -1203,6 +1373,13 @@ function SavePage({ templatesState }) {
   const finalData = normalizeWishDocument(readJson('finalData', null) || {});
   const persistedRef = useRef(false);
 
+  useSeoMeta({
+    title: 'Saving wish | Boltwish',
+    description: 'Saving your wish and preparing the shareable link.',
+    canonicalPath: '/save',
+    robots: 'noindex,nofollow',
+  });
+
   useEffect(() => {
     const persistWish = async () => {
       if (persistedRef.current) return;
@@ -1368,81 +1545,31 @@ function WishViewPage({ templatesState }) {
   const theme = template?.theme || {};
   const remainingMs = useCountdownRemaining(wishData?.recipientData?.eventDate);
 
-  // SEO: set page title and description for public wish view
-  useEffect(() => {
-    if (!preview || !template) return;
-    const previousTitle = document.title;
-    const meta = document.querySelector('meta[name="description"]') || (() => { const m = document.createElement('meta'); m.name = 'description'; document.head.appendChild(m); return m; })();
-    const previousDesc = meta.getAttribute('content') || '';
-    const prevOgImage = document.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
-    const prevOgTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
-    const prevOgDesc = document.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
-    const prevTwitterImage = document.querySelector('meta[name="twitter:image"]')?.getAttribute('content') || '';
+  const wishUrl = `${SITE_URL}/wish/${wishData?.username || username}`;
+  const imageUrl = wishData?.username
+    ? `${SITE_URL}/api/og/wish/${wishData.username}?title=${encodeURIComponent(preview.title)}&subtitle=${encodeURIComponent(preview.subtitle)}&chip=${encodeURIComponent(preview.chip)}`
+    : DEFAULT_OG_IMAGE;
 
-    const wishUrl = `${window.location.origin}/wish/${wishData?.username || username}`;
-    // Use dynamic OG endpoint when wishData is available
-    const imageUrl = wishData?.username
-      ? `${window.location.origin}/api/og/wish/${wishData.username}?title=${encodeURIComponent(preview.title)}&subtitle=${encodeURIComponent(preview.subtitle)}&chip=${encodeURIComponent(preview.chip)}`
-      : `${window.location.origin}/brand-mark.svg`;
-
-    document.title = `${preview.title} — ${preview.displayName || template.label || 'Wish'}`;
-    meta.setAttribute('content', preview.subtitle || template.summary || 'A personalised wish');
-
-    // Set Open Graph and Twitter meta tags (create if missing)
-    const setMeta = (selector, attr, value) => {
-      let el = document.querySelector(selector);
-      if (!el) {
-        el = document.createElement('meta');
-        if (selector.includes('property')) el.setAttribute('property', selector.match(/property=\"([^\"]+)\"/)[1]);
-        else el.setAttribute('name', selector.match(/name=\"([^\"]+)\"/)[1]);
-        document.head.appendChild(el);
-      }
-      el.setAttribute(attr, value);
-      return el;
-    };
-
-    setMeta('meta[property="og:title"]', 'content', `${preview.title} — ${preview.displayName || template.label || 'Wish'}`);
-    setMeta('meta[property="og:description"]', 'content', preview.subtitle || template.summary || 'A personalised wish');
-    setMeta('meta[property="og:url"]', 'content', wishUrl);
-    setMeta('meta[property="og:image"]', 'content', imageUrl);
-    setMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
-    setMeta('meta[name="twitter:image"]', 'content', imageUrl);
-
-    // JSON-LD structured data for the wish page
-    const ld = {
+  useSeoMeta({
+    title: `${preview.title} — ${preview.displayName || template?.label || 'Wish'}`,
+    description: preview.subtitle || template?.summary || 'A personalised wish',
+    canonicalPath: `/wish/${wishData?.username || username || ''}`,
+    image: imageUrl,
+    jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
-      'name': `${preview.title} — ${preview.displayName || template.label || 'Wish'}`,
-      'description': preview.subtitle || template.summary || '',
-      'url': wishUrl,
-      'image': imageUrl,
-      'mainEntity': {
+      name: `${preview.title} — ${preview.displayName || template?.label || 'Wish'}`,
+      description: preview.subtitle || template?.summary || '',
+      url: wishUrl,
+      image: imageUrl,
+      mainEntity: {
         '@type': 'CreativeWork',
-        'headline': preview.title,
-        'author': { '@type': 'Person', 'name': preview.displayName || '' },
+        headline: preview.title,
+        author: { '@type': 'Person', name: preview.displayName || '' },
       },
-    };
-
-    const existingLd = document.getElementById('wish-json-ld');
-    if (existingLd) existingLd.remove();
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.id = 'wish-json-ld';
-    script.text = JSON.stringify(ld);
-    document.head.appendChild(script);
-
-    return () => {
-      document.title = previousTitle;
-      meta.setAttribute('content', previousDesc);
-      // restore previous og/twitter tags when possible
-      if (prevOgImage) setMeta('meta[property="og:image"]', 'content', prevOgImage);
-      if (prevOgTitle) setMeta('meta[property="og:title"]', 'content', prevOgTitle);
-      if (prevOgDesc) setMeta('meta[property="og:description"]', 'content', prevOgDesc);
-      if (prevTwitterImage) setMeta('meta[name="twitter:image"]', 'content', prevTwitterImage);
-      const ldEl = document.getElementById('wish-json-ld');
-      if (ldEl) ldEl.remove();
-    };
-  }, [preview, template]);
+    },
+    jsonLdId: 'wish-json-ld',
+  });
 
   if (status && !wishData) {
     return <div className="center-screen"><Panel className="wish-loading"><h2>{status}</h2><p>Please wait while we fetch your card.</p></Panel></div>;
