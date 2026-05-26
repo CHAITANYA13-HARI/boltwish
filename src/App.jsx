@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   MessageSquareMore,
 } from 'lucide-react';
+// Firebase initialization (eager) — keep the original import to match existing usage.
 import { app } from './lib/firebase';
 import {
   buildContentDraft,
@@ -311,6 +312,7 @@ function useFirestoreTemplates() {
     const load = async () => {
       try {
         const { collection, getDocs, getFirestore, onSnapshot } = await import('firebase/firestore');
+        const { app } = await import('./lib/firebase');
         const db = getFirestore(app);
         const templatesRef = collection(db, 'templates');
 
