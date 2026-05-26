@@ -411,7 +411,7 @@ function Brand() {
   return (
     <div className="brand">
       <div className="brand-mark">
-        <img src="/brand-mark.svg" alt="Boltwish logo" />
+        <img src="/brand-mark.svg" alt="Boltwish logo" width="48" height="48" role="img" />
       </div>
       <div className="brand-copy">
         <strong>Boltwish</strong>
@@ -832,7 +832,7 @@ function PageShell({ kicker, title, description, actions, children, aside }) {
           </div>
         </div>
       </header>
-      <main className="hero-grid">
+      <main id="main-content" className="hero-grid">
         <Panel className="hero-card">
           {kicker ? <div className="eyebrow">{kicker}</div> : null}
           <h1>{title}</h1>

@@ -38,8 +38,9 @@ async function fetchWishesFromFirestore() {
   }
 }
 
-function buildUrlXml(loc, changefreq = 'monthly', priority = '0.5') {
-  return `  <url>\n    <loc>${loc}</loc>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+function buildUrlXml(loc, changefreq = 'monthly', priority = '0.5', lastmod) {
+  const lastmodTag = lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : '';
+  return `  <url>\n    <loc>${loc}</loc>${lastmodTag}\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
 }
 
 async function main() {
@@ -56,8 +57,9 @@ async function main() {
   for (const p of wishPaths) urls.push({ path: p, changefreq: 'monthly', priority: '0.6' });
 
   const xmlParts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'];
+  const today = new Date().toISOString().slice(0, 10);
   for (const u of urls) {
-    xmlParts.push(buildUrlXml(`${siteUrl.replace(/\/$/, '')}${u.path}`, u.changefreq, u.priority));
+    xmlParts.push(buildUrlXml(`${siteUrl.replace(/\/$/, '')}${u.path}`, u.changefreq, u.priority, today));
   }
   xmlParts.push('</urlset>');
 
