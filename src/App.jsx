@@ -37,7 +37,7 @@ import {
 } from './data/templates';
 import { templateSeed } from './data/templateSeed';
 import { readJson, slugify, writeJson } from './lib/storage';
-const ADMIN_CODE = import.meta.env.VITE_ADMIN_CODE || 'boltwish-admin';
+const ADMIN_CODE = import.meta.env.VITE_ADMIN_CODE;
 const SITE_NAME = 'Boltwish';
 const SITE_DESCRIPTION = 'Create and share beautiful wish cards with personalized templates, live previews, and one-tap sharing.';
 const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://boltwish.vercel.app').replace(/\/$/, '');
