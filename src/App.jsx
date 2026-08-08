@@ -22,6 +22,8 @@ import {
   Globe2,
   ShieldCheck,
   MessageSquareMore,
+  LockKeyhole,
+  PartyPopper,
 } from 'lucide-react';
 // Firebase initialization (eager) — keep the original import to match existing usage.
 import { app } from './lib/firebase';
@@ -30,14 +32,13 @@ import {
   buildRecipientDraft,
   buildShareMessage,
   composeWishPreview,
-  contentFieldMeta,
   defaultContentOrder,
   normalizeTemplateDoc,
   normalizeWishDocument,
+  wishTones,
 } from './data/templates';
 import { templateSeed } from './data/templateSeed';
-import { readJson, slugify, writeJson } from './lib/storage';
-const ADMIN_CODE = import.meta.env.VITE_ADMIN_CODE;
+import { createSecureId, readJson, slugify, writeJson } from './lib/storage';
 const SITE_NAME = 'Boltwish';
 const SITE_DESCRIPTION = 'Create and share beautiful wish cards with personalized templates, live previews, and one-tap sharing.';
 const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://boltwish.vercel.app').replace(/\/$/, '');
@@ -293,6 +294,7 @@ function App() {
       <Route path="/save" element={<SavePage templatesState={templatesState} />} />
       <Route path="/admin" element={<AdminPage templatesState={templatesState} />} />
       <Route path="/wish/:username" element={<WishViewPage templatesState={templatesState} />} />
+      <Route path="/manage/:username" element={<ManageWishPage templatesState={templatesState} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -318,7 +320,7 @@ function useFirestoreTemplates() {
 
         const initialSnapshot = await getDocs(templatesRef);
         const initialTemplates = initialSnapshot.docs
-          .map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, docSnapshot.data()))
+          .map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, prepareTemplateDocument(docSnapshot.id, docSnapshot.data())))
           .filter((template) => template.enabled !== false)
           .sort(sortTemplates);
 
@@ -334,7 +336,7 @@ function useFirestoreTemplates() {
           templatesRef,
           (snapshot) => {
             const templates = snapshot.docs
-              .map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, docSnapshot.data()))
+              .map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, prepareTemplateDocument(docSnapshot.id, docSnapshot.data())))
               .filter((template) => template.enabled !== false)
               .sort(sortTemplates);
 
@@ -381,6 +383,20 @@ function resolveTemplate(templates, templateId) {
   return templates.find((template) => template.id === templateId) || null;
 }
 
+function prepareTemplateDocument(templateId, data = {}) {
+  const personalizedTemplate = templateSeed.find((template) => template.id === templateId);
+  if (!personalizedTemplate || Number(data.personalizationVersion || 0) >= 3) return data;
+
+  return {
+    ...personalizedTemplate,
+    ...data,
+    summary: personalizedTemplate.summary,
+    fields: personalizedTemplate.fields,
+    content: personalizedTemplate.content,
+    personalizationVersion: 3,
+  };
+}
+
 function sortTemplates(left, right) {
   const leftLabel = String(left?.label || left?.id || '');
   const rightLabel = String(right?.label || right?.id || '');
@@ -423,26 +439,97 @@ function Brand() {
   );
 }
 
-function AdminGate({ onUnlock, locked }) {
-  const [code, setCode] = useState('');
+function AdminGate({ onUnlock, error, busy }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const submit = (event) => {
+    event.preventDefault();
+    onUnlock({ email: email.trim(), password });
+  };
+
   return (
     <Panel className="admin-gate">
-      <div className="eyebrow">Admin access</div>
-      <h1>Manage templates in Firebase.</h1>
-      <p className="lead">Use the admin code to unlock template editing, seeding, and cleanup tools.</p>
-      <div className="admin-gate-form">
+      <div className="admin-lock-icon"><LockKeyhole size={26} /></div>
+      <div className="eyebrow">Protected admin area</div>
+      <h1>Sign in to manage Boltwish.</h1>
+      <p className="lead">Your password is checked securely by Firebase Authentication. It is never stored in this website's code.</p>
+      <form className="admin-gate-form" onSubmit={submit}>
+        <input
+          className="admin-input"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="Admin email"
+          autoComplete="username"
+          required
+        />
         <input
           className="admin-input"
           type="password"
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
-          placeholder="Admin code"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Password"
+          autoComplete="current-password"
+          minLength={8}
+          required
         />
-        <AppButton onClick={() => onUnlock(code)}>Unlock admin</AppButton>
-      </div>
-      {locked ? <div className="notice error">Invalid admin code.</div> : null}
+        <AppButton type="submit" disabled={busy}>{busy ? 'Checking access…' : 'Sign in securely'}</AppButton>
+      </form>
+      <p className="admin-security-note"><ShieldCheck size={16} /> Access also requires an admin record in the backend.</p>
+      {error ? <div className="notice error" role="alert">{error}</div> : null}
     </Panel>
   );
+}
+
+function cleanForFirestore(value) {
+  if (Array.isArray(value)) return value.map(cleanForFirestore);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, entry]) => entry !== undefined)
+        .map(([key, entry]) => [key, cleanForFirestore(entry)]),
+    );
+  }
+  return value;
+}
+
+async function ensureWishOwner() {
+  const { getAuth, signInAnonymously } = await import('firebase/auth');
+  const auth = getAuth(app);
+  if (auth.currentUser) return auth.currentUser;
+  const credential = await signInAnonymously(auth);
+  return credential.user;
+}
+
+function valueToMillis(value) {
+  if (!value) return 0;
+  if (typeof value.toMillis === 'function') return value.toMillis();
+  if (typeof value.toDate === 'function') return value.toDate().getTime();
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === 'number') return value;
+  const parsed = new Date(String(value).includes('T') ? value : `${value}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+}
+
+function valueToDateInput(value) {
+  const millis = valueToMillis(value);
+  if (!millis) return '';
+  const date = new Date(millis);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
+const WISH_ACCESS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+function createWishSchedule(Timestamp, eventDate) {
+  const revealMillis = valueToMillis(eventDate);
+  if (!revealMillis) throw new Error('Please enter a valid event date.');
+
+  return {
+    revealAt: Timestamp.fromMillis(revealMillis),
+    expiresAt: Timestamp.fromMillis(revealMillis + WISH_ACCESS_WINDOW_MS),
+  };
 }
 
 function AppButton({ variant = 'primary', className = '', ...props }) {
@@ -512,13 +599,76 @@ function WishMetaLines({ metaLines = [], className = '' }) {
   );
 }
 
+function WishExperience({ preview, template, compact = false, children }) {
+  const icon = template?.icon || '✨';
+  const displayName = preview?.displayName && preview.displayName !== 'there' ? preview.displayName : '';
+  const visualStyle = slugify(template?.theme?.background || template?.id || 'celebration');
+  const motifSets = {
+    sunrise: ['✦', '●', '🎈', '✦'],
+    blush: ['♡', '✦', '∞', '♡'],
+    rose: ['♥', '✦', '♡', '♥'],
+    violet: ['★', '✦', '◆', '★'],
+    sky: ['☁', '★', '☾', '☁'],
+    peach: ['❀', '✦', '♡', '❀'],
+    mint: ['✦', '☻', '◆', '✦'],
+    teal: ['✦', '♡', '●', '✦'],
+  };
+  const motifs = motifSets[visualStyle] || ['✦', '●', '◆', '✦'];
+
+  return (
+    <article className={`wish-experience wish-style-${visualStyle} wish-tone-${preview.tone || 'heartfelt'} ${compact ? 'wish-experience-compact' : 'wish-experience-full'}`.trim()}>
+      <div className="wish-aurora wish-aurora-one" aria-hidden="true" />
+      <div className="wish-aurora wish-aurora-two" aria-hidden="true" />
+      <div className="wish-confetti" aria-hidden="true">
+        {Array.from({ length: compact ? 8 : 16 }).map((_, index) => <i key={index} />)}
+      </div>
+      <div className="wish-motifs" aria-hidden="true">{motifs.map((motif, index) => <span key={`${motif}-${index}`}>{motif}</span>)}</div>
+      <div className="wish-experience-content">
+        <div className="wish-occasion-pill"><PartyPopper size={15} /> {preview.chip}</div>
+        <div className="wish-icon-orbit" aria-hidden="true"><span>{icon}</span></div>
+        {displayName ? <p className="wish-dedication">A special wish for</p> : null}
+        {displayName ? <div className="wish-recipient-name">{displayName}</div> : null}
+        <h2>{preview.title}</h2>
+        {preview.subtitle ? <p className="wish-experience-subtitle">{preview.subtitle}</p> : null}
+        <WishMetaLines metaLines={preview.metaLines} className="wish-experience-meta" />
+        <div className="wish-story">
+          {preview.body.map((paragraph, index) => <p key={`${paragraph}-${index}`}>{paragraph}</p>)}
+        </div>
+        {preview.highlight ? <div className="wish-highlight"><Sparkles size={18} /> <span>{preview.highlight}</span></div> : null}
+        {preview.quote ? <blockquote>“{preview.quote}”</blockquote> : null}
+        {(preview.footer || preview.fromLine) ? (
+          <div className="wish-signoff">
+            {preview.footer ? preview.footer.split('\n').map((line, index) => <span key={`${line}-${index}`}>{line}</span>) : null}
+            {preview.fromLine ? <strong>{preview.fromLine}</strong> : null}
+          </div>
+        ) : null}
+        {children}
+      </div>
+    </article>
+  );
+}
+
+function ToneSelector({ value, onChange }) {
+  return (
+    <div className="tone-section">
+      <div className="tone-section-head">
+        <div><span className="tone-kicker">Writing style</span><h3>How should this wish sound?</h3></div>
+        <span className="tone-current">{wishTones.find((tone) => tone.id === value)?.label}</span>
+      </div>
+      <div className="tone-grid" role="radiogroup" aria-label="Wish tone">
+        {wishTones.map((tone) => (
+          <button key={tone.id} type="button" role="radio" aria-checked={value === tone.id} className={`tone-card ${value === tone.id ? 'active' : ''}`} onClick={() => onChange(tone.id)}>
+            <span className="tone-emoji">{tone.emoji}</span>
+            <span><strong>{tone.label}</strong><small>{tone.description}</small></span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function getCountdownRemainingMs(eventDate) {
-  if (!eventDate) return 0;
-
-  const target = new Date(`${eventDate}T00:00:00`);
-  if (Number.isNaN(target.getTime())) return 0;
-
-  return Math.max(0, target.getTime() - Date.now());
+  return Math.max(0, valueToMillis(eventDate) - Date.now());
 }
 
 function formatCountdownDuration(remainingMs) {
@@ -624,21 +774,21 @@ function HomePage({ templatesState }) {
           <MotionPanel className="hero-card hero-accent hero-glass">
             <div className="eyebrow"><Sparkles size={14} /> Make Any Occasion Unforgettable</div>
             <h1>Create stunning, interactive wishes in 30 seconds.</h1>
-            <p className="lead">Splash effects, music, and animated reveals to make moments unforgettable — no design skills required.</p>
+            <p className="lead">Answer a few thoughtful prompts and turn your memories into a polished, private wish—no writing or design skills required.</p>
             <div className="actions-row">
               <AppButton onClick={() => navigate('/template-picker')}>Create Wish →</AppButton>
-              <AppButton variant="secondary" onClick={() => navigate('/template-picker')}>Explore community</AppButton>
+              <AppButton variant="secondary" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>See how it works</AppButton>
             </div>
             <div className="stats-grid">
-              <div className="stat-card"><strong>50,000+</strong><span>Wishes created</span></div>
-              <div className="stat-card"><strong>30s</strong><span>Create a wish</span></div>
-              <div className="stat-card"><strong>Anywhere</strong><span>Share on WhatsApp & Instagram</span></div>
+              <div className="stat-card"><strong>8</strong><span>Occasion-specific designs</span></div>
+              <div className="stat-card"><strong>4</strong><span>Personal writing tones</span></div>
+              <div className="stat-card"><strong>Private</strong><span>Unlisted, expiring links</span></div>
             </div>
           </MotionPanel>
 
                   <MotionPanel className="side-panel hero-glass" id="recent-wish">
                     <div className="eyebrow"><BadgeCheck size={14} /> Recent activity</div>
-                        <h2>Explore public wishes</h2>
+                        <h2>Your wishes on this device</h2>
                     <div className="recent-hero-card">
                       {recentWishes.length ? (
                         <>
@@ -868,22 +1018,23 @@ function TemplatePickerPage({ templatesState }) {
     <PageShell
       kicker="Step 1 of 3 · Choose style"
       title="Choose a template that fits the moment."
-      description="Templates are loaded from Firebase, so the picker reflects what you manage in the backend."
+      description="Each occasion has its own visual personality, writing tones, and thoughtful prompts."
       actions={<AppButton variant="secondary" onClick={() => navigate('/')}>Back to welcome</AppButton>}
-      aside={<Panel className="side-panel"><h2>Next step</h2><p>After you choose a template, you’ll edit both the recipient details and the actual content before saving.</p></Panel>}
+      aside={<Panel className="side-panel"><h2>Next step</h2><p>Choose a writing tone, answer a few personal prompts, and watch the finished wish come to life.</p></Panel>}
     >
       <div className="actions-row"><AppButton onClick={() => document.getElementById('template-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Pick a template</AppButton></div>
-      <div className="hero-note">If no templates show here, add or fix the documents in the Firebase <span>templates</span> collection.</div>
       <section className="templates-section" id="template-grid">
         {templatesState.error ? <div className="notice error">{templatesState.error}</div> : null}
         <div className="templates-grid">
           {templatesState.loading
             ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="template-card skeleton-card tall" />)
             : templatesState.templates.map((template) => (
-                <CardButton key={template.id} onClick={() => { writeJson('selectedTemplateId', template.id); navigate(`/template/${template.id}`); }}>
+                <CardButton key={template.id} className={`visual-template-card template-card-${slugify(template.theme?.background || template.id)}`} style={{ '--template-accent': template.theme?.accent, '--template-soft': template.theme?.accentSoft }} onClick={() => { writeJson('selectedTemplateId', template.id); navigate(`/template/${template.id}`); }}>
+                  <span className="template-card-art" aria-hidden="true"><i>{template.icon}</i><b>✦</b><b>●</b></span>
                   <span className="chip">{template.label}</span>
-                  <strong>{template.icon} {template.chip}</strong>
-                  <span>{template.summary || 'Edit this template in Firebase.'}</span>
+                  <strong>{template.chip}</strong>
+                  <span>{template.summary || 'A thoughtful wish for this occasion.'}</span>
+                  <span className="template-card-cta">Personalize this design <ArrowRight size={14} /></span>
                 </CardButton>
               ))}
         </div>
@@ -895,22 +1046,84 @@ function TemplatePickerPage({ templatesState }) {
 
 function AdminPage({ templatesState }) {
   const navigate = useNavigate();
-  const [isUnlocked, setIsUnlocked] = useState(() => localStorage.getItem('adminUnlocked') === 'true');
+  const [authStatus, setAuthStatus] = useState('checking');
+  const [adminUser, setAdminUser] = useState(null);
   const [adminError, setAdminError] = useState('');
   const [templates, setTemplates] = useState([]);
   const [editingId, setEditingId] = useState('');
   const [notice, setNotice] = useState('');
   const [showPreview, setShowPreview] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 900 : true));
 
+  const isUnlocked = authStatus === 'authorized';
+
+  useSeoMeta({
+    title: 'Admin | Boltwish',
+    description: 'Private template management area for Boltwish.',
+    canonicalPath: '/admin',
+    robots: 'noindex,nofollow',
+  });
+
   useEffect(() => {
-    if (!isUnlocked) return;
+    let active = true;
+    let unsubscribe = () => {};
+
+    const watchAuth = async () => {
+      const { getAuth, onAuthStateChanged, signOut } = await import('firebase/auth');
+      const { doc, getDoc, getFirestore } = await import('firebase/firestore');
+      const auth = getAuth(app);
+
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!active) return;
+        if (!user) {
+          setAdminUser(null);
+          setAuthStatus('signed-out');
+          return;
+        }
+
+        try {
+          const adminRecord = await getDoc(doc(getFirestore(app), 'admins', user.uid));
+          if (!adminRecord.exists()) {
+            await signOut(auth);
+            if (active) setAdminError('This account is signed in, but it does not have admin access.');
+            return;
+          }
+          if (active) {
+            setAdminUser(user);
+            setAdminError('');
+            setAuthStatus('authorized');
+          }
+        } catch {
+          await signOut(auth).catch(() => {});
+          if (active) {
+            setAdminError('Admin access could not be verified. Check the backend admin record.');
+            setAuthStatus('signed-out');
+          }
+        }
+      });
+    };
+
+    watchAuth().catch(() => {
+      if (active) {
+        setAdminError('Authentication is not available right now.');
+        setAuthStatus('signed-out');
+      }
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isUnlocked) return undefined;
 
     const load = async () => {
       try {
         const { collection, getDocs, getFirestore } = await import('firebase/firestore');
         const db = getFirestore(app);
         const snapshot = await getDocs(collection(db, 'templates'));
-        const docs = snapshot.docs.map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, docSnapshot.data()));
+        const docs = snapshot.docs.map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, prepareTemplateDocument(docSnapshot.id, docSnapshot.data())));
         setTemplates(docs);
         setEditingId((current) => current || (docs[0]?.id || ''));
         setAdminError('');
@@ -921,17 +1134,24 @@ function AdminPage({ templatesState }) {
     };
 
     load();
+    return undefined;
   }, [isUnlocked]);
 
-  const unlockAdmin = async (code) => {
-    if (code !== ADMIN_CODE) {
-      setAdminError('Invalid admin code.');
-      return;
-    }
-
-    localStorage.setItem('adminUnlocked', 'true');
-    setIsUnlocked(true);
+  const unlockAdmin = async ({ email, password }) => {
+    setAuthStatus('checking');
     setAdminError('');
+    try {
+      const { browserSessionPersistence, getAuth, setPersistence, signInWithEmailAndPassword } = await import('firebase/auth');
+      const auth = getAuth(app);
+      await setPersistence(auth, browserSessionPersistence);
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      const message = error?.code === 'auth/invalid-credential'
+        ? 'The email or password is incorrect.'
+        : 'Sign-in failed. Please try again.';
+      setAdminError(message);
+      setAuthStatus('signed-out');
+    }
   };
 
   const selectedTemplate = templates.find((template) => template.id === editingId) || templates[0] || null;
@@ -946,7 +1166,8 @@ function AdminPage({ templatesState }) {
   const saveTemplate = async (template) => {
     const { doc, getFirestore, setDoc } = await import('firebase/firestore');
     const db = getFirestore(app);
-    await setDoc(doc(db, 'templates', template.id), template, { merge: true });
+    const cleanTemplate = cleanForFirestore(template);
+    await setDoc(doc(db, 'templates', template.id), cleanTemplate, { merge: true });
     setTemplates((current) => {
       const next = current.filter((item) => item.id !== template.id);
       next.push(template);
@@ -972,7 +1193,7 @@ function AdminPage({ templatesState }) {
       // eslint-disable-next-line no-await-in-loop
       await saveTemplate(template);
     }
-    setNotice('Seeded Firebase templates from the built-in catalog.');
+    setNotice('Installed the personalized template collection in Firebase.');
   };
 
   const updateSelected = (field, value) => {
@@ -1024,24 +1245,18 @@ function AdminPage({ templatesState }) {
           <Brand />
           <TextButton type="button" onClick={() => navigate('/')}>Home</TextButton>
         </header>
-        <AdminGate onUnlock={unlockAdmin} locked={Boolean(adminError)} />
+        <AdminGate onUnlock={unlockAdmin} error={adminError} busy={authStatus === 'checking'} />
       </div>
     );
   }
 
-  const logoutAdmin = () => {
-    localStorage.removeItem('adminUnlocked');
-    setIsUnlocked(false);
+  const logoutAdmin = async () => {
+    const { getAuth, signOut } = await import('firebase/auth');
+    await signOut(getAuth(app));
     setNotice('Logged out.');
-    navigate('/');
+    setAdminUser(null);
+    setAuthStatus('signed-out');
   };
-
-  useSeoMeta({
-    title: 'Admin | Boltwish',
-    description: 'Private template management area for Boltwish.',
-    canonicalPath: '/admin',
-    robots: 'noindex,nofollow',
-  });
 
   return (
     <div className="page-shell admin-shell">
@@ -1049,12 +1264,13 @@ function AdminPage({ templatesState }) {
         <Brand />
         <div className="topbar-actions">
           <TextButton type="button" onClick={() => navigate('/')}>Home</TextButton>
-          <TextButton type="button" onClick={seedTemplates}>Seed templates</TextButton>
+          <TextButton type="button" onClick={seedTemplates}>Install personalized templates</TextButton>
           <AppButton variant="secondary" onClick={addTemplate}>Add template</AppButton>
           <TextButton type="button" onClick={() => setShowPreview((v) => !v)}>{showPreview ? 'Hide preview' : 'Show preview'}</TextButton>
           <TextButton type="button" onClick={logoutAdmin}>Logout</TextButton>
         </div>
       </header>
+      <div className="admin-session"><ShieldCheck size={15} /> Signed in securely as {adminUser?.email}</div>
       <main className="admin-layout">
         <Panel className="admin-list panel">
           <div className="section-head">
@@ -1145,24 +1361,24 @@ function WishFormPage({ templatesState }) {
   const template = useMemo(() => resolveTemplate(templatesState.templates, templateId), [templatesState.templates, templateId]);
   const [recipientData, setRecipientData] = useState({});
   const [contentData, setContentData] = useState({});
+  const [tone, setTone] = useState('heartfelt');
   const [currentStep, setCurrentStep] = useState(2);
 
   useEffect(() => {
     if (!template) return;
     setRecipientData(buildRecipientDraft(template));
     setContentData(buildContentDraft(template));
+    setTone('heartfelt');
     setCurrentStep(2);
   }, [template?.id]);
 
-  const preview = useMemo(() => composeWishPreview(template, { recipientData, content: contentData }), [template, recipientData, contentData]);
-  const recipientFieldsComplete = template ? template.fields.every((field) => String(recipientData[field.key] || '').trim().length > 0) : false;
-  const contentFieldsComplete = defaultContentOrder.filter((field) => field !== 'title' && field !== 'subtitle').every((field) => field === 'body' ? String(contentData[field] || '').trim().length > 0 : true);
-  const canContinue = currentStep === 2 ? recipientFieldsComplete : currentStep === 3 ? contentFieldsComplete : true;
+  const preview = useMemo(() => composeWishPreview(template, { recipientData, content: contentData, tone }), [template, recipientData, contentData, tone]);
+  const recipientFieldsComplete = template ? template.fields.every((field) => field.required === false || String(recipientData[field.key] || '').trim().length > 0) : false;
+  const canContinue = currentStep === 2 ? recipientFieldsComplete : true;
   const wizardSteps = [
     { step: 1, label: 'Template', done: true },
-    { step: 2, label: 'Details', done: currentStep > 2, active: currentStep === 2 },
-    { step: 3, label: 'Message', done: currentStep > 3, active: currentStep === 3 },
-    { step: 4, label: 'Preview', done: false, active: currentStep === 4 },
+    { step: 2, label: 'Personalize', done: currentStep > 2, active: currentStep === 2 },
+    { step: 3, label: 'Preview', done: false, active: currentStep === 3 },
   ];
 
   useSeoMeta({
@@ -1194,7 +1410,6 @@ function WishFormPage({ templatesState }) {
   }
 
   const updateRecipient = (field, value) => setRecipientData((current) => ({ ...current, [field]: value }));
-  const updateContent = (field, value) => setContentData((current) => ({ ...current, [field]: value }));
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -1202,14 +1417,14 @@ function WishFormPage({ templatesState }) {
     const cleanedContent = Object.fromEntries(defaultContentOrder.map((field) => [field, String(contentData[field] || '').trim()]));
 
     writeJson('selectedTemplateId', template.id);
-    writeJson('finalData', { templateId: template.id, templateSnapshot: template, recipientData: cleanedRecipientData, content: cleanedContent });
+    writeJson('finalData', { templateId: template.id, templateSnapshot: template, recipientData: cleanedRecipientData, content: cleanedContent, tone, visibility: 'unlisted' });
     navigate('/save');
   };
 
   const goNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       if (!canContinue) return;
-      setCurrentStep((step) => Math.min(4, step + 1));
+      setCurrentStep((step) => Math.min(3, step + 1));
       return;
     }
     handleSubmit(new Event('submit'));
@@ -1225,9 +1440,9 @@ function WishFormPage({ templatesState }) {
 
   return (
     <PageShell
-      kicker="Step 2 of 4 · Personalize"
-      title="Build your wish in a calm, guided flow."
-      description="Edit the recipient details, message, and final preview before saving."
+      kicker="Step 2 of 3 · Make it personal"
+      title="Tell us what makes this person special."
+      description="Answer a few occasion-specific prompts and Boltwish will shape them into a finished wish."
       actions={<AppButton variant="secondary" onClick={() => navigate('/template-picker')}>Change template</AppButton>}
       aside={
         <MotionPanel className="side-panel preview-panel glass-sidebar">
@@ -1239,14 +1454,8 @@ function WishFormPage({ templatesState }) {
             <Sparkles size={18} className="rail-icon" />
           </div>
           <div className="preview-card premium-preview" style={{ '--wish-accent': template?.theme?.accent || '#8b5cf6', '--wish-accent-soft': template?.theme?.accentSoft || '#ec4899' }}>
-            <div className="chip">{preview.chip}</div>
-            <strong>{preview.title}</strong>
-            <p>{preview.subtitle}</p>
-            <WishMetaLines metaLines={preview.metaLines} className="wish-card-meta-inline" />
+            <WishExperience preview={preview} template={template} compact />
             {recipientData.eventDate && preview.countdown ? <CountdownBadge eventDate={recipientData.eventDate} /> : null}
-            <div className="preview-body">{preview.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
-            {preview.highlight ? <div className="preview-highlight">{preview.highlight}</div> : null}
-            {preview.quote ? <div className="preview-quote">“{preview.quote}”</div> : null}
           </div>
         </MotionPanel>
       }
@@ -1266,18 +1475,20 @@ function WishFormPage({ templatesState }) {
             <motion.section key="recipient" className="editor-card glass-card wizard-card" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.28 }}>
               <SectionHeading
                 eyebrow="Step 2"
-                title="Add the recipient details."
-                description="Use the few fields required for the selected template."
+                title="Add the details only you know."
+                description="Specific memories and honest details make the final wish feel truly personal."
               />
+              <ToneSelector value={tone} onChange={setTone} />
               <div className="field-grid">
                 {template.fields.map((field) => (
-                  <label key={field.key} className="field-group floating-field">
-                    <span>{field.label}</span>
+                  <label key={field.key} className={`field-group floating-field ${field.type === 'textarea' ? 'field-wide' : ''}`}>
+                    <span>{field.label}{field.required === false ? '' : ' *'}</span>
                     {field.type === 'textarea' ? (
                       <textarea value={recipientData[field.key] || ''} required={field.required} maxLength={field.maxLength} placeholder={field.placeholder} onChange={(event) => updateRecipient(field.key, event.target.value)} />
                     ) : (
-                      <input type={field.type} value={recipientData[field.key] || ''} required={field.required} min={field.min} max={field.max} maxLength={field.maxLength} placeholder={field.placeholder} onChange={(event) => updateRecipient(field.key, event.target.value)} />
+                      <input type={field.type} value={recipientData[field.key] || ''} required={field.required} min={field.key === 'eventDate' ? new Date().toISOString().slice(0, 10) : field.min} max={field.max} maxLength={field.maxLength} placeholder={field.placeholder} onChange={(event) => updateRecipient(field.key, event.target.value)} />
                     )}
+                    <small>{field.helpText || (field.maxLength ? `${String(recipientData[field.key] || '').length}/${field.maxLength}` : '')}</small>
                   </label>
                 ))}
               </div>
@@ -1285,51 +1496,17 @@ function WishFormPage({ templatesState }) {
           ) : null}
 
           {currentStep === 3 ? (
-            <motion.section key="content" className="editor-card glass-card wizard-card" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.28 }}>
-              <SectionHeading
-                eyebrow="Step 3"
-                title="Edit the message."
-                description="All message fields are prefilled so you can tweak every part of the card."
-              />
-              <div className="content-editor-grid">
-                {defaultContentOrder.map((field) => {
-                  const meta = contentFieldMeta[field];
-                  const isSingleLine = field === 'title' || field === 'subtitle';
-                  return (
-                    <label key={field} className="field-group full-width floating-field">
-                      <span>{meta.label}</span>
-                      {isSingleLine ? (
-                        <input value={contentData[field] || ''} maxLength={meta.maxLength} placeholder={meta.placeholder} onChange={(event) => updateContent(field, event.target.value)} />
-                      ) : (
-                        <textarea value={contentData[field] || ''} required={field === 'body'} maxLength={meta.maxLength} placeholder={meta.placeholder} rows={field === 'body' ? 7 : 3} onChange={(event) => updateContent(field, event.target.value)} />
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
-            </motion.section>
-          ) : null}
-
-          {currentStep === 4 ? (
             <motion.section key="review" className="editor-card glass-card wizard-card" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.28 }}>
               <SectionHeading
-                eyebrow="Step 4"
-                title="Review the final wish."
-                description="If everything looks right, save and share it."
+                eyebrow="Step 3"
+                title={`A wish made for ${preview.displayName}.`}
+                description="Your answers are now part of the story. Go back to adjust anything, or save it when it feels right."
               />
-              <div className="review-grid">
-                <div className="review-panel">
-                  <h3>Recipient</h3>
-                  <ul>
-                    {template.fields.map((field) => <li key={field.key}><strong>{field.label}:</strong> {String(recipientData[field.key] || '')}</li>)}
-                  </ul>
-                </div>
-                <div className="review-panel">
-                  <h3>Message fields</h3>
-                  <ul>
-                    {defaultContentOrder.map((field) => <li key={field}><strong>{contentFieldMeta[field].label}:</strong> {String(contentData[field] || '').slice(0, 80)}</li>)}
-                  </ul>
-                </div>
+              <div className="review-experience" style={{ '--wish-accent': template?.theme?.accent || '#8b5cf6', '--wish-accent-soft': template?.theme?.accentSoft || '#ec4899' }}>
+                <WishExperience preview={preview} template={template} />
+              </div>
+              <div className="share-settings">
+                <div className="share-settings-head"><ShieldCheck size={18} /><div><h3>Automatic private sharing</h3><p>This unlisted wish opens on the event date and expires automatically seven days later.</p></div></div>
               </div>
             </motion.section>
           ) : null}
@@ -1337,24 +1514,24 @@ function WishFormPage({ templatesState }) {
 
         <div className="wizard-actions actions-row form-actions">
           <AppButton variant="secondary" type="button" onClick={goBack}>Back</AppButton>
-          <AppButton type={currentStep === 4 ? 'submit' : 'button'} onClick={currentStep === 4 ? undefined : goNext} disabled={!canContinue}>{currentStep === 4 ? 'Save and continue' : 'Next step'}</AppButton>
+          <AppButton type={currentStep === 3 ? 'submit' : 'button'} onClick={currentStep === 3 ? undefined : goNext} disabled={!canContinue}>{currentStep === 3 ? 'Save my personalized wish' : 'See my wish'}</AppButton>
         </div>
       </form>
 
       <div className="mobile-sticky-bar">
         <div>
-          <strong>Step {currentStep} of 4</strong>
-          <span>{currentStep === 4 ? 'Ready to save' : 'Continue your wish'}</span>
+          <strong>Step {currentStep} of 3</strong>
+          <span>{currentStep === 3 ? 'Your personalized wish is ready' : 'Tell us what makes them special'}</span>
         </div>
         <div className="mobile-sticky-actions">
           <AppButton variant="secondary" type="button" onClick={goBack}>Back</AppButton>
           <AppButton
-            type={currentStep === 4 ? 'submit' : 'button'}
-            form={currentStep === 4 ? formId : undefined}
-            onClick={currentStep === 4 ? undefined : goNext}
+            type={currentStep === 3 ? 'submit' : 'button'}
+            form={currentStep === 3 ? formId : undefined}
+            onClick={currentStep === 3 ? undefined : goNext}
             disabled={!canContinue}
           >
-            {currentStep === 4 ? 'Save' : 'Next'}
+            {currentStep === 3 ? 'Save' : 'See wish'}
           </AppButton>
         </div>
       </div>
@@ -1394,13 +1571,28 @@ function SavePage({ templatesState }) {
       }
 
       try {
-        const { doc, getFirestore, serverTimestamp, setDoc } = await import('firebase/firestore');
+        const { doc, getFirestore, serverTimestamp, setDoc, Timestamp } = await import('firebase/firestore');
+        const owner = await ensureWishOwner();
         const db = getFirestore(app);
         const template = finalData.templateSnapshot || resolveTemplate(templatesState.templates, finalData.templateId);
         const recipientData = finalData.recipientData || {};
-        const baseName = recipientData.name || recipientData.babyName || recipientData.bride || recipientData.groom || recipientData.parentName || 'user';
-        const username = `${slugify(baseName)}-${Date.now().toString().slice(-4)}`;
-        const payload = { templateId: finalData.templateId, templateSnapshot: template, recipientData, content: finalData.content || {}, username, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+        const baseName = recipientData.name || recipientData.babyName || recipientData.bride || recipientData.groom || recipientData.partnerOne || recipientData.parentName || 'user';
+        const username = `${slugify(baseName)}-${createSecureId()}`;
+        const { expiresAt, revealAt } = createWishSchedule(Timestamp, recipientData.eventDate);
+        const payload = {
+          templateId: finalData.templateId,
+          templateSnapshot: cleanForFirestore(template),
+          recipientData,
+          content: finalData.content || {},
+          tone: finalData.tone || 'heartfelt',
+          visibility: 'unlisted',
+          ownerUid: owner.uid,
+          expiresAt,
+          revealAt,
+          username,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
 
         await setDoc(doc(db, 'wishes', username), payload);
 
@@ -1415,8 +1607,8 @@ function SavePage({ templatesState }) {
         // persist to recentWishes list (local device) with recipient name
         try {
           const existing = readJson('recentWishes', []);
-          const recipientName = recipientData.name || recipientData.babyName || recipientData.bride || recipientData.groom || recipientData.parentName || '';
-          const entry = { url, metadata: { ...metadata, recipientName }, createdAt: Date.now() };
+          const recipientName = recipientData.name || recipientData.babyName || recipientData.bride || recipientData.groom || recipientData.partnerOne || recipientData.parentName || '';
+          const entry = { url, manageUrl: `${window.location.origin}/manage/${username}`, metadata: { ...metadata, recipientName }, createdAt: Date.now() };
           const next = [entry, ...existing].slice(0, 20);
           writeJson('recentWishes', next);
         } catch (e) {
@@ -1467,6 +1659,7 @@ function SavePage({ templatesState }) {
         <div className="actions-column save-actions">
           <AppButton onClick={openWish} disabled={!savedLink}>Open Your Wish</AppButton>
           <AppButton variant="secondary" onClick={() => setShareOpen(true)} disabled={!savedLink}>Share Your Wish</AppButton>
+          <AppButton variant="secondary" onClick={() => savedLink && navigate(`/manage/${savedLink.split('/').pop()}`)} disabled={!savedLink}>Manage or edit</AppButton>
           <AppButton variant="secondary" onClick={() => navigate('/')}>Back to Home</AppButton>
         </div>
         {shareOpen ? <ShareDialog message={shareMessage} link={savedLink} onClose={() => setShareOpen(false)} onCopy={async () => navigator.clipboard.writeText(shareMessage).catch(() => {})} onOpenNative={shareNative} /> : null}
@@ -1504,10 +1697,155 @@ function ShareDialog({ message, link, onClose, onCopy, onOpenNative }) {
   );
 }
 
+function ManageWishPage({ templatesState }) {
+  const { username } = useParams();
+  const navigate = useNavigate();
+  const [status, setStatus] = useState('Verifying ownership…');
+  const [wishData, setWishData] = useState(null);
+  const [recipientData, setRecipientData] = useState({});
+  const [tone, setTone] = useState('heartfelt');
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState('');
+
+  useSeoMeta({
+    title: 'Manage wish | Boltwish',
+    description: 'Private creator controls for a Boltwish wish.',
+    canonicalPath: `/manage/${username || ''}`,
+    robots: 'noindex,nofollow',
+  });
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      if (!username) {
+        setStatus('Invalid management link.');
+        return;
+      }
+      try {
+        const owner = await ensureWishOwner();
+        const { doc, getDoc, getFirestore } = await import('firebase/firestore');
+        const snapshot = await getDoc(doc(getFirestore(app), 'wishes', username));
+        if (!snapshot.exists()) {
+          if (active) setStatus('This wish is unavailable or has expired.');
+          return;
+        }
+        const wish = normalizeWishDocument(snapshot.data());
+        if (wish.ownerUid !== owner.uid) {
+          if (active) setStatus('This wish belongs to a different browser or device.');
+          return;
+        }
+        if (active) {
+          setWishData(wish);
+          setRecipientData({
+            ...(wish.recipientData || {}),
+            eventDate: wish.recipientData?.eventDate || valueToDateInput(wish.revealAt),
+          });
+          setTone(wish.tone || 'heartfelt');
+          setStatus('');
+        }
+      } catch (error) {
+        if (active) setStatus(error?.code === 'auth/operation-not-allowed' ? 'Anonymous creator access must be enabled in Firebase Authentication.' : 'Could not verify this wish owner.');
+      }
+    };
+    load();
+    return () => { active = false; };
+  }, [username]);
+
+  const template = useMemo(() => {
+    if (!wishData) return null;
+    if (wishData.templateSnapshot) return normalizeTemplateDoc(wishData.templateId, prepareTemplateDocument(wishData.templateId, wishData.templateSnapshot));
+    return resolveTemplate(templatesState.templates, wishData.templateId);
+  }, [templatesState.templates, wishData]);
+
+  const preview = useMemo(() => composeWishPreview(template || {}, { ...(wishData || {}), recipientData, tone }), [template, wishData, recipientData, tone]);
+
+  const saveChanges = async (event) => {
+    event.preventDefault();
+    if (!wishData || !template || !username) return;
+    setSaving(true);
+    setNotice('');
+    try {
+      const { doc, getFirestore, serverTimestamp, Timestamp, updateDoc } = await import('firebase/firestore');
+      const cleanedRecipientData = Object.fromEntries(template.fields.map((field) => [field.key, String(recipientData[field.key] || '').trim()]));
+      const { expiresAt, revealAt } = createWishSchedule(Timestamp, cleanedRecipientData.eventDate);
+      await updateDoc(doc(getFirestore(app), 'wishes', username), {
+        recipientData: cleanedRecipientData,
+        tone,
+        expiresAt,
+        revealAt,
+        updatedAt: serverTimestamp(),
+      });
+      setWishData((current) => ({ ...current, recipientData: cleanedRecipientData, tone, expiresAt, revealAt }));
+      setRecipientData(cleanedRecipientData);
+      setNotice('Changes saved. The shared link now shows the updated wish.');
+    } catch (error) {
+      setNotice(error?.message || 'Could not save these changes.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteWish = async () => {
+    if (!username || !window.confirm('Delete this wish permanently? The shared link will stop working.')) return;
+    try {
+      const { deleteDoc, doc, getFirestore } = await import('firebase/firestore');
+      await deleteDoc(doc(getFirestore(app), 'wishes', username));
+      const remaining = readJson('recentWishes', []).filter((item) => !item.url.endsWith(`/wish/${username}`));
+      writeJson('recentWishes', remaining);
+      navigate('/', { replace: true });
+    } catch (error) {
+      setNotice(error?.message || 'Could not delete this wish.');
+    }
+  };
+
+  if (status || !wishData || !template) {
+    return <div className="center-screen"><Panel className="fallback-panel"><div className="eyebrow">Creator controls</div><h1>{status || 'Loading wish…'}</h1><p>Wish management is available only in the browser that created it.</p><AppButton variant="secondary" onClick={() => navigate('/')}>Back home</AppButton></Panel></div>;
+  }
+
+  return (
+    <PageShell
+      kicker="Private creator controls"
+      title={`Manage ${preview.displayName}’s wish.`}
+      description="Update the personal details, change the writing style, or remove the wish. The event date controls when the link opens and expires."
+      actions={<AppButton variant="secondary" onClick={() => navigate(`/wish/${username}`)}>View shared wish</AppButton>}
+      aside={<MotionPanel className="side-panel preview-panel glass-sidebar"><div className="eyebrow"><Eye size={14} /> Live preview</div><div className="preview-card premium-preview" style={{ '--wish-accent': template.theme?.accent, '--wish-accent-soft': template.theme?.accentSoft }}><WishExperience preview={preview} template={template} compact /></div></MotionPanel>}
+    >
+      <form className="editor-card glass-card wizard-card manage-wish-form" onSubmit={saveChanges}>
+        <ToneSelector value={tone} onChange={setTone} />
+        <div className="field-grid">
+          {template.fields.map((field) => (
+            <label key={field.key} className={`field-group floating-field ${field.type === 'textarea' ? 'field-wide' : ''}`}>
+              <span>{field.label}{field.required === false ? '' : ' *'}</span>
+              {field.type === 'textarea'
+                ? <textarea value={recipientData[field.key] || ''} required={field.required} maxLength={field.maxLength} placeholder={field.placeholder} onChange={(event) => setRecipientData((current) => ({ ...current, [field.key]: event.target.value }))} />
+                : <input type={field.type} value={recipientData[field.key] || ''} required={field.required} min={field.key === 'eventDate' ? undefined : field.min} max={field.max} maxLength={field.maxLength} placeholder={field.placeholder} onChange={(event) => setRecipientData((current) => ({ ...current, [field.key]: event.target.value }))} />}
+            </label>
+          ))}
+        </div>
+        <div className="share-settings">
+          <div className="share-settings-head"><ShieldCheck size={18} /><div><h3>Automatic seven-day access</h3><p>The shared link opens on the event date above and closes exactly seven days later.</p></div></div>
+        </div>
+        {notice ? <div className={`notice ${notice.includes('Could not') ? 'error' : ''}`} role="status">{notice}</div> : null}
+        <div className="manage-actions"><AppButton type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</AppButton><AppButton variant="secondary" type="button" onClick={deleteWish}>Delete wish</AppButton></div>
+      </form>
+    </PageShell>
+  );
+}
+
 function WishViewPage({ templatesState }) {
   const { username } = useParams();
+  const navigate = useNavigate();
   const [status, setStatus] = useState('Loading your wish...');
   const [wishData, setWishData] = useState(null);
+  const [viewerUid, setViewerUid] = useState('');
+
+  useEffect(() => {
+    let unsubscribe = () => {};
+    import('firebase/auth').then(({ getAuth, onAuthStateChanged }) => {
+      unsubscribe = onAuthStateChanged(getAuth(app), (user) => setViewerUid(user?.uid || ''));
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const loadWish = async () => {
@@ -1545,7 +1883,7 @@ function WishViewPage({ templatesState }) {
   const template = wishData ? (wishData.templateSnapshot || resolveTemplate(templatesState.templates, wishData.templateId)) : null;
   const preview = composeWishPreview(template || {}, wishData || {});
   const theme = template?.theme || {};
-  const remainingMs = useCountdownRemaining(wishData?.recipientData?.eventDate);
+  const remainingMs = useCountdownRemaining(wishData?.revealAt || wishData?.recipientData?.eventDate);
 
   const wishUrl = `${SITE_URL}/wish/${wishData?.username || username}`;
   const imageUrl = wishData?.username
@@ -1587,36 +1925,14 @@ function WishViewPage({ templatesState }) {
     <div className="wish-view" style={{ '--wish-accent': theme.accent || '#e85d04', '--wish-accent-soft': theme.accentSoft || '#fb8500' }}>
       <div className="wish-view-shell">
         <div className="wish-card-wrap">
-          <div className="wish-card panel final-card-old">
-            <div className="wish-card-summary-head">
-                <div className="chip">{preview.chip}</div>
-            </div>
-
-            <strong>{preview.title}</strong>
-            <p className="lead wish-subtitle">{preview.subtitle}</p>
-            {/* For thank-you style templates show the recipient under the subtitle */}
-            {template?.id === 'thankyou' && preview.toLine ? <div className="wish-to-line">{preview.toLine}</div> : null}
-
-            <div className="wish-decor" aria-hidden="true">
-              <span>{template?.icon || '✨'}</span>
-              <span>{template?.icon || '💌'}</span>
-              <span>{template?.icon || '🎉'}</span>
-            </div>
-
-            <div className="wish-message-box">{preview.body.map((line) => <p key={line}>{line}</p>)}</div>
-            {preview.highlight ? <div className="highlight-box">{preview.highlight}</div> : null}
-            {preview.quote ? <div className="quote-box">“{preview.quote}”</div> : null}
-
-            {preview.footer ? <footer className="wish-footer">{preview.footer.split('\n').map((line) => <div key={line}>{line}</div>)}</footer> : null}
-
-            {/* Place sender "From:" line after the signature/footer for final/print templates */}
-            {preview.fromLine ? <div className="wish-from-line" style={{ marginTop: 12 }}>{preview.fromLine}</div> : null}
-
-            <div className="wish-actions-row">
-              <AppButton variant="secondary" onClick={() => window.print()}>Print</AppButton>
+          <WishExperience preview={preview} template={template}>
+            <div className="wish-actions-row wish-experience-actions">
+              <AppButton variant="secondary" onClick={() => window.print()}>Print keepsake</AppButton>
               <AppButton variant="secondary" onClick={copyLink}>Copy link</AppButton>
+              {viewerUid && viewerUid === wishData.ownerUid ? <AppButton variant="secondary" onClick={() => navigate(`/manage/${username}`)}>Manage wish</AppButton> : null}
             </div>
-          </div>
+          </WishExperience>
+          <button className="wish-create-own" type="button" onClick={() => window.location.assign('/template-picker')}>Create your own wish <ArrowRight size={16} /></button>
         </div>
       </div>
     </div>
