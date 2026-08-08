@@ -9,9 +9,9 @@ export default function (req) {
     const parts = pathname.split('/').filter(Boolean);
     const username = parts[parts.length - 1] || 'wish';
 
-    const title = searchParams.get('title') || 'A special wish';
-    const subtitle = searchParams.get('subtitle') || '';
-    const chip = searchParams.get('chip') || '';
+    const title = (searchParams.get('title') || 'A special wish').slice(0, 90);
+    const subtitle = (searchParams.get('subtitle') || '').slice(0, 140);
+    const chip = (searchParams.get('chip') || '').slice(0, 40);
 
     const escapeXml = (value) => String(value)
       .replace(/&/g, '&amp;')
@@ -58,6 +58,8 @@ export default function (req) {
       headers: {
         'Content-Type': 'image/svg+xml; charset=utf-8',
         'Cache-Control': 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800',
+        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (e) {
