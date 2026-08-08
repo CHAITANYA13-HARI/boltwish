@@ -11,16 +11,19 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const app = getApps().find((candidate) => candidate.name === '[DEFAULT]') || initializeApp(firebaseConfig);
+const adminApp = getApps().find((candidate) => candidate.name === 'boltwish-admin') || initializeApp(firebaseConfig, 'boltwish-admin');
 
 const appCheckSiteKey = import.meta.env.VITE_FIREBASE_APPCHECK_SITE_KEY;
 
 if (typeof window !== 'undefined' && appCheckSiteKey) {
   import('firebase/app-check')
     .then(({ initializeAppCheck, ReCaptchaV3Provider }) => {
-      initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(appCheckSiteKey),
-        isTokenAutoRefreshEnabled: true,
+      [app, adminApp].forEach((firebaseApp) => {
+        initializeAppCheck(firebaseApp, {
+          provider: new ReCaptchaV3Provider(appCheckSiteKey),
+          isTokenAutoRefreshEnabled: true,
+        });
       });
     })
     .catch(() => {
@@ -28,4 +31,4 @@ if (typeof window !== 'undefined' && appCheckSiteKey) {
     });
 }
 
-export { app };
+export { adminApp, app };

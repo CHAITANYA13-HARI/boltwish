@@ -10,11 +10,19 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRight,
   BadgeCheck,
+  CheckCircle2,
+  CircleOff,
   Mail,
   Palette,
   Eye,
   ExternalLink,
   Copy,
+  LayoutDashboard,
+  LogOut,
+  Plus,
+  RotateCcw,
+  Save,
+  Search,
   Trash2,
   Sparkles,
   Share2,
@@ -26,7 +34,7 @@ import {
   PartyPopper,
 } from 'lucide-react';
 // Firebase initialization (eager) — keep the original import to match existing usage.
-import { app } from './lib/firebase';
+import { adminApp, app } from './lib/firebase';
 import {
   buildContentDraft,
   buildRecipientDraft,
@@ -471,7 +479,7 @@ function AdminGate({ onUnlock, error, busy }) {
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Password"
           autoComplete="current-password"
-          minLength={8}
+          minLength={6}
           required
         />
         <AppButton type="submit" disabled={busy}>{busy ? 'Checking access…' : 'Sign in securely'}</AppButton>
@@ -495,9 +503,10 @@ function cleanForFirestore(value) {
 }
 
 async function ensureWishOwner() {
-  const { getAuth, signInAnonymously } = await import('firebase/auth');
+  const { getAuth, signInAnonymously, signOut } = await import('firebase/auth');
   const auth = getAuth(app);
-  if (auth.currentUser) return auth.currentUser;
+  if (auth.currentUser?.isAnonymous) return auth.currentUser;
+  if (auth.currentUser) await signOut(auth);
   const credential = await signInAnonymously(auth);
   return credential.user;
 }
@@ -1044,21 +1053,28 @@ function TemplatePickerPage({ templatesState }) {
   );
 }
 
-function AdminPage({ templatesState }) {
+function AdminPage() {
   const navigate = useNavigate();
   const [authStatus, setAuthStatus] = useState('checking');
   const [adminUser, setAdminUser] = useState(null);
   const [adminError, setAdminError] = useState('');
   const [templates, setTemplates] = useState([]);
+  const [savedTemplates, setSavedTemplates] = useState({});
   const [editingId, setEditingId] = useState('');
   const [notice, setNotice] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [savingId, setSavingId] = useState('');
+  const [previewTone, setPreviewTone] = useState('heartfelt');
   const [showPreview, setShowPreview] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 900 : true));
 
   const isUnlocked = authStatus === 'authorized';
+  const cloneTemplate = (template) => JSON.parse(JSON.stringify(template));
+  const templateSignature = (template) => JSON.stringify(cleanForFirestore(template || {}));
 
   useSeoMeta({
-    title: 'Admin | Boltwish',
-    description: 'Private template management area for Boltwish.',
+    title: 'Admin dashboard | Boltwish',
+    description: 'Private template management dashboard for Boltwish.',
     canonicalPath: '/admin',
     robots: 'noindex,nofollow',
   });
@@ -1070,7 +1086,7 @@ function AdminPage({ templatesState }) {
     const watchAuth = async () => {
       const { getAuth, onAuthStateChanged, signOut } = await import('firebase/auth');
       const { doc, getDoc, getFirestore } = await import('firebase/firestore');
-      const auth = getAuth(app);
+      const auth = getAuth(adminApp);
 
       unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (!active) return;
@@ -1080,11 +1096,12 @@ function AdminPage({ templatesState }) {
           return;
         }
 
+        setAuthStatus('checking');
         try {
-          const adminRecord = await getDoc(doc(getFirestore(app), 'admins', user.uid));
+          const adminRecord = await getDoc(doc(getFirestore(adminApp), 'admins', user.uid));
           if (!adminRecord.exists()) {
             await signOut(auth);
-            if (active) setAdminError('This account is signed in, but it does not have admin access.');
+            if (active) setAdminError('This account is valid, but it is not listed in the admins collection.');
             return;
           }
           if (active) {
@@ -1092,10 +1109,12 @@ function AdminPage({ templatesState }) {
             setAdminError('');
             setAuthStatus('authorized');
           }
-        } catch {
+        } catch (error) {
           await signOut(auth).catch(() => {});
           if (active) {
-            setAdminError('Admin access could not be verified. Check the backend admin record.');
+            setAdminError(error?.code === 'permission-denied'
+              ? 'Admin access is blocked by Firestore. Publish the latest firestore.rules to this Firebase project.'
+              : 'Admin access could not be verified right now.');
             setAuthStatus('signed-out');
           }
         }
@@ -1121,14 +1140,18 @@ function AdminPage({ templatesState }) {
     const load = async () => {
       try {
         const { collection, getDocs, getFirestore } = await import('firebase/firestore');
-        const db = getFirestore(app);
-        const snapshot = await getDocs(collection(db, 'templates'));
-        const docs = snapshot.docs.map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, prepareTemplateDocument(docSnapshot.id, docSnapshot.data())));
+        const snapshot = await getDocs(collection(getFirestore(adminApp), 'templates'));
+        const docs = snapshot.docs
+          .map((docSnapshot) => normalizeTemplateDoc(docSnapshot.id, prepareTemplateDocument(docSnapshot.id, docSnapshot.data())))
+          .sort(sortTemplates);
         setTemplates(docs);
+        setSavedTemplates(Object.fromEntries(docs.map((template) => [template.id, cloneTemplate(template)])));
         setEditingId((current) => current || (docs[0]?.id || ''));
         setAdminError('');
       } catch (error) {
-        setAdminError(error?.message || 'Admin auth failed.');
+        setAdminError(error?.code === 'permission-denied'
+          ? 'Template access is blocked. Publish the latest Firestore rules and sign in again.'
+          : error?.message || 'Templates could not be loaded.');
         setTemplates([]);
       }
     };
@@ -1142,94 +1165,175 @@ function AdminPage({ templatesState }) {
     setAdminError('');
     try {
       const { browserSessionPersistence, getAuth, setPersistence, signInWithEmailAndPassword } = await import('firebase/auth');
-      const auth = getAuth(app);
+      const auth = getAuth(adminApp);
       await setPersistence(auth, browserSessionPersistence);
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       const message = error?.code === 'auth/invalid-credential'
-        ? 'The email or password is incorrect.'
-        : 'Sign-in failed. Please try again.';
+        ? 'The admin email or password is incorrect.'
+        : error?.code === 'auth/too-many-requests'
+          ? 'Too many attempts. Wait a moment and try again.'
+          : 'Sign-in failed. Check that Email/Password authentication is enabled.';
       setAdminError(message);
       setAuthStatus('signed-out');
     }
   };
 
   const selectedTemplate = templates.find((template) => template.id === editingId) || templates[0] || null;
+  const isDirty = Boolean(selectedTemplate) && templateSignature(selectedTemplate) !== templateSignature(savedTemplates[selectedTemplate.id]);
+  const enabledCount = templates.filter((template) => template.enabled !== false).length;
+  const hiddenCount = templates.length - enabledCount;
+  const totalPrompts = templates.reduce((total, template) => total + (template.fields?.length || 0), 0);
+
+  const filteredTemplates = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return templates.filter((template) => {
+      const matchesStatus = statusFilter === 'all'
+        || (statusFilter === 'enabled' && template.enabled !== false)
+        || (statusFilter === 'hidden' && template.enabled === false);
+      const matchesQuery = !query || `${template.label} ${template.chip} ${template.summary} ${template.id}`.toLowerCase().includes(query);
+      return matchesStatus && matchesQuery;
+    });
+  }, [searchQuery, statusFilter, templates]);
 
   const preview = useMemo(() => {
     if (!selectedTemplate) return null;
     const recipientDraft = buildRecipientDraft(selectedTemplate);
     const contentDraft = selectedTemplate.content || buildContentDraft(selectedTemplate);
-    return composeWishPreview(selectedTemplate, { recipientData: recipientDraft, content: contentDraft });
-  }, [selectedTemplate]);
+    return composeWishPreview(selectedTemplate, { recipientData: recipientDraft, content: contentDraft, tone: previewTone });
+  }, [previewTone, selectedTemplate]);
 
   const saveTemplate = async (template) => {
-    const { doc, getFirestore, setDoc } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    const cleanTemplate = cleanForFirestore(template);
-    await setDoc(doc(db, 'templates', template.id), cleanTemplate, { merge: true });
-    setTemplates((current) => {
-      const next = current.filter((item) => item.id !== template.id);
-      next.push(template);
-      return next.sort(sortTemplates);
-    });
-    setNotice(`Saved ${template.label}.`);
+    if (!template?.id || !template?.label?.trim()) {
+      setAdminError('Every template needs a name before it can be saved.');
+      return;
+    }
+    setSavingId(template.id);
+    setNotice('');
+    setAdminError('');
+    try {
+      const { doc, getFirestore, setDoc } = await import('firebase/firestore');
+      const cleanTemplate = cleanForFirestore(template);
+      await setDoc(doc(getFirestore(adminApp), 'templates', template.id), cleanTemplate, { merge: true });
+      setTemplates((current) => current.map((item) => (item.id === template.id ? template : item)).sort(sortTemplates));
+      setSavedTemplates((current) => ({ ...current, [template.id]: cloneTemplate(template) }));
+      setNotice(`${template.label} is saved and ready.`);
+    } catch (error) {
+      setAdminError(error?.code === 'permission-denied'
+        ? 'Firebase blocked this save. Publish the latest Firestore rules and confirm this UID is in admins.'
+        : error?.message || 'This template could not be saved.');
+    } finally {
+      setSavingId('');
+    }
   };
 
-  const deleteTemplate = async (templateId) => {
-    const { deleteDoc, doc, getFirestore } = await import('firebase/firestore');
-    const db = getFirestore(app);
-    await deleteDoc(doc(db, 'templates', templateId));
-    setTemplates((current) => current.filter((item) => item.id !== templateId));
-    setEditingId((current) => {
-      const remaining = templates.filter((item) => item.id !== templateId);
-      return remaining[0]?.id || current;
-    });
-    setNotice('Template deleted.');
+  const deleteTemplate = async (template) => {
+    if (!template || !window.confirm(`Delete “${template.label}”? This removes it from the template picker.`)) return;
+    setSavingId(template.id);
+    setNotice('');
+    try {
+      const { deleteDoc, doc, getFirestore } = await import('firebase/firestore');
+      await deleteDoc(doc(getFirestore(adminApp), 'templates', template.id));
+      const remaining = templates.filter((item) => item.id !== template.id);
+      setTemplates(remaining);
+      setSavedTemplates((current) => {
+        const next = { ...current };
+        delete next[template.id];
+        return next;
+      });
+      setEditingId(remaining[0]?.id || '');
+      setNotice(`${template.label} was deleted.`);
+    } catch (error) {
+      setAdminError(error?.code === 'permission-denied' ? 'Firebase blocked this delete.' : error?.message || 'This template could not be deleted.');
+    } finally {
+      setSavingId('');
+    }
   };
 
   const seedTemplates = async () => {
-    for (const template of templateSeed) {
-      // eslint-disable-next-line no-await-in-loop
-      await saveTemplate(template);
+    if (!window.confirm('Install the eight personalized starter templates? Existing templates with the same IDs will be updated.')) return;
+    setSavingId('seed');
+    setNotice('Installing personalized templates…');
+    setAdminError('');
+    try {
+      const { doc, getFirestore, setDoc } = await import('firebase/firestore');
+      const db = getFirestore(adminApp);
+      await Promise.all(templateSeed.map((template) => setDoc(doc(db, 'templates', template.id), cleanForFirestore(template), { merge: true })));
+      const installed = templateSeed.map((template) => normalizeTemplateDoc(template.id, template));
+      const installedIds = new Set(installed.map((template) => template.id));
+      const next = [...installed, ...templates.filter((template) => !installedIds.has(template.id))].sort(sortTemplates);
+      setTemplates(next);
+      setSavedTemplates((current) => ({ ...current, ...Object.fromEntries(installed.map((template) => [template.id, cloneTemplate(template)])) }));
+      setEditingId(next[0]?.id || '');
+      setNotice('Eight personalized templates are installed.');
+    } catch (error) {
+      setAdminError(error?.code === 'permission-denied' ? 'Firebase blocked the install. Publish the latest Firestore rules first.' : error?.message || 'Templates could not be installed.');
+      setNotice('');
+    } finally {
+      setSavingId('');
     }
-    setNotice('Installed the personalized template collection in Firebase.');
   };
 
   const updateSelected = (field, value) => {
-    if (!selectedTemplate) return;
-    if (field === 'id') return;
-    const next = { ...selectedTemplate, [field]: value };
-    setTemplates((current) => current.map((item) => (item.id === next.id ? next : item)));
+    if (!selectedTemplate || field === 'id') return;
+    setTemplates((current) => current.map((item) => (item.id === selectedTemplate.id ? { ...item, [field]: value } : item)));
   };
 
   const updateContent = (field, value) => {
     if (!selectedTemplate) return;
-    const next = { ...selectedTemplate, content: { ...(selectedTemplate.content || {}), [field]: value } };
-    setTemplates((current) => current.map((item) => (item.id === next.id ? next : item)));
+    setTemplates((current) => current.map((item) => (item.id === selectedTemplate.id ? { ...item, content: { ...(item.content || {}), [field]: value } } : item)));
   };
 
   const updateTheme = (field, value) => {
     if (!selectedTemplate) return;
-    const next = { ...selectedTemplate, theme: { ...(selectedTemplate.theme || {}), [field]: value } };
-    setTemplates((current) => current.map((item) => (item.id === next.id ? next : item)));
+    setTemplates((current) => current.map((item) => (item.id === selectedTemplate.id ? { ...item, theme: { ...(item.theme || {}), [field]: value } } : item)));
+  };
+
+  const selectTemplate = (templateId) => {
+    if (isDirty && !window.confirm('Discard the unsaved changes to this template?')) return;
+    setEditingId(templateId);
+    setNotice('');
+  };
+
+  const resetSelected = () => {
+    if (!selectedTemplate) return;
+    const saved = savedTemplates[selectedTemplate.id];
+    if (!saved) {
+      setTemplates((current) => current.filter((item) => item.id !== selectedTemplate.id));
+      setEditingId(templates.find((item) => item.id !== selectedTemplate.id)?.id || '');
+      return;
+    }
+    setTemplates((current) => current.map((item) => (item.id === selectedTemplate.id ? cloneTemplate(saved) : item)));
+    setNotice('Unsaved changes were reset.');
   };
 
   const addTemplate = () => {
+    if (isDirty && !window.confirm('Discard the current unsaved changes and create a new template?')) return;
     const draft = {
-      id: `template-${Date.now()}`,
-      label: 'New Template',
-      chip: 'New Template',
+      id: `template-${createSecureId(8)}`,
+      label: 'New occasion',
+      chip: 'A special wish',
       icon: '✨',
-      summary: 'Start editing this template.',
-      theme: { accent: '#e85d04', accentSoft: '#fb8500', background: 'sunrise' },
-      fields: ['name', 'message', 'from'],
-      content: buildContentDraft({ label: 'New Template', summary: 'Start editing this template.' }),
+      summary: 'Describe when people should choose this template.',
+      theme: { accent: '#7c3aed', accentSoft: '#ec4899', background: 'violet' },
+      fields: ['name', 'message', 'eventDate', 'from'],
+      content: buildContentDraft({ label: 'New occasion', summary: 'A thoughtful wish made just for you.' }),
+      personalizationVersion: 3,
       order: templates.length + 1,
-      enabled: true,
+      enabled: false,
     };
     setTemplates((current) => [draft, ...current]);
     setEditingId(draft.id);
+    setNotice('New templates start hidden. Finish the copy, then switch it live.');
+  };
+
+  const logoutAdmin = async () => {
+    const { getAuth, signOut } = await import('firebase/auth');
+    await signOut(getAuth(adminApp));
+    setAdminUser(null);
+    setAuthStatus('signed-out');
+    setTemplates([]);
+    setSavedTemplates({});
   };
 
   useEffect(() => {
@@ -1240,112 +1344,127 @@ function AdminPage({ templatesState }) {
 
   if (!isUnlocked) {
     return (
-      <div className="page-shell admin-shell">
+      <div className="page-shell admin-shell admin-login-shell">
         <header className="topbar">
           <Brand />
-          <TextButton type="button" onClick={() => navigate('/')}>Home</TextButton>
+          <TextButton type="button" onClick={() => navigate('/')}>Back to website</TextButton>
         </header>
         <AdminGate onUnlock={unlockAdmin} error={adminError} busy={authStatus === 'checking'} />
       </div>
     );
   }
 
-  const logoutAdmin = async () => {
-    const { getAuth, signOut } = await import('firebase/auth');
-    await signOut(getAuth(app));
-    setNotice('Logged out.');
-    setAdminUser(null);
-    setAuthStatus('signed-out');
-  };
-
   return (
-    <div className="page-shell admin-shell">
-      <header className="topbar">
+    <div className="page-shell admin-shell admin-dashboard">
+      <header className="topbar admin-topbar">
         <Brand />
-        <div className="topbar-actions">
-          <TextButton type="button" onClick={() => navigate('/')}>Home</TextButton>
-          <TextButton type="button" onClick={seedTemplates}>Install personalized templates</TextButton>
-          <AppButton variant="secondary" onClick={addTemplate}>Add template</AppButton>
-          <TextButton type="button" onClick={() => setShowPreview((v) => !v)}>{showPreview ? 'Hide preview' : 'Show preview'}</TextButton>
-          <TextButton type="button" onClick={logoutAdmin}>Logout</TextButton>
+        <div className="topbar-actions admin-account-actions">
+          <div className="admin-session"><ShieldCheck size={15} /><span><small>Secure admin</small>{adminUser?.email}</span></div>
+          <TextButton type="button" onClick={() => navigate('/')}>View website</TextButton>
+          <TextButton type="button" onClick={logoutAdmin}><LogOut size={15} /> Logout</TextButton>
         </div>
       </header>
-      <div className="admin-session"><ShieldCheck size={15} /> Signed in securely as {adminUser?.email}</div>
-      <main className="admin-layout">
+
+      <section className="admin-dashboard-hero">
+        <div>
+          <div className="eyebrow"><LayoutDashboard size={15} /> Boltwish control center</div>
+          <h1>Template studio</h1>
+          <p>Manage every occasion, refine the writing, and preview the exact experience before it goes live.</p>
+        </div>
+        <div className="admin-hero-actions">
+          <AppButton variant="secondary" type="button" onClick={seedTemplates} disabled={Boolean(savingId)}>Install starter set</AppButton>
+          <AppButton type="button" onClick={addTemplate}><Plus size={17} /> New template</AppButton>
+        </div>
+      </section>
+
+      <section className="admin-stat-grid" aria-label="Template overview">
+        <div className="admin-stat-card"><span><CheckCircle2 size={18} /> Live templates</span><strong>{enabledCount}</strong><small>Visible in the picker</small></div>
+        <div className="admin-stat-card"><span><CircleOff size={18} /> Hidden drafts</span><strong>{hiddenCount}</strong><small>Safe to keep editing</small></div>
+        <div className="admin-stat-card"><span><Sparkles size={18} /> Personal prompts</span><strong>{totalPrompts}</strong><small>Across {templates.length} occasions</small></div>
+      </section>
+
+      {adminError ? <div className="notice error admin-global-notice" role="alert">{adminError}</div> : null}
+      {notice ? <div className="notice admin-global-notice" role="status">{notice}</div> : null}
+
+      <main className={`admin-layout admin-dashboard-grid ${showPreview ? '' : 'preview-hidden'}`}>
         <Panel className="admin-list panel">
-          <div className="section-head">
-            <div>
-              <h2>Templates</h2>
-              <p>Manage the collection that powers the picker.</p>
-            </div>
+          <div className="section-head compact-head">
+            <div><h2>Templates</h2><p>{filteredTemplates.length} shown</p></div>
+            <button className="admin-icon-button" type="button" onClick={() => setShowPreview((value) => !value)} aria-label={showPreview ? 'Hide preview' : 'Show preview'}><Eye size={17} /></button>
           </div>
-          {adminError ? <div className="notice error">{adminError}</div> : null}
-          {notice ? <div className="notice">{notice}</div> : null}
+          <label className="admin-search"><Search size={17} /><input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search templates" /></label>
+          <div className="admin-filter-tabs" role="group" aria-label="Filter templates">
+            {['all', 'enabled', 'hidden'].map((filter) => <button key={filter} className={statusFilter === filter ? 'active' : ''} type="button" onClick={() => setStatusFilter(filter)}>{filter === 'all' ? 'All' : filter === 'enabled' ? 'Live' : 'Hidden'}</button>)}
+          </div>
           <div className="admin-template-list">
-            {templates.map((template) => (
-              <button key={template.id} type="button" className={`admin-template-row ${template.id === selectedTemplate?.id ? 'active' : ''}`} onClick={() => setEditingId(template.id)}>
-                <strong>{template.icon} {template.label}</strong>
-                <span>{template.summary}</span>
+            {filteredTemplates.map((template) => (
+              <button key={template.id} type="button" className={`admin-template-row ${template.id === selectedTemplate?.id ? 'active' : ''}`} onClick={() => selectTemplate(template.id)}>
+                <span className="admin-template-row-top"><strong><span className="admin-template-icon">{template.icon}</span>{template.label}</strong><span className={`admin-status-pill ${template.enabled === false ? 'hidden' : 'live'}`}>{template.enabled === false ? 'Hidden' : 'Live'}</span></span>
+                <span className="admin-template-summary">{template.summary}</span>
+                <span className="admin-template-meta">Order {template.order ?? 0} · {template.fields?.length || 0} prompts</span>
               </button>
             ))}
+            {!filteredTemplates.length ? <div className="admin-empty-list"><Search size={22} /><strong>No templates found</strong><span>Try another search or filter.</span></div> : null}
           </div>
         </Panel>
 
         <Panel className="admin-editor panel">
           {selectedTemplate ? (
             <>
-              <div className="section-head">
+              <div className="admin-editor-head">
                 <div>
-                  <h2>Edit card</h2>
-                  <p>Use simple language to change what people see when they create a wish.</p>
+                  <div className="admin-editor-title-line"><h2>{selectedTemplate.icon} {selectedTemplate.label}</h2>{isDirty ? <span className="admin-unsaved-badge">Unsaved</span> : <span className="admin-saved-badge">Saved</span>}</div>
+                  <p>Template ID: <code>{selectedTemplate.id}</code></p>
                 </div>
-                <div className="actions-row">
-                  <AppButton variant="secondary" onClick={() => saveTemplate(selectedTemplate)}>Save</AppButton>
-                  <AppButton variant="secondary" onClick={() => deleteTemplate(selectedTemplate.id)}>Delete</AppButton>
+                <div className="admin-editor-actions">
+                  <button className="admin-icon-button" type="button" onClick={resetSelected} disabled={!isDirty} title="Reset unsaved changes"><RotateCcw size={17} /></button>
+                  <AppButton variant="secondary" type="button" className="admin-delete-button" onClick={() => deleteTemplate(selectedTemplate)} disabled={Boolean(savingId)}><Trash2 size={16} /> Delete</AppButton>
+                  <AppButton type="button" onClick={() => saveTemplate(selectedTemplate)} disabled={!isDirty || Boolean(savingId)}><Save size={16} /> {savingId === selectedTemplate.id ? 'Saving…' : 'Save changes'}</AppButton>
                 </div>
               </div>
 
-              <div className="admin-form-grid friendly-grid">
-                <label className="field-group field-span-2"><span>Card name</span><input value={selectedTemplate.label || ''} onChange={(event) => updateSelected('label', event.target.value)} placeholder="Birthday, Wedding, Congrats..." /></label>
-                <label className="field-group field-span-2"><span>Badge text</span><input value={selectedTemplate.chip || ''} onChange={(event) => updateSelected('chip', event.target.value)} placeholder="Birthday Wish" /></label>
-                <label className="field-group field-span-2"><span>Emoji</span><input value={selectedTemplate.icon || ''} onChange={(event) => updateSelected('icon', event.target.value)} placeholder="🎂" /></label>
-                <label className="field-group field-span-2"><span>Short description</span><textarea rows={3} value={selectedTemplate.summary || ''} onChange={(event) => updateSelected('summary', event.target.value)} placeholder="A short sentence that explains the card." /></label>
-                <label className="field-group field-span-2"><span>Main message</span><textarea rows={7} value={selectedTemplate.content?.body || ''} onChange={(event) => updateContent('body', event.target.value)} placeholder="Write the main wish message here." /></label>
-                <label className="field-group field-span-2"><span>Closing line</span><textarea rows={2} value={selectedTemplate.content?.footer || ''} onChange={(event) => updateContent('footer', event.target.value)} placeholder="With love, Team, Best wishes..." /></label>
-                <label className="field-group field-span-2"><span>Extra highlight</span><textarea rows={2} value={selectedTemplate.content?.highlight || ''} onChange={(event) => updateContent('highlight', event.target.value)} placeholder="Short line that stands out on the card." /></label>
-                <label className="field-group field-span-2"><span>Optional quote</span><textarea rows={2} value={selectedTemplate.content?.quote || ''} onChange={(event) => updateContent('quote', event.target.value)} placeholder="A short quote or closing thought." /></label>
-                <label className="field-group field-span-2"><span>Accent color</span><input type="color" value={selectedTemplate.theme?.accent || '#e85d04'} onChange={(event) => updateTheme('accent', event.target.value)} /></label>
-                <label className="field-group field-span-2"><span>Soft accent</span><input type="color" value={selectedTemplate.theme?.accentSoft || '#fb8500'} onChange={(event) => updateTheme('accentSoft', event.target.value)} /></label>
-                <label className="field-group field-span-2"><span>Background style</span><input value={selectedTemplate.theme?.background || ''} onChange={(event) => updateTheme('background', event.target.value)} placeholder="sunrise" /></label>
-                <label className="field-group field-span-2"><span>Sort order</span><input type="number" value={selectedTemplate.order ?? 0} onChange={(event) => updateSelected('order', Number(event.target.value))} /></label>
-                <label className="field-group checkbox-row field-span-2"><input type="checkbox" checked={selectedTemplate.enabled !== false} onChange={(event) => updateSelected('enabled', event.target.checked)} /> Show this template to users</label>
-              </div>
+              <section className="admin-form-section">
+                <div className="admin-form-section-head"><span>1</span><div><h3>Picker details</h3><p>How this occasion appears before someone starts writing.</p></div></div>
+                <div className="admin-form-grid">
+                  <label className="field-group"><span>Card name</span><input value={selectedTemplate.label || ''} maxLength={80} onChange={(event) => updateSelected('label', event.target.value)} placeholder="Birthday" /></label>
+                  <label className="field-group"><span>Badge text</span><input value={selectedTemplate.chip || ''} maxLength={80} onChange={(event) => updateSelected('chip', event.target.value)} placeholder="Birthday wish" /></label>
+                  <label className="field-group"><span>Emoji</span><input value={selectedTemplate.icon || ''} maxLength={8} onChange={(event) => updateSelected('icon', event.target.value)} placeholder="🎂" /></label>
+                  <label className="field-group"><span>Sort order</span><input type="number" min="0" value={selectedTemplate.order ?? 0} onChange={(event) => updateSelected('order', Number(event.target.value))} /></label>
+                  <label className="field-group field-span-2"><span>Short description</span><textarea rows={3} maxLength={180} value={selectedTemplate.summary || ''} onChange={(event) => updateSelected('summary', event.target.value)} placeholder="Tell people when to choose this template." /></label>
+                </div>
+              </section>
+
+              <section className="admin-form-section">
+                <div className="admin-form-section-head"><span>2</span><div><h3>Wish writing</h3><p>The starting copy that personalization shapes for each recipient.</p></div></div>
+                <div className="admin-form-grid">
+                  <label className="field-group"><span>Headline</span><input value={selectedTemplate.content?.title || ''} maxLength={90} onChange={(event) => updateContent('title', event.target.value)} placeholder="A beautiful day for {{name}}" /></label>
+                  <label className="field-group"><span>Subtitle</span><input value={selectedTemplate.content?.subtitle || ''} maxLength={140} onChange={(event) => updateContent('subtitle', event.target.value)} placeholder="A personal opening line" /></label>
+                  <label className="field-group field-span-2"><span>Main message</span><textarea rows={8} maxLength={1800} value={selectedTemplate.content?.body || ''} onChange={(event) => updateContent('body', event.target.value)} placeholder="Write the main wish message here." /></label>
+                  <label className="field-group field-span-2"><span>Highlight</span><textarea rows={2} maxLength={180} value={selectedTemplate.content?.highlight || ''} onChange={(event) => updateContent('highlight', event.target.value)} placeholder="A short line that deserves attention." /></label>
+                  <label className="field-group"><span>Optional quote</span><textarea rows={3} maxLength={180} value={selectedTemplate.content?.quote || ''} onChange={(event) => updateContent('quote', event.target.value)} /></label>
+                  <label className="field-group"><span>Closing line</span><textarea rows={3} maxLength={90} value={selectedTemplate.content?.footer || ''} onChange={(event) => updateContent('footer', event.target.value)} /></label>
+                </div>
+              </section>
+
+              <section className="admin-form-section">
+                <div className="admin-form-section-head"><span>3</span><div><h3>Style and publishing</h3><p>Control the look and decide when it is ready for users.</p></div></div>
+                <div className="admin-form-grid admin-appearance-grid">
+                  <label className="field-group"><span>Accent color</span><div className="admin-color-field"><input type="color" value={selectedTemplate.theme?.accent || '#7c3aed'} onChange={(event) => updateTheme('accent', event.target.value)} /><code>{selectedTemplate.theme?.accent || '#7c3aed'}</code></div></label>
+                  <label className="field-group"><span>Soft accent</span><div className="admin-color-field"><input type="color" value={selectedTemplate.theme?.accentSoft || '#ec4899'} onChange={(event) => updateTheme('accentSoft', event.target.value)} /><code>{selectedTemplate.theme?.accentSoft || '#ec4899'}</code></div></label>
+                  <label className="field-group"><span>Background style</span><input list="admin-backgrounds" value={selectedTemplate.theme?.background || ''} onChange={(event) => updateTheme('background', event.target.value)} placeholder="violet" /><datalist id="admin-backgrounds"><option value="sunrise" /><option value="blush" /><option value="rose" /><option value="violet" /><option value="sky" /><option value="peach" /><option value="mint" /><option value="teal" /></datalist></label>
+                  <label className="admin-publish-toggle"><input type="checkbox" checked={selectedTemplate.enabled !== false} onChange={(event) => updateSelected('enabled', event.target.checked)} /><span><strong>{selectedTemplate.enabled === false ? 'Hidden draft' : 'Live in picker'}</strong><small>{selectedTemplate.enabled === false ? 'Only admins can work on it.' : 'People can choose this template now.'}</small></span></label>
+                </div>
+                <div className="admin-prompt-summary"><span>Personalization prompts</span><div>{(selectedTemplate.fields || []).map((field) => { const key = typeof field === 'string' ? field : field.key; const label = typeof field === 'string' ? field : field.label || field.key; return <span key={key}>{label}</span>; })}</div><small>Prompts stay occasion-specific so the final wish feels personal.</small></div>
+              </section>
             </>
-          ) : (
-            <div className="empty-state"><h3>No template selected</h3><p>Add or choose a template from the list.</p></div>
-          )}
+          ) : <div className="empty-state"><h3>No template selected</h3><p>Create or choose a template from the list.</p></div>}
         </Panel>
+
         {showPreview ? (
           <Panel className="admin-preview panel">
-          <div className="section-head">
-            <div>
-              <h2>Live preview</h2>
-              <p>See how this template will look when used in a wish.</p>
-            </div>
-          </div>
-          {preview ? (
-            <div className="preview-card template-preview-mini" style={{ '--wish-accent': selectedTemplate?.theme?.accent || '#e85d04', '--wish-accent-soft': selectedTemplate?.theme?.accentSoft || '#fb8500' }}>
-              <div className="chip">{preview.chip}</div>
-              <strong>{preview.title}</strong>
-              <p>{preview.subtitle}</p>
-              <WishMetaLines metaLines={preview.metaLines} className="wish-card-meta-inline" />
-              <div className="preview-body">{preview.body.map((p) => <p key={p}>{p}</p>)}</div>
-              {preview.highlight ? <div className="preview-highlight">{preview.highlight}</div> : null}
-              {preview.quote ? <div className="preview-quote">“{preview.quote}”</div> : null}
-            </div>
-          ) : (
-            <div className="empty-state"><p>No template selected.</p></div>
-          )}
+            <div className="section-head compact-head"><div><h2>Live preview</h2><p>Updates while you type</p></div><span className="admin-live-dot">Live</span></div>
+            <ToneSelector value={previewTone} onChange={setPreviewTone} />
+            {preview ? <div className="admin-preview-stage" style={{ '--wish-accent': selectedTemplate?.theme?.accent || '#7c3aed', '--wish-accent-soft': selectedTemplate?.theme?.accentSoft || '#ec4899' }}><WishExperience preview={preview} template={selectedTemplate} compact /></div> : <div className="empty-state"><p>No template selected.</p></div>}
           </Panel>
         ) : null}
       </main>
