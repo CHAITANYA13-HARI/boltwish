@@ -1072,8 +1072,39 @@ function AdminPage() {
   const [savingId, setSavingId] = useState('');
   const [previewTone, setPreviewTone] = useState('heartfelt');
   const [showPreview, setShowPreview] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 900 : true));
+  const [adminTab, setAdminTab] = useState('templates');
+  const [liveWishes, setLiveWishes] = useState([]);
+  const [loadingWishes, setLoadingWishes] = useState(false);
+  const [wishSearch, setWishSearch] = useState('');
 
   const isUnlocked = authStatus === 'authorized';
+
+  const loadWishes = async () => {
+    setLoadingWishes(true);
+    try {
+      const { collection, getDocs, getFirestore, limit, query } = await import('firebase/firestore');
+      const db = getFirestore(adminApp);
+      const snapshot = await getDocs(query(collection(db, 'wishes'), limit(80)));
+      const list = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+      setLiveWishes(list);
+    } catch (err) {
+      setNotice('Could not load live wishes: ' + (err?.message || 'Error'));
+    } finally {
+      setLoadingWishes(false);
+    }
+  };
+
+  const deleteWishAsAdmin = async (wishId) => {
+    if (!window.confirm(`Permanently delete wish "${wishId}"? This will immediately remove it from live viewing.`)) return;
+    try {
+      const { doc, deleteDoc, getFirestore } = await import('firebase/firestore');
+      await deleteDoc(doc(getFirestore(adminApp), 'wishes', wishId));
+      setLiveWishes((prev) => prev.filter((w) => w.id !== wishId));
+      setNotice(`Wish "${wishId}" successfully deleted.`);
+    } catch (err) {
+      setNotice('Failed to delete wish: ' + (err?.message || 'Error'));
+    }
+  };
   const cloneTemplate = (template) => JSON.parse(JSON.stringify(template));
   const templateSignature = (template) => JSON.stringify(cleanForFirestore(template || {}));
 
@@ -1370,28 +1401,169 @@ function AdminPage() {
         </div>
       </header>
 
-      <section className="admin-dashboard-hero">
-        <div>
-          <div className="eyebrow"><LayoutDashboard size={15} /> Boltwish control center</div>
-          <h1>Template studio</h1>
-          <p>Manage every occasion, refine the writing, and preview the exact experience before it goes live.</p>
-        </div>
-        <div className="admin-hero-actions">
-          <AppButton variant="secondary" type="button" onClick={seedTemplates} disabled={Boolean(savingId)}>Install starter set</AppButton>
-          <AppButton type="button" onClick={addTemplate}><Plus size={17} /> New template</AppButton>
-        </div>
-      </section>
+      {/* Admin Feature Tabs */}
+      <div className="admin-tab-nav">
+        <button
+          type="button"
+          className={`admin-tab-btn ${adminTab === 'templates' ? 'active' : ''}`}
+          onClick={() => setAdminTab('templates')}
+        >
+          🎨 Template Studio ({templates.length})
+        </button>
+        <button
+          type="button"
+          className={`admin-tab-btn ${adminTab === 'wishes' ? 'active' : ''}`}
+          onClick={() => { setAdminTab('wishes'); loadWishes(); }}
+        >
+          💌 Live Wishes & Moderation ({liveWishes.length || 'Browse'})
+        </button>
+        <button
+          type="button"
+          className={`admin-tab-btn ${adminTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setAdminTab('overview')}
+        >
+          📊 System Overview
+        </button>
+      </div>
 
-      <section className="admin-stat-grid" aria-label="Template overview">
-        <div className="admin-stat-card"><span><CheckCircle2 size={18} /> Live templates</span><strong>{enabledCount}</strong><small>Visible in the picker</small></div>
-        <div className="admin-stat-card"><span><CircleOff size={18} /> Hidden drafts</span><strong>{hiddenCount}</strong><small>Safe to keep editing</small></div>
-        <div className="admin-stat-card"><span><Sparkles size={18} /> Personal prompts</span><strong>{totalPrompts}</strong><small>Across {templates.length} occasions</small></div>
-      </section>
+      {adminTab === 'wishes' && (
+        <section className="admin-wishes-panel glass-card">
+          <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2>Live Wishes Moderation</h2>
+              <p>Browse, inspect, and moderate cards created across the platform.</p>
+            </div>
+            <AppButton onClick={loadWishes} disabled={loadingWishes}>
+              {loadingWishes ? 'Refreshing…' : 'Refresh list'}
+            </AppButton>
+          </div>
 
-      {adminError ? <div className="notice error admin-global-notice" role="alert">{adminError}</div> : null}
-      {notice ? <div className="notice admin-global-notice" role="status">{notice}</div> : null}
+          <div className="admin-search-row" style={{ margin: '16px 0' }}>
+            <input
+              type="text"
+              placeholder="Search wishes by recipient name or wish ID..."
+              value={wishSearch}
+              onChange={(e) => setWishSearch(e.target.value)}
+              className="admin-search-input"
+            />
+          </div>
 
-      <main className={`admin-layout admin-dashboard-grid ${showPreview ? '' : 'preview-hidden'}`}>
+          {loadingWishes ? (
+            <p>Loading active wishes from database...</p>
+          ) : (
+            <div className="admin-wishes-table-wrap">
+              <table className="admin-wishes-table">
+                <thead>
+                  <tr>
+                    <th>Recipient</th>
+                    <th>Template</th>
+                    <th>Sender</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {liveWishes
+                    .filter((w) => {
+                      if (!wishSearch.trim()) return true;
+                      const q = wishSearch.toLowerCase();
+                      const name = (w.recipientData?.name || w.recipientData?.babyName || w.id || '').toLowerCase();
+                      return name.includes(q) || (w.id || '').toLowerCase().includes(q);
+                    })
+                    .map((w) => {
+                      const name = w.recipientData?.name || w.recipientData?.babyName || w.recipientData?.bride || 'Recipient';
+                      const sender = w.recipientData?.from || 'Unknown';
+                      return (
+                        <tr key={w.id}>
+                          <td><strong>{name}</strong></td>
+                          <td><span className="chip" style={{ fontSize: '0.72rem' }}>{w.templateId || 'Wish'}</span></td>
+                          <td>{sender}</td>
+                          <td><small>{w.createdAt?.seconds ? new Date(w.createdAt.seconds * 1000).toLocaleDateString() : 'Recent'}</small></td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <a
+                                href={`/wish/${w.id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="action-btn action-secondary small"
+                              >
+                                View ↗
+                              </a>
+                              <button
+                                type="button"
+                                className="action-btn small"
+                                style={{ background: '#fee2e2', color: '#b91c1c' }}
+                                onClick={() => deleteWishAsAdmin(w.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+              {liveWishes.length === 0 && !loadingWishes && (
+                <p style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>No wishes found in database.</p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {adminTab === 'overview' && (
+        <section className="admin-overview-panel glass-card">
+          <SectionHeading
+            eyebrow="System Overview"
+            title="Boltwish Health & Analytics"
+            description="Status of your database, templates, and active platform instances."
+          />
+          <div className="stats-grid" style={{ margin: '20px 0' }}>
+            <div className="stat-card">
+              <strong>{templates.length}</strong>
+              <span>Active Templates</span>
+            </div>
+            <div className="stat-card">
+              <strong>{liveWishes.length || 'Active'}</strong>
+              <span>Live Wishes</span>
+            </div>
+            <div className="stat-card">
+              <strong style={{ color: '#059669' }}>Online</strong>
+              <span>Firestore Status</span>
+            </div>
+          </div>
+          <div className="admin-status-box" style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <p><strong>Admin Authenticated:</strong> {adminUser?.email}</p>
+            <p><strong>Security Rules:</strong> Firestore Rules Active</p>
+            <p><strong>Host Environment:</strong> Production Web Application</p>
+          </div>
+        </section>
+      )}
+
+      {adminTab === 'templates' && (
+        <>
+          <section className="admin-dashboard-hero">
+            <div>
+              <div className="eyebrow"><LayoutDashboard size={15} /> Boltwish control center</div>
+              <h1>Template studio</h1>
+              <p>Manage every occasion, refine the writing, and preview the exact experience before it goes live.</p>
+            </div>
+            <div className="admin-hero-actions">
+              <AppButton variant="secondary" type="button" onClick={seedTemplates} disabled={Boolean(savingId)}>Install starter set</AppButton>
+              <AppButton type="button" onClick={addTemplate}><Plus size={17} /> New template</AppButton>
+            </div>
+          </section>
+
+          <section className="admin-stat-grid" aria-label="Template overview">
+            <div className="admin-stat-card"><span><CheckCircle2 size={18} /> Live templates</span><strong>{enabledCount}</strong><small>Visible in the picker</small></div>
+            <div className="admin-stat-card"><span><CircleOff size={18} /> Hidden drafts</span><strong>{hiddenCount}</strong><small>Safe to keep editing</small></div>
+            <div className="admin-stat-card"><span><Sparkles size={18} /> Personal prompts</span><strong>{totalPrompts}</strong><small>Across {templates.length} occasions</small></div>
+          </section>
+          {adminError ? <div className="notice error admin-global-notice" role="alert">{adminError}</div> : null}
+          {notice ? <div className="notice admin-global-notice" role="status">{notice}</div> : null}
+
+          <main className={`admin-layout admin-dashboard-grid ${showPreview ? '' : 'preview-hidden'}`}>
         <Panel className="admin-list panel">
           <div className="section-head compact-head">
             <div><h2>Templates</h2><p>{filteredTemplates.length} shown</p></div>
@@ -1473,6 +1645,8 @@ function AdminPage() {
           </Panel>
         ) : null}
       </main>
+        </>
+      )}
     </div>
   );
 }

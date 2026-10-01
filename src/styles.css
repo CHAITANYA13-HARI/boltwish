@@ -5373,3 +5373,450 @@ h1 {
     background: none !important;
   }
 }
+
+
+/* ==========================================================================
+   3D LUXURY GIFT CARD UNBOXING & OCCASION THEMES
+   ========================================================================== */
+
+.giftcard-3d-stage {
+  perspective: 1400px;
+  width: min(540px, 94vw);
+  margin: 15px auto 35px;
+  display: flex;
+  justify-content: center;
+}
+
+.giftcard-container {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.giftcard-container:hover {
+  transform: translateY(-6px) scale(1.01);
+}
+
+.giftcard-ambient-glow {
+  position: absolute;
+  inset: -24px;
+  border-radius: 40px;
+  pointer-events: none;
+  filter: blur(32px);
+  opacity: 0.85;
+  transition: opacity 0.3s;
+}
+
+.giftcard-cover-card {
+  position: relative;
+  min-height: 440px;
+  border-radius: 26px;
+  padding: 42px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 30px 70px -15px rgba(15, 23, 42, 0.2), 0 12px 28px -6px rgba(15, 23, 42, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  transform-style: preserve-3d;
+  transition: all 0.35s ease;
+}
+
+/* Satin Gift Ribbon */
+.gift-ribbon-horizontal {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 38px;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, var(--ribbon-color, #e11d48) 0%, rgba(0,0,0,0.18) 50%, var(--ribbon-color, #e11d48) 100%);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+}
+
+.gift-ribbon-horizontal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+  opacity: 0.7;
+}
+
+.gift-ribbon-vertical {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 38px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, var(--ribbon-color, #e11d48) 0%, rgba(0,0,0,0.18) 50%, var(--ribbon-color, #e11d48) 100%);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+}
+
+/* 3D Ribbon Bow */
+.gift-ribbon-bow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.bow-loop {
+  position: absolute;
+  width: 32px;
+  height: 44px;
+  border-radius: 50% 50% 10% 10%;
+  background: var(--ribbon-color, #e11d48);
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.bow-left {
+  left: 4px;
+  top: 6px;
+  transform: rotate(-35deg);
+}
+
+.bow-right {
+  right: 4px;
+  top: 6px;
+  transform: rotate(35deg);
+}
+
+.bow-knot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.4) 0%, var(--ribbon-color, #e11d48) 60%, rgba(0,0,0,0.3) 100%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Gold Corner Accents */
+.card-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: #ffd166;
+  border-style: solid;
+  border-width: 0;
+  z-index: 2;
+  opacity: 0.85;
+}
+.corner-tl { top: 12px; left: 12px; border-top-width: 2.5px; border-left-width: 2.5px; border-top-left-radius: 8px; }
+.corner-tr { top: 12px; right: 12px; border-top-width: 2.5px; border-right-width: 2.5px; border-top-right-radius: 8px; }
+.corner-bl { bottom: 12px; left: 12px; border-bottom-width: 2.5px; border-left-width: 2.5px; border-bottom-left-radius: 8px; }
+.corner-br { bottom: 12px; right: 12px; border-bottom-width: 2.5px; border-right-width: 2.5px; border-bottom-right-radius: 8px; }
+
+/* Typographic Plaque */
+.giftcard-plaque {
+  position: relative;
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  padding: 24px 28px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  width: min(390px, 90%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.giftcard-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.giftcard-kicker {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.giftcard-recipient-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 5vw, 2.3rem);
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.giftcard-subtitle {
+  margin: 2px 0 12px;
+  font-size: 0.86rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.giftcard-open-stamp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  cursor: pointer;
+}
+
+.stamp-inner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--stamp-color, #e11d48) 0%, #881337 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+}
+
+.stamp-icon {
+  font-size: 26px;
+}
+
+.stamp-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+}
+
+.giftcard-tap-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e11d48;
+  animation: pulseDot 1.4s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.4; }
+}
+
+/* ==========================================================================
+   SPECIFIC THEMES FOR EVERY WISH
+   ========================================================================== */
+
+/* 1. Birthday */
+.giftcard-theme-birthday .giftcard-cover-card,
+.theme-wrap-birthday .wish-style-sunrise {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fed7aa 100%) !important;
+}
+
+/* 2. Anniversary */
+.giftcard-theme-anniversary .giftcard-cover-card,
+.theme-wrap-anniversary .wish-style-blush {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 50%, #fecdd3 100%) !important;
+}
+
+/* 3. Love */
+.giftcard-theme-love .giftcard-cover-card,
+.theme-wrap-love .wish-style-rose {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 40%, #fda4af 100%) !important;
+}
+
+/* 4. Congrats */
+.giftcard-theme-congrats .giftcard-cover-card,
+.theme-wrap-congrats .wish-style-violet {
+  background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 50%, #ddd6fe 100%) !important;
+}
+
+/* 5. New Baby */
+.giftcard-theme-newbaby .giftcard-cover-card,
+.theme-wrap-newbaby .wish-style-sky {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%) !important;
+}
+
+/* 6. Wedding */
+.giftcard-theme-wedding .giftcard-cover-card,
+.theme-wrap-wedding .wish-style-peach {
+  background: linear-gradient(135deg, #fdfbf7 0%, #fae8e0 50%, #f7d6c8 100%) !important;
+}
+
+/* 7. Friendship */
+.giftcard-theme-friendship .giftcard-cover-card,
+.theme-wrap-friendship .wish-style-mint {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%) !important;
+}
+
+/* 8. Thank You */
+.giftcard-theme-thankyou .giftcard-cover-card,
+.theme-wrap-thankyou .wish-style-teal {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%) !important;
+}
+
+/* ==========================================================================
+   ADMIN TABS & WISHES TABLE
+   ========================================================================== */
+
+.admin-tab-nav {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0 26px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-tab-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.admin-tab-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.admin-wishes-panel {
+  padding: 24px;
+  border-radius: 20px;
+  margin-bottom: 30px;
+}
+
+.admin-search-input {
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.admin-wishes-table-wrap {
+  overflow-x: auto;
+  margin-top: 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-wishes-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+.admin-wishes-table th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  font-weight: 700;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-wishes-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+
+.admin-wishes-table tr:hover td {
+  background: #fbfcfe;
+}
+
+/* Mobile Responsiveness Polish */
+@media (max-width: 768px) {
+  .giftcard-cover-card {
+    min-height: 380px;
+    padding: 30px 16px;
+  }
+  .giftcard-plaque {
+    padding: 18px 16px;
+    width: 95%;
+  }
+  .gift-ribbon-horizontal,
+  .gift-ribbon-vertical {
+    height: 30px;
+    width: 30px;
+  }
+  .gift-ribbon-bow {
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  .stamp-inner {
+    width: 52px;
+    height: 52px;
+  }
+  .stamp-icon {
+    font-size: 22px;
+  }
+  .stamp-label {
+    font-size: 0.74rem;
+    padding: 5px 12px;
+  }
+  .celebration-floating-bar {
+    gap: 6px;
+  }
+  .celebration-pill-btn {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+  .admin-tab-btn {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+}
