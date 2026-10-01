@@ -25,7 +25,7 @@ service cloud.firestore {
       return data.keys().hasOnly([
           'templateId', 'templateSnapshot', 'recipientData', 'content',
           'username', 'createdAt', 'updatedAt', 'tone', 'visibility',
-          'ownerUid', 'expiresAt', 'revealAt'
+          'ownerUid', 'expiresAt', 'revealAt', 'passcodeHash'
         ])
         && data.templateId is string
         && data.templateId.size() > 0
@@ -39,48 +39,47 @@ service cloud.firestore {
         && data.visibility == 'unlisted'
         && data.revealAt is timestamp
         && data.expiresAt is timestamp
-        && data.expiresAt == data.revealAt + duration.value(7, 'd')
+        && data.expiresAt >= data.revealAt
+        && validOptionalString(data, 'passcodeHash', 128)
         && recipient is map
-        && recipient.keys().hasAll(['eventDate'])
         && recipient.keys().hasOnly([
           'name', 'age', 'eventDate', 'years', 'message', 'from',
           'achievement', 'babyName', 'parentName', 'bride', 'groom', 'to',
           'partnerOne', 'partnerTwo', 'relationship', 'favoriteMemory',
           'quality', 'futureWish', 'effort', 'specialWish',
-          'friendshipYears', 'reason', 'impact'
+          'friendshipYears', 'reason', 'impact', 'passcodeHash'
         ])
-        && validOptionalString(recipient, 'name', 50)
-        && validOptionalString(recipient, 'age', 3)
-        && recipient.eventDate is string
-        && recipient.eventDate.matches('^\\d{4}-\\d{2}-\\d{2}$')
-        && validOptionalString(recipient, 'years', 3)
-        && validOptionalString(recipient, 'message', 300)
-        && validOptionalString(recipient, 'from', 50)
-        && validOptionalString(recipient, 'achievement', 80)
-        && validOptionalString(recipient, 'babyName', 50)
-        && validOptionalString(recipient, 'parentName', 50)
-        && validOptionalString(recipient, 'bride', 50)
-        && validOptionalString(recipient, 'groom', 50)
-        && validOptionalString(recipient, 'to', 50)
-        && validOptionalString(recipient, 'partnerOne', 50)
-        && validOptionalString(recipient, 'partnerTwo', 50)
+        && validOptionalString(recipient, 'name', 80)
+        && validOptionalString(recipient, 'age', 10)
+        && validOptionalString(recipient, 'eventDate', 30)
+        && validOptionalString(recipient, 'years', 10)
+        && validOptionalString(recipient, 'message', 2500)
+        && validOptionalString(recipient, 'from', 80)
+        && validOptionalString(recipient, 'achievement', 120)
+        && validOptionalString(recipient, 'babyName', 80)
+        && validOptionalString(recipient, 'parentName', 80)
+        && validOptionalString(recipient, 'bride', 80)
+        && validOptionalString(recipient, 'groom', 80)
+        && validOptionalString(recipient, 'to', 80)
+        && validOptionalString(recipient, 'partnerOne', 80)
+        && validOptionalString(recipient, 'partnerTwo', 80)
         && validOptionalString(recipient, 'relationship', 80)
-        && validOptionalString(recipient, 'favoriteMemory', 220)
-        && validOptionalString(recipient, 'quality', 180)
-        && validOptionalString(recipient, 'futureWish', 180)
-        && validOptionalString(recipient, 'effort', 220)
-        && validOptionalString(recipient, 'specialWish', 200)
-        && validOptionalString(recipient, 'friendshipYears', 3)
-        && validOptionalString(recipient, 'reason', 220)
-        && validOptionalString(recipient, 'impact', 220)
+        && validOptionalString(recipient, 'favoriteMemory', 300)
+        && validOptionalString(recipient, 'quality', 200)
+        && validOptionalString(recipient, 'futureWish', 200)
+        && validOptionalString(recipient, 'effort', 300)
+        && validOptionalString(recipient, 'specialWish', 300)
+        && validOptionalString(recipient, 'friendshipYears', 10)
+        && validOptionalString(recipient, 'reason', 300)
+        && validOptionalString(recipient, 'impact', 300)
         && content is map
         && content.keys().hasOnly(['title', 'subtitle', 'body', 'highlight', 'quote', 'footer'])
-        && validOptionalString(content, 'title', 90)
-        && validOptionalString(content, 'subtitle', 140)
-        && validOptionalString(content, 'body', 1800)
-        && validOptionalString(content, 'highlight', 180)
-        && validOptionalString(content, 'quote', 180)
-        && validOptionalString(content, 'footer', 90)
+        && validOptionalString(content, 'title', 120)
+        && validOptionalString(content, 'subtitle', 200)
+        && validOptionalString(content, 'body', 3000)
+        && validOptionalString(content, 'highlight', 250)
+        && validOptionalString(content, 'quote', 250)
+        && validOptionalString(content, 'footer', 120)
         && snapshot is map
         && snapshot.keys().hasOnly([
           'id', 'label', 'chip', 'icon', 'summary', 'theme',
@@ -107,20 +106,19 @@ service cloud.firestore {
       allow get: if !resource.data.keys().hasAny(['expiresAt'])
         || resource.data.expiresAt == null
         || request.time < resource.data.expiresAt
-        || (signedIn() && resource.data.ownerUid == request.auth.uid);
-      allow list: if false;
+        || (signedIn() && resource.data.ownerUid == request.auth.uid)
+        || isAdmin();
+      allow list: if isAdmin();
       allow create: if signedIn()
         && validWishData(wishId)
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
       allow update: if signedIn()
-        && resource.data.ownerUid == request.auth.uid
-        && request.resource.data.ownerUid == resource.data.ownerUid
-        && request.resource.data.createdAt == resource.data.createdAt
+        && (resource.data.ownerUid == request.auth.uid || isAdmin())
         && request.resource.data.updatedAt == request.time
         && validWishData(wishId);
-      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow delete: if (signedIn() && resource.data.ownerUid == request.auth.uid) || isAdmin();
     }
 
     match /{document=**} {

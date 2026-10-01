@@ -10,18 +10,16 @@ export const templateSeed = [
       { key: 'name', label: "Birthday Person's Name", placeholder: 'e.g., Alex', required: true },
       { key: 'message', label: 'Your Birthday Message', type: 'textarea', placeholder: 'Write a warm wish, inside joke, or heartfelt note...', required: true },
       { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Sarah', required: true },
-      { key: 'age', label: 'Age (optional)', placeholder: 'e.g., 25', required: false, type: 'number', min: 1, max: 120 },
-      { key: 'eventDate', label: 'Celebration Date', type: 'date', required: false },
     ],
     content: {
       title: 'Happy Birthday, {{name}}! 🎂',
       subtitle: 'Today is a celebration of everything that makes you wonderfully you.',
-      body: 'Dear {{name}},\n\n{{ageCelebration}}\n\n{{message}}',
+      body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'May this year bring you endless happiness, good health, and wonderful adventures.',
       quote: 'The best birthdays celebrate not just another year, but the wonderful person you are.',
       footer: 'With lots of love',
     },
-    personalizationVersion: 4,
+    personalizationVersion: 5,
   },
   {
     id: 'anniversary',
@@ -33,20 +31,18 @@ export const templateSeed = [
     fields: [
       { key: 'partnerOne', label: 'Partner 1 Name', placeholder: 'e.g., Aisha', required: true },
       { key: 'partnerTwo', label: 'Partner 2 Name', placeholder: 'e.g., Rohan', required: true },
-      { key: 'message', label: 'Your Personal Anniversary Message', type: 'textarea', placeholder: 'Write your blessings or celebratory note...', required: true },
+      { key: 'message', label: 'Your Anniversary Message', type: 'textarea', placeholder: 'Write your blessings or celebratory note...', required: true },
       { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Maya', required: true },
-      { key: 'years', label: 'Years Together (optional)', placeholder: 'e.g., 5', required: false, type: 'number', min: 1, max: 100 },
-      { key: 'eventDate', label: 'Anniversary Date', type: 'date', required: false },
     ],
     content: {
       title: 'Happy Anniversary, {{coupleName}}! 🥂',
-      subtitle: '{{yearsCelebration}} Your story together is something worth celebrating.',
+      subtitle: 'Your story together is something truly worth celebrating.',
       body: 'Dear {{partnerOne}} and {{partnerTwo}},\n\n{{message}}',
       highlight: 'May the years ahead bring even more reasons to choose each other, laugh together, and feel at home.',
       quote: 'The strongest love stories are written in thousands of small, caring moments.',
       footer: 'Celebrating your journey together',
     },
-    personalizationVersion: 4,
+    personalizationVersion: 5,
   },
   {
     id: 'love',
@@ -59,7 +55,6 @@ export const templateSeed = [
       { key: 'name', label: 'Their Name', placeholder: 'e.g., Sophia', required: true },
       { key: 'message', label: 'Your Love Note', type: 'textarea', placeholder: 'Express your feelings in your own words...', required: true },
       { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Liam', required: true },
-      { key: 'eventDate', label: 'Date (optional)', type: 'date', required: false },
     ],
     content: {
       title: 'For You, {{name}} ❤️',
@@ -69,7 +64,7 @@ export const templateSeed = [
       quote: 'Love lives in the details we notice, remember, and choose every day.',
       footer: 'With all my heart',
     },
-    personalizationVersion: 4,
+    personalizationVersion: 5,
   },
   {
     id: 'congrats',
@@ -83,7 +78,6 @@ export const templateSeed = [
       { key: 'achievement', label: 'What are they celebrating?', placeholder: 'e.g., New Job, Graduation, Marathon', required: true },
       { key: 'message', label: 'Your Congratulations Message', type: 'textarea', placeholder: 'Share how proud you are...', required: true },
       { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., David', required: true },
-      { key: 'eventDate', label: 'Date (optional)', type: 'date', required: false },
     ],
     content: {
       title: 'You Did It, {{name}}! 🎉',
@@ -93,7 +87,7 @@ export const templateSeed = [
       quote: 'The proudest moments are the ones that carry the story of everything it took to reach them.',
       footer: 'So proud of you',
     },
-    personalizationVersion: 4,
+    personalizationVersion: 5,
   },
   {
     id: 'newbaby',
@@ -107,7 +101,6 @@ export const templateSeed = [
       { key: 'parentName', label: "Parents' Name", placeholder: 'e.g., Sarah & Tom', required: true },
       { key: 'message', label: 'Your Welcome Message for Baby & Parents', type: 'textarea', placeholder: 'Write your blessings for the growing family...', required: true },
       { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Aunt Rachel', required: true },
-      { key: 'eventDate', label: 'Arrival Date (optional)', type: 'date', required: false },
     ],
     content: {
       title: 'Welcome to the World, {{babyName}}! 👶',
@@ -117,7 +110,7 @@ export const templateSeed = [
       quote: 'The smallest feet can leave the biggest footprints on a family’s heart.',
       footer: 'With love for your growing family',
     },
-    personalizationVersion: 4,
+    personalizationVersion: 5,
   },
   {
     id: 'wedding',
@@ -131,7 +124,6 @@ export const templateSeed = [
       { key: 'groom', label: "Groom's Name", placeholder: 'e.g., James', required: true },
       { key: 'message', label: 'Your Wedding Blessings & Message', type: 'textarea', placeholder: 'Share your warm wishes for their marriage...', required: true },
       { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Chris', required: true },
-      { key: 'eventDate', label: 'Wedding Date', type: 'date', required: false },
     ],
     content: {
       title: 'To {{coupleName}}, With Love 💒',
@@ -141,7 +133,7 @@ export const templateSeed = [
       quote: 'A beautiful marriage is a lifetime of turning toward each other.',
       footer: 'With warmest wishes for your life together',
     },
-    personalizationVersion: 4,
+    personalizationVersion: 5,
   },
   {
     id: 'friendship',
@@ -154,7 +146,6 @@ export const templateSeed = [
       { key: 'name', label: "Friend's Name", placeholder: 'e.g., Daniel', required: true },
       { key: 'message', label: 'Your Friendship Note', type: 'textarea', placeholder: 'Share an appreciation note, inside joke, or heartfelt thank you...', required: true },
       { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Marcus', required: true },
-      { key: 'eventDate', label: 'Date (optional)', type: 'date', required: false },
     ],
     content: {
       title: 'To My Friend, {{name}} 🤝',
@@ -164,7 +155,7 @@ export const templateSeed = [
       quote: 'A real friend remembers your stories because they helped you live them.',
       footer: 'Your friend, always',
     },
-    personalizationVersion: 4,
+    personalizationVersion: 5,
   },
   {
     id: 'thankyou',
@@ -177,7 +168,6 @@ export const templateSeed = [
       { key: 'name', label: "Recipient's Name", placeholder: 'e.g., Dr. Lisa', required: true },
       { key: 'message', label: 'What You Are Thankful For', type: 'textarea', placeholder: 'Tell them what they did and why it meant so much to you...', required: true },
       { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Nina', required: true },
-      { key: 'eventDate', label: 'Date (optional)', type: 'date', required: false },
     ],
     content: {
       title: 'Thank You, {{name}} 🙏',
@@ -187,6 +177,6 @@ export const templateSeed = [
       quote: 'Gratitude becomes meaningful when we name the kindness we received.',
       footer: 'With sincere gratitude',
     },
-    personalizationVersion: 4,
+    personalizationVersion: 5,
   },
 ];

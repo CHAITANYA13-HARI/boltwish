@@ -516,9 +516,16 @@ async function ensureWishOwner() {
   const { getAuth, signInAnonymously, signOut } = await import('firebase/auth');
   const auth = getAuth(app);
   if (auth.currentUser?.isAnonymous) return auth.currentUser;
-  if (auth.currentUser) await signOut(auth);
-  const credential = await signInAnonymously(auth);
-  return credential.user;
+  if (auth.currentUser) await signOut(auth).catch(() => {});
+  try {
+    const credential = await signInAnonymously(auth);
+    return credential.user;
+  } catch (err) {
+    if (err?.code === 'auth/admin-restricted-operation' || err?.code === 'auth/operation-not-allowed') {
+      throw new Error('Anonymous sign-in must be enabled in Firebase Console -> Authentication -> Sign-in method.');
+    }
+    throw err;
+  }
 }
 
 function valueToMillis(value) {
@@ -542,8 +549,9 @@ function valueToDateInput(value) {
 const WISH_ACCESS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function createWishSchedule(Timestamp, eventDate) {
-  const revealMillis = valueToMillis(eventDate);
-  if (!revealMillis) throw new Error('Please enter a valid event date.');
+  const today = new Date().toISOString().slice(0, 10);
+  const effectiveDate = eventDate || today;
+  const revealMillis = valueToMillis(effectiveDate) || Date.now();
 
   return {
     revealAt: Timestamp.fromMillis(revealMillis),
@@ -1753,7 +1761,11 @@ function WishFormPage({ templatesState }) {
       passcodeHash = await hashPasscode(passcode);
     }
 
-    const cleanedRecipientData = Object.fromEntries(template.fields.map((field) => [field.key, String(recipientData[field.key] || '').trim()]));
+    const todayString = new Date().toISOString().slice(0, 10);
+    const cleanedRecipientData = {
+      ...Object.fromEntries(template.fields.map((field) => [field.key, String(recipientData[field.key] || '').trim()])),
+      eventDate: recipientData.eventDate || todayString,
+    };
     const cleanedContent = Object.fromEntries(defaultContentOrder.map((field) => [field, String(contentData[field] || '').trim()]));
 
     writeJson('selectedTemplateId', template.id);
@@ -1987,10 +1999,15 @@ function SavePage({ templatesState }) {
         const baseName = recipientData.name || recipientData.babyName || recipientData.bride || recipientData.groom || recipientData.partnerOne || recipientData.parentName || 'user';
         const username = `${slugify(baseName)}-${createSecureId()}`;
         const { expiresAt, revealAt } = createWishSchedule(Timestamp, recipientData.eventDate);
+        const todayString = new Date().toISOString().slice(0, 10);
+        const safeRecipientData = {
+          ...(recipientData || {}),
+          eventDate: recipientData.eventDate || todayString,
+        };
         const payload = {
           templateId: finalData.templateId,
           templateSnapshot: cleanForFirestore(template),
-          recipientData,
+          recipientData: safeRecipientData,
           content: finalData.content || {},
           tone: finalData.tone || 'heartfelt',
           visibility: 'unlisted',
@@ -1998,10 +2015,13 @@ function SavePage({ templatesState }) {
           expiresAt,
           revealAt,
           username,
-          passcodeHash: finalData.passcodeHash || '',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         };
+
+        if (finalData.passcodeHash) {
+          payload.passcodeHash = finalData.passcodeHash;
+        }
 
         await setDoc(doc(db, 'wishes', username), payload);
 
