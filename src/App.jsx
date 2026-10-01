@@ -443,9 +443,10 @@ function getStaticPageMeta(title) {
   };
 }
 
-function Brand() {
+function Brand({ to = '/' }) {
+  const navigate = useNavigate();
   return (
-    <div className="brand">
+    <div className="brand" style={{ cursor: 'pointer' }} onClick={() => navigate(to)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate(to)}>
       <div className="brand-mark">
         <img src="/brand-mark.svg" alt="Boltwish logo" width="48" height="48" role="img" />
       </div>
@@ -454,6 +455,39 @@ function Brand() {
         <span>Beautiful wishes, made fast</span>
       </div>
     </div>
+  );
+}
+
+function TopbarNav({ showLinks = true }) {
+  const navigate = useNavigate();
+  return (
+    <nav className="topbar-nav" aria-label="Main navigation">
+      {showLinks && (
+        <>
+          <button
+            type="button"
+            className="topbar-nav-link"
+            onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }) || navigate('/')}
+          >
+            How it works
+          </button>
+          <button
+            type="button"
+            className="topbar-nav-link"
+            onClick={() => navigate('/template-picker')}
+          >
+            Templates
+          </button>
+        </>
+      )}
+      <button
+        type="button"
+        className="topbar-nav-link primary"
+        onClick={() => navigate('/template-picker')}
+      >
+        Create Wish →
+      </button>
+    </nav>
   );
 }
 
@@ -795,6 +829,7 @@ function HomePage({ templatesState }) {
     <div className="page-shell landing-shell">
       <header className="topbar topbar-home">
         <Brand />
+        <TopbarNav showLinks />
       </header>
       <main className="landing-main">
         <section className="hero-grid home-grid landing-hero">
@@ -802,84 +837,109 @@ function HomePage({ templatesState }) {
             <div className="eyebrow"><Sparkles size={14} /> Make Any Occasion Unforgettable</div>
             <h1>Create stunning, interactive wishes in 30 seconds.</h1>
             <p className="lead">Answer a few thoughtful prompts and turn your memories into a polished, private wish—no writing or design skills required.</p>
-            <div className="actions-row">
+            <div className="actions-row" style={{ marginTop: 20 }}>
               <AppButton onClick={() => navigate('/template-picker')}>Create Wish →</AppButton>
               <AppButton variant="secondary" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>See how it works</AppButton>
             </div>
-            <div className="stats-grid">
-              <div className="stat-card"><strong>8</strong><span>Occasion-specific designs</span></div>
-              <div className="stat-card"><strong>4</strong><span>Personal writing tones</span></div>
-              <div className="stat-card"><strong>Private</strong><span>Unlisted, expiring links</span></div>
+            {/* Benefit-focused stats */}
+            <div className="hero-stats">
+              <div className="hero-stat"><strong>30s</strong><span>To create a wish</span></div>
+              <div className="hero-stat"><strong>100%</strong><span>Free, no login</span></div>
+              <div className="hero-stat"><strong>8+</strong><span>Occasion templates</span></div>
+              <div className="hero-stat"><strong>Private</strong><span>Unlisted links</span></div>
             </div>
           </MotionPanel>
 
-                  <MotionPanel className="side-panel hero-glass" id="recent-wish">
-                    <div className="eyebrow"><BadgeCheck size={14} /> Recent activity</div>
-                        <h2>Your wishes on this device</h2>
-                    <div className="recent-hero-card">
-                      {recentWishes.length ? (
-                        <>
-                          <div className="recent-hero-head">
-                            <h3>Saved on this device</h3>
-                            <span>Up to 20 items</span>
-                          </div>
-                          <div className="recent-list">
-                            {recentWishes.map((item, idx) => (
-                              <div key={item.url + idx} className="recent-item">
-                                <label className="recent-select">
-                                  <input type="checkbox" checked={Boolean(selectedIds[item.url])} onChange={() => toggleSelect(item.url)} />
-                                </label>
-                                <div className="recent-meta">
-                                  <div className="recent-title">{item.metadata?.recipientName || 'Recipient'} — {item.metadata?.templateLabel || ''}</div>
-                                  <div className="recent-note">{new Date(item.createdAt).toLocaleString()}</div>
-                                </div>
-                                <div>
-                                  <a className="action-btn action-secondary small" href={item.url} target="_blank" rel="noopener noreferrer" title="Open wish" aria-label="Open wish"><ExternalLink size={14} /></a>
-                                  <button className="action-btn action-secondary small" type="button" title="Copy link" aria-label="Copy link" onClick={() => { navigator.clipboard.writeText(item.url).catch(() => {}); }}><Copy size={14} /></button>
-                                  <button className="action-btn small" type="button" title="Remove" aria-label="Remove" onClick={() => {
-                                    if (!window.confirm('Remove this saved wish?')) return;
-                                    const next = recentWishes.filter((i, j) => j !== idx);
-                                    setRecentWishes(next);
-                                    writeJson('recentWishes', next);
-                                    const nextSelected = { ...(readJson('recentSelected', {})) };
-                                    delete nextSelected[item.url];
-                                    writeJson('recentSelected', nextSelected);
-                                    setSelectedIds(nextSelected);
-                                  }}><Trash2 size={14} /></button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="actions-row">
-                            <button className="action-btn action-secondary" type="button" disabled={Object.keys(selectedIds || {}).filter((k) => selectedIds[k]).length === 0} onClick={() => {
-                              const selected = Object.keys(selectedIds || {}).filter((k) => selectedIds[k]);
-                              if (!selected.length) return;
-                              if (!window.confirm(`Delete ${selected.length} selected wish(es)? This cannot be undone.`)) return;
-                              const next = recentWishes.filter((i) => !selected.includes(i.url));
-                              setRecentWishes(next);
-                              writeJson('recentWishes', next);
-                              const nextSelected = { ...(readJson('recentSelected', {})) };
-                              selected.forEach((k) => delete nextSelected[k]);
-                              writeJson('recentSelected', nextSelected);
-                              setSelectedIds(nextSelected);
-                            }}>Delete selected</button>
-
-                            <button className="action-btn" type="button" onClick={() => {
-                              if (!recentWishes.length) return;
-                              if (!window.confirm('Remove all saved wishes? This cannot be undone.')) return;
-                              setRecentWishes([]);
-                              writeJson('recentWishes', []);
-                              writeJson('recentSelected', {});
-                              setSelectedIds({});
-                            }}>Remove all</button>
-                          </div>
-                        </>
-                      ) : (
-                        <p>{'Create wishes and they will appear here.'}</p>
-                      )}
+          <MotionPanel className="side-panel hero-glass hero-demo-panel" id="recent-wish">
+            {recentWishes.length > 0 ? (
+              <>
+                <div className="eyebrow eyebrow-dark"><BadgeCheck size={14} /> Recent activity</div>
+                <h2 style={{ marginTop: 10 }}>Your wishes on this device</h2>
+                <div className="recent-hero-card">
+                  <div className="recent-hero-head">
+                    <h3>Saved on this device</h3>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Up to 20 items</span>
+                  </div>
+                  <div className="recent-list">
+                    {recentWishes.map((item, idx) => (
+                      <div key={item.url + idx} className="recent-item">
+                        <label className="recent-select">
+                          <input type="checkbox" checked={Boolean(selectedIds[item.url])} onChange={() => toggleSelect(item.url)} />
+                        </label>
+                        <div className="recent-meta">
+                          <div className="recent-title">{item.metadata?.recipientName || 'Recipient'} — {item.metadata?.templateLabel || ''}</div>
+                          <div className="recent-note">{new Date(item.createdAt).toLocaleString()}</div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <a className="action-btn action-secondary small" href={item.url} target="_blank" rel="noopener noreferrer" title="Open wish" aria-label="Open wish"><ExternalLink size={14} /></a>
+                          <button className="action-btn action-secondary small" type="button" title="Copy link" aria-label="Copy link" onClick={() => { navigator.clipboard.writeText(item.url).catch(() => {}); }}><Copy size={14} /></button>
+                          <button className="action-btn small" type="button" title="Remove" aria-label="Remove" onClick={() => {
+                            if (!window.confirm('Remove this saved wish?')) return;
+                            const next = recentWishes.filter((i, j) => j !== idx);
+                            setRecentWishes(next);
+                            writeJson('recentWishes', next);
+                            const nextSelected = { ...(readJson('recentSelected', {})) };
+                            delete nextSelected[item.url];
+                            writeJson('recentSelected', nextSelected);
+                            setSelectedIds(nextSelected);
+                          }}><Trash2 size={14} /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="actions-row" style={{ marginTop: 12 }}>
+                    <button className="action-btn action-secondary" type="button" style={{ fontSize: '0.82rem', padding: '8px 12px' }} disabled={Object.keys(selectedIds || {}).filter((k) => selectedIds[k]).length === 0} onClick={() => {
+                      const selected = Object.keys(selectedIds || {}).filter((k) => selectedIds[k]);
+                      if (!selected.length) return;
+                      if (!window.confirm(`Delete ${selected.length} selected wish(es)? This cannot be undone.`)) return;
+                      const next = recentWishes.filter((i) => !selected.includes(i.url));
+                      setRecentWishes(next);
+                      writeJson('recentWishes', next);
+                      const nextSelected = { ...(readJson('recentSelected', {})) };
+                      selected.forEach((k) => delete nextSelected[k]);
+                      writeJson('recentSelected', nextSelected);
+                      setSelectedIds(nextSelected);
+                    }}>Delete selected</button>
+                    <button className="action-btn" type="button" style={{ fontSize: '0.82rem', padding: '8px 12px' }} onClick={() => {
+                      if (!recentWishes.length) return;
+                      if (!window.confirm('Remove all saved wishes? This cannot be undone.')) return;
+                      setRecentWishes([]);
+                      writeJson('recentWishes', []);
+                      writeJson('recentSelected', {});
+                      setSelectedIds({});
+                    }}>Remove all</button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* Empty state: show live demo card */
+              <>
+                <div className="hero-demo-label">
+                  <span className="hero-demo-pulse" />
+                  Live demo — see what you'll create
+                </div>
+                {livePreview && liveTemplate ? (
+                  <div className="hero-demo-card">
+                    <div style={{ '--wish-accent': liveTemplate.theme?.accent || '#e85d04', '--wish-accent-soft': liveTemplate.theme?.accentSoft || '#fb8500', pointerEvents: 'none', userSelect: 'none' }}>
+                      <WishExperience preview={livePreview} template={liveTemplate} compact />
                     </div>
-                  </MotionPanel>
+                  </div>
+                ) : (
+                  <div className="empty-hero-state">
+                    <span className="empty-emoji">🎁</span>
+                    <h3>Your card appears here</h3>
+                    <p>Create a wish and it shows up instantly, ready to share.</p>
+                    <div className="empty-confetti-dots">
+                      <span /><span /><span /><span /><span />
+                    </div>
+                  </div>
+                )}
+                <AppButton onClick={() => navigate('/template-picker')} style={{ marginTop: 14, width: '100%' }}>
+                  Create your first wish ✨
+                </AppButton>
+              </>
+            )}
+          </MotionPanel>
         </section>
 
         <section className="section-card glass-section" id="features">
@@ -890,15 +950,15 @@ function HomePage({ templatesState }) {
           />
           <div className="feature-grid">
             {[
-              { icon: Palette, title: 'Elegant templates', copy: 'Choose a style for birthdays, love, friendship, anniversaries, and more.' },
-              { icon: Wand2, title: 'Live editing', copy: 'See the wish update instantly as you edit the recipient and message.' },
-              { icon: Share2, title: 'One-tap sharing', copy: 'Save, copy, print, or share the final wish in seconds.' },
-              { icon: ShieldCheck, title: 'Trust-friendly UI', copy: 'Clear spacing, readable text, and a simple layout that works on any device.' },
+              { icon: Palette, title: 'Elegant templates', copy: 'Choose from 8 occasion-specific designs — birthday, love, friendship, anniversaries, and more.' },
+              { icon: Wand2, title: 'Live editing', copy: 'See the wish update instantly as you type. No guessing what the final card looks like.' },
+              { icon: Share2, title: 'One-tap sharing', copy: 'Share via WhatsApp, Telegram, Twitter, or copy a private link in seconds.' },
+              { icon: ShieldCheck, title: 'Private by default', copy: 'Unlisted, expiring links. Only people with your link can view the wish — ever.' },
             ].map(({ icon: Icon, title, copy }) => (
               <MotionPanel key={title} className="feature-card glass-card">
                 <div className="feature-icon"><Icon size={20} /></div>
                 <h3>{title}</h3>
-                <p>{copy}</p>
+                <p style={{ color: 'var(--muted)', fontSize: '0.92rem', lineHeight: 1.65, margin: 0 }}>{copy}</p>
               </MotionPanel>
             ))}
           </div>
@@ -912,17 +972,20 @@ function HomePage({ templatesState }) {
           />
           <div className="steps-grid">
             {[
-              ['1', 'Pick a template', 'Start with a polished design for the occasion.'],
-              ['2', 'Add recipient details', 'Enter the person’s name and any needed details.'],
-              ['3', 'Edit the message', 'Fine-tune the message, highlight, and footer.'],
-              ['4', 'Preview and share', 'Check the final card, then save and share it.'],
+              ['1', 'Pick a template', 'Start with a polished design for the occasion — birthday, wedding, love, and more.'],
+              ['2', 'Add recipient details', 'Enter the person\'s name, your personal message, and who it\'s from.'],
+              ['3', 'Choose a writing tone', 'Heartfelt, playful, poetic, or bold — the card adapts its language to match.'],
+              ['4', 'Preview and share', 'See the live card, then get a private link to share instantly.'],
             ].map(([step, title, copy]) => (
               <MotionPanel key={step} className="step-card glass-card">
                 <div className="step-badge">{step}</div>
                 <h3>{title}</h3>
-                <p>{copy}</p>
+                <p style={{ color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>{copy}</p>
               </MotionPanel>
             ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 28 }}>
+            <AppButton onClick={() => navigate('/template-picker')}>Start creating for free →</AppButton>
           </div>
         </section>
 
@@ -955,21 +1018,41 @@ function StaticPage({ title, children }) {
 function Footer() {
   const navigate = useNavigate();
   return (
-    <footer className="site-footer glass-card" aria-label="footer links">
-      <div className="footer-links">
-        <button className="footer-link" type="button" onClick={() => navigate('/terms')}>Terms</button>
-        <button className="footer-link" type="button" onClick={() => navigate('/contact')}>Contact</button>
-        <button className="footer-link" type="button" onClick={() => navigate('/vision')}>Vision</button>
+    <footer className="site-footer" aria-label="Site footer">
+      {/* Left: Brand */}
+      <div className="footer-brand">
+        <div className="brand-mark" style={{ width: 36, height: 36, borderRadius: 10 }}>
+          <img src="/brand-mark.svg" alt="Boltwish" width="36" height="36" />
+        </div>
+        <div>
+          <div className="footer-brand-name">Boltwish</div>
+          <div className="footer-brand-tag">Beautiful wishes, made fast</div>
+        </div>
       </div>
-      <div className="footer-socials">
-        <a className="footer-icon-link" href="mailto:rlmsgames.help@gmail.com" aria-label="Email rlmsgames" title="Email rlmsgames">
-          <Mail size={16} />
-          <span className="footer-social-text">rlmsgames.help@gmail.com</span>
-        </a>
-        <button className="footer-icon-link" type="button" onClick={() => navigate('/social')} aria-label="Social links" title="Social links">
-          <MessageSquareMore size={16} />
-          <span className="footer-social-text">Social</span>
-        </button>
+
+      {/* Right: Links + Socials + Copy */}
+      <div className="footer-right">
+        <div className="footer-links">
+          <button className="footer-link" type="button" onClick={() => navigate('/template-picker')}>Templates</button>
+          <button className="footer-link" type="button" onClick={() => navigate('/terms')}>Terms</button>
+          <button className="footer-link" type="button" onClick={() => navigate('/contact')}>Contact</button>
+          <button className="footer-link" type="button" onClick={() => navigate('/vision')}>Vision</button>
+        </div>
+        <div className="footer-socials">
+          <a className="footer-icon-link" href="mailto:rlmsgames.help@gmail.com" aria-label="Email us" title="Email us">
+            <Mail size={15} />
+            <span className="footer-social-text">Email</span>
+          </a>
+          <a className="footer-icon-link" href="https://instagram.com/rlmsgames" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+            <Globe2 size={15} />
+            <span className="footer-social-text">Instagram</span>
+          </a>
+          <button className="footer-icon-link" type="button" onClick={() => navigate('/social')} aria-label="All social links">
+            <MessageSquareMore size={15} />
+            <span className="footer-social-text">More</span>
+          </button>
+        </div>
+        <p className="footer-copy">© {new Date().getFullYear()} Boltwish · Made with ❤️ · Free forever</p>
       </div>
     </footer>
   );
@@ -1057,6 +1140,9 @@ function TemplatePickerPage({ templatesState }) {
             ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="template-card skeleton-card tall" />)
             : templatesState.templates.map((template) => (
                 <CardButton key={template.id} className={`visual-template-card template-card-${slugify(template.theme?.background || template.id)}`} style={{ '--template-accent': template.theme?.accent, '--template-soft': template.theme?.accentSoft }} onClick={() => { writeJson('selectedTemplateId', template.id); navigate(`/template/${template.id}`); }}>
+                  {['birthday', 'love'].includes(template.id) && <span className="template-badge">🔥 Popular</span>}
+                  {['wedding', 'anniversary'].includes(template.id) && <span className="template-badge">✨ Favorite</span>}
+                  {['congrats', 'newbaby'].includes(template.id) && <span className="template-badge">🎉 Trending</span>}
                   <span className="template-card-art" aria-hidden="true"><i>{template.icon}</i><b>✦</b><b>●</b></span>
                   <span className="chip">{template.label}</span>
                   <strong>{template.chip}</strong>
@@ -1824,57 +1910,67 @@ function WishFormPage({ templatesState }) {
             description="Just who it is for, your personal message, and who it is from."
           />
           <div className="field-grid">
-            {template.fields.map((field) => (
-              <label key={field.key} className={`field-group floating-field ${field.type === 'textarea' ? 'field-wide' : ''}`}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <span>{field.label}{field.required === false ? '' : ' *'}</span>
-                  {field.key === 'message' && (
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button
-                        type="button"
-                        className="topbar-link"
-                        style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                        onClick={() => setQuotesOpen(true)}
-                        title="Browse 50+ beautiful quotes & poetry"
-                      >
-                        📜 Quotes library
-                      </button>
-                      <button
-                        type="button"
-                        className="topbar-link"
-                        style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                        onClick={fillSampleMessage}
-                        title="Insert pre-written celebration wish"
-                      >
-                        ✨ Sample wish
-                      </button>
+            {template.fields.map((field) => {
+              const maxL = field.maxLength || (field.type === 'textarea' ? 600 : 60);
+              const currentVal = String(recipientData[field.key] || '');
+              const charCount = currentVal.length;
+              return (
+                <label key={field.key} className={`field-group floating-field ${field.type === 'textarea' ? 'field-wide' : ''}`}>
+                  <div className="field-label-row">
+                    <span>{field.label}{field.required === false ? '' : ' *'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {field.key === 'message' && (
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button
+                            type="button"
+                            className="topbar-link"
+                            style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                            onClick={() => setQuotesOpen(true)}
+                            title="Browse 50+ beautiful quotes & poetry"
+                          >
+                            📜 Quotes library
+                          </button>
+                          <button
+                            type="button"
+                            className="topbar-link"
+                            style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                            onClick={fillSampleMessage}
+                            title="Insert pre-written celebration wish"
+                          >
+                            ✨ Sample wish
+                          </button>
+                        </div>
+                      )}
+                      <span className={`field-char-count ${charCount >= maxL ? 'at-limit' : charCount > maxL * 0.85 ? 'near-limit' : ''}`}>
+                        {charCount}/{maxL}
+                      </span>
                     </div>
+                  </div>
+                  {field.type === 'textarea' ? (
+                    <textarea
+                      rows={4}
+                      value={recipientData[field.key] || ''}
+                      required={field.required}
+                      maxLength={maxL}
+                      placeholder={field.placeholder}
+                      onChange={(event) => updateRecipient(field.key, event.target.value)}
+                    />
+                  ) : (
+                    <input
+                      type={field.type || 'text'}
+                      value={recipientData[field.key] || ''}
+                      required={field.required}
+                      min={field.key === 'eventDate' ? new Date().toISOString().slice(0, 10) : field.min}
+                      max={field.max}
+                      maxLength={maxL}
+                      placeholder={field.placeholder}
+                      onChange={(event) => updateRecipient(field.key, event.target.value)}
+                    />
                   )}
-                </div>
-                {field.type === 'textarea' ? (
-                  <textarea
-                    rows={4}
-                    value={recipientData[field.key] || ''}
-                    required={field.required}
-                    maxLength={field.maxLength}
-                    placeholder={field.placeholder}
-                    onChange={(event) => updateRecipient(field.key, event.target.value)}
-                  />
-                ) : (
-                  <input
-                    type={field.type}
-                    value={recipientData[field.key] || ''}
-                    required={field.required}
-                    min={field.key === 'eventDate' ? new Date().toISOString().slice(0, 10) : field.min}
-                    max={field.max}
-                    maxLength={field.maxLength}
-                    placeholder={field.placeholder}
-                    onChange={(event) => updateRecipient(field.key, event.target.value)}
-                  />
-                )}
-                <small>{field.helpText || (field.maxLength ? `${String(recipientData[field.key] || '').length}/${field.maxLength}` : '')}</small>
-              </label>
-            ))}
+                  {field.helpText && <small>{field.helpText}</small>}
+                </label>
+              );
+            })}
           </div>
 
           {/* Honeypot field (hidden from real users, catches automated bots) */}
@@ -2088,33 +2184,47 @@ function SavePage({ templatesState }) {
         <div className={`loader ${saving ? '' : 'loader-done'}`} aria-hidden="true" />
         <h1 className="save-status">{status}</h1>
         {preview ? <div className="save-preview"><div className="chip">{preview.chip}</div><strong>{preview.title}</strong><p>{preview.subtitle}</p><WishMetaLines metaLines={preview.metaLines} className="wish-card-meta-inline" /></div> : null}
-        <div className="actions-column save-actions">
-          <AppButton onClick={openWish} disabled={!savedLink}>Open Your Wish 🎁</AppButton>
-          <AppButton variant="secondary" onClick={() => setShareOpen(true)} disabled={!savedLink}>Share With Loved Ones 🚀</AppButton>
-          <AppButton
-            variant="secondary"
-            onClick={async () => {
-              setStoryExporting(true);
-              const tpl = wishData?.templateSnapshot || resolveTemplate(templatesState.templates, wishData?.templateId);
-              await exportInstagramStory({
-                recipientName: preview?.displayName || 'Friend',
-                occasionTitle: preview?.title || 'Celebration Wish',
-                message: preview?.body?.[0] || 'Wishing you the best day!',
-                fromName: preview?.fromLine || '',
-                theme: tpl?.theme || {},
-                wishUrl: savedLink,
-              });
-              setStoryExporting(false);
-            }}
-            disabled={!savedLink || storyExporting}
-          >
-            {storyExporting ? 'Generating Poster...' : '📸 Download Story Poster'}
-          </AppButton>
-          <AppButton variant="secondary" onClick={() => setGiftTagOpen(true)} disabled={!savedLink}>
-            🎁 Print Mini Gift Tag
-          </AppButton>
-          <AppButton variant="secondary" onClick={() => savedLink && navigate(`/manage/${savedLink.split('/').pop()}`)} disabled={!savedLink}>Manage or edit</AppButton>
-          <AppButton variant="secondary" onClick={() => navigate('/')}>Back to Home</AppButton>
+        <div className="save-actions-wrap" style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="save-primary-action">
+            <AppButton onClick={openWish} disabled={!savedLink} style={{ width: '100%', padding: '16px', fontSize: '1.08rem' }}>
+              Open Your Wish 🎁
+            </AppButton>
+          </div>
+          <div className="save-secondary-actions">
+            <AppButton variant="secondary" onClick={() => setShareOpen(true)} disabled={!savedLink}>
+              🚀 Share Wish
+            </AppButton>
+            <AppButton
+              variant="secondary"
+              onClick={async () => {
+                setStoryExporting(true);
+                const tpl = wishData?.templateSnapshot || resolveTemplate(templatesState.templates, wishData?.templateId);
+                await exportInstagramStory({
+                  recipientName: preview?.displayName || 'Friend',
+                  occasionTitle: preview?.title || 'Celebration Wish',
+                  message: preview?.body?.[0] || 'Wishing you the best day!',
+                  fromName: preview?.fromLine || '',
+                  theme: tpl?.theme || {},
+                  wishUrl: savedLink,
+                });
+                setStoryExporting(false);
+              }}
+              disabled={!savedLink || storyExporting}
+            >
+              {storyExporting ? 'Generating...' : '📸 Story Poster'}
+            </AppButton>
+          </div>
+          <div className="save-tertiary-actions">
+            <button className="action-btn" type="button" onClick={() => setGiftTagOpen(true)} disabled={!savedLink}>
+              🏷️ Mini Gift Tag
+            </button>
+            <button className="action-btn" type="button" onClick={() => savedLink && navigate(`/manage/${savedLink.split('/').pop()}`)} disabled={!savedLink}>
+              ⚙️ Manage / Edit
+            </button>
+            <button className="action-btn" type="button" onClick={() => navigate('/')}>
+              🏠 Back Home
+            </button>
+          </div>
         </div>
         {giftTagOpen && (
           <GiftTagModal
@@ -2407,7 +2517,25 @@ function WishViewPage({ templatesState }) {
   });
 
   if (status && !wishData) {
-    return <div className="center-screen"><Panel className="wish-loading"><h2>{status}</h2><p>Please wait while we fetch your card.</p></Panel></div>;
+    return (
+      <div className="wish-view" style={{ '--wish-accent': '#ff6b6b', '--wish-accent-soft': '#ff8fa3' }}>
+        <div className="wish-ambient-glow" aria-hidden="true" />
+        <div className="wish-skeleton-wrap">
+          <div className="wish-skeleton-card">
+            <div className="wish-skeleton-line short" style={{ marginBottom: 18 }} />
+            <div className="wish-skeleton-line hero" />
+            <div className="wish-skeleton-line full" />
+            <div className="wish-skeleton-line medium" />
+            <div className="wish-skeleton-line full" style={{ marginTop: 20 }} />
+            <div className="wish-skeleton-line full" />
+            <div className="wish-skeleton-line short" style={{ marginTop: 20 }} />
+          </div>
+          {status !== 'Loading your wish...' && (
+            <p style={{ textAlign: 'center', color: 'var(--muted)', marginTop: 16, fontSize: '0.9rem' }}>{status}</p>
+          )}
+        </div>
+      </div>
+    );
   }
 
   if (!wishData) return null;
@@ -2451,12 +2579,17 @@ function WishViewPage({ templatesState }) {
 
   return (
     <div className="wish-view" style={{ '--wish-accent': theme.accent || '#e85d04', '--wish-accent-soft': theme.accentSoft || '#fb8500' }}>
+      <div className="wish-ambient-glow" aria-hidden="true" />
       <div className="wish-view-shell">
         <div className="wish-card-wrap">
           <EnvelopeUnboxing preview={preview} template={template}>
             {template?.id === 'birthday' && (
               <BirthdayCake recipientName={preview?.displayName || 'Friend'} />
             )}
+            <div className="wish-scroll-hint" aria-hidden="true">
+              <span>Scroll down for message & actions</span>
+              <div className="wish-scroll-arrow" />
+            </div>
             <WishExperience preview={preview} template={template}>
               <div className="wish-actions-row wish-experience-actions">
                 <AppButton variant="secondary" onClick={() => window.print()}>🖨️ Print Keepsake</AppButton>
