@@ -5820,3 +5820,282 @@ h1 {
     font-size: 0.82rem;
   }
 }
+
+
+/* ==========================================================================
+   Quotes & Inspiration Modal (Upgrade 33)
+   ========================================================================== */
+.quotes-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(10, 14, 28, 0.78);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.quotes-modal-panel {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 760px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.quotes-modal-head {
+  padding: 24px 28px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.quotes-modal-head h2 {
+  font-size: 1.35rem;
+  color: #0f172a;
+  margin: 4px 0 0;
+  font-weight: 800;
+}
+
+.quotes-modal-subtitle {
+  padding: 0 28px;
+  margin: 12px 0 0;
+  font-size: 0.92rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.quotes-categories-scroll {
+  display: flex;
+  gap: 8px;
+  padding: 14px 28px;
+  overflow-x: auto;
+  border-bottom: 1px solid #f1f5f9;
+  scrollbar-width: none;
+}
+
+.quotes-categories-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.quotes-cat-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quotes-cat-pill:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.quotes-cat-pill.active {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #7c3aed;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+.quotes-grid {
+  padding: 20px 28px;
+  overflow-y: auto;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+}
+
+.quote-item-card {
+  background: #fbfcfe;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quote-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.quote-text {
+  font-family: Georgia, serif;
+  font-size: 0.98rem;
+  font-style: italic;
+  color: #1e293b;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.quote-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.quote-author {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+/* ==========================================================================
+   Passcode Gate Screen (Upgrade 6)
+   ========================================================================== */
+.passcode-gate-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at center, #1e1b4b 0%, #090d16 100%);
+}
+
+.passcode-gate-panel {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  border-radius: 28px;
+  padding: 38px 32px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  color: #ffffff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.passcode-lock-icon-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.passcode-lock-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255, 215, 0, 0.12);
+  border: 2px solid rgba(255, 215, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.lock-icon-gold {
+  color: #ffd700;
+}
+
+.lock-icon-error {
+  color: #ef4444;
+}
+
+.passcode-sparkle-1 {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  color: #ffd700;
+  animation: pulse 1.8s infinite;
+}
+
+.passcode-sparkle-2 {
+  position: absolute;
+  bottom: 0px;
+  left: -8px;
+  color: #f59e0b;
+  animation: pulse 2.2s infinite;
+}
+
+.passcode-digits-input {
+  width: 160px;
+  margin: 14px auto 0;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  color: #ffffff;
+  font-size: 1.8rem;
+  letter-spacing: 12px;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.passcode-digits-input:focus {
+  border-color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.passcode-digits-input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+.passcode-error-text {
+  color: #f87171;
+  font-size: 0.88rem;
+  margin-top: 10px;
+}
+
+.passcode-hint-text {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  margin-top: 10px;
+}
+
+.passcode-error-shake {
+  animation: shake 0.45s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* ==========================================================================
+   Viral Loop & Reaction Section Polish
+   ========================================================================== */
+.wish-viral-loop-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+  align-items: center;
+}
+
+.viral-reply-btn {
+  background: linear-gradient(135deg, #e11d48 0%, #db2777 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+.viral-reply-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.4) !important;
+}

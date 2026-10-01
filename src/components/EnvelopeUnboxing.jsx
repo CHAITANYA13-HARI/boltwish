@@ -1,17 +1,37 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Volume2, VolumeX, PartyPopper, RotateCcw, Gift, Heart } from 'lucide-react';
-import { celebrationAudio } from '../lib/celebrationAudio';
+import { celebrationAudio, triggerHaptic } from '../lib/celebrationAudio';
 import { fireGrandConfetti, fireCelebrationConfetti } from '../lib/celebrationConfetti';
 
 export function EnvelopeUnboxing({ preview, template, children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(() => celebrationAudio.isMuted());
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const icon = template?.icon || '✨';
   const displayName = preview?.displayName && preview.displayName !== 'there' ? preview.displayName : 'You';
   const theme = template?.theme || {};
   const accentColor = theme.accent || '#e85d04';
   const templateId = template?.id || 'celebration';
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 16;
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * -16;
+    setTilt({ x, y });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+  };
+
+  const handleOpen = () => {
+    triggerHaptic([35, 45, 35]);
+    celebrationAudio.playEnvelopeOpen();
+    celebrationAudio.playOccasionMelody(templateId);
+    fireGrandConfetti();
+    setIsOpen(true);
+  };
 
   // Theme-specific cover graphics & badges
   const themeConfig = {
@@ -75,12 +95,6 @@ export function EnvelopeUnboxing({ preview, template, children }) {
 
   const currentTheme = themeConfig[templateId] || themeConfig.birthday;
 
-  const handleOpen = () => {
-    celebrationAudio.playEnvelopeOpen();
-    fireGrandConfetti();
-    setIsOpen(true);
-  };
-
   const handleReplay = () => {
     setIsOpen(false);
   };
@@ -142,6 +156,8 @@ export function EnvelopeUnboxing({ preview, template, children }) {
             <div
               className={`giftcard-container giftcard-theme-${templateId}`}
               onClick={handleOpen}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleOpen()}
@@ -154,7 +170,13 @@ export function EnvelopeUnboxing({ preview, template, children }) {
               />
 
               {/* The Foldable 3D Card Body */}
-              <div className="giftcard-cover-card">
+              <div
+                className="giftcard-cover-card"
+                style={{
+                  transform: `perspective(1000px) rotateX(${tilt.y}deg) rotateY(${tilt.x}deg)`,
+                  transition: 'transform 0.15s ease-out',
+                }}
+              >
                 {/* Decorative Pattern Background */}
                 <div className={`giftcard-cover-pattern pattern-${currentTheme.coverPattern}`} />
 

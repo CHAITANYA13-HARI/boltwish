@@ -38,6 +38,11 @@ import { EnvelopeUnboxing } from './components/EnvelopeUnboxing';
 import { BirthdayCake } from './components/BirthdayCake';
 import { SendLoveBack } from './components/SendLoveBack';
 import { GiftTagModal } from './components/GiftTagModal';
+import { QuotesModal } from './components/QuotesModal';
+import { PasscodeGate } from './components/PasscodeGate';
+import { exportInstagramStory } from './lib/storyCanvasExporter';
+import { checkContentSafety, hashPasscode } from './lib/securityFilter';
+import { triggerHaptic } from './lib/celebrationAudio';
 import { adminApp, app } from './lib/firebase';
 import {
   defaultWishMessages,
@@ -1196,6 +1201,32 @@ function AdminPage() {
     return undefined;
   }, [isUnlocked]);
 
+  // Automatic Admin session inactivity timeout (Upgrade 10)
+  useEffect(() => {
+    if (!isUnlocked) return undefined;
+    let timer;
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        try {
+          const { getAuth, signOut } = await import('firebase/auth');
+          await signOut(getAuth(adminApp));
+          setAdminError('Admin session ended after 30 minutes of inactivity for security.');
+          setAuthStatus('signed-out');
+        } catch {}
+      }, 30 * 60 * 1000);
+    };
+
+    resetTimer();
+    const events = ['mousemove', 'keydown', 'touchstart', 'scroll'];
+    events.forEach((ev) => window.addEventListener(ev, resetTimer, { passive: true }));
+
+    return () => {
+      clearTimeout(timer);
+      events.forEach((ev) => window.removeEventListener(ev, resetTimer));
+    };
+  }, [isUnlocked]);
+
   const unlockAdmin = async ({ email, password }) => {
     setAuthStatus('checking');
     setAdminError('');
@@ -1661,6 +1692,10 @@ function WishFormPage({ templatesState }) {
   const [contentData, setContentData] = useState({});
   const [tone, setTone] = useState('heartfelt');
   const [saving, setSaving] = useState(false);
+  const [quotesOpen, setQuotesOpen] = useState(false);
+  const [usePasscode, setUsePasscode] = useState(false);
+  const [passcode, setPasscode] = useState('');
+  const [honeypot, setHoneypot] = useState('');
 
   useEffect(() => {
     if (!template) return;
@@ -1689,21 +1724,60 @@ function WishFormPage({ templatesState }) {
 
   const updateRecipient = (field, value) => setRecipientData((current) => ({ ...current, [field]: value }));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     if (event?.preventDefault) event.preventDefault();
     if (!canContinue || saving) return;
+
+    // 1. Honeypot check (catches automated spam bots)
+    if (honeypot) {
+      console.warn('Spam submission intercepted.');
+      return;
+    }
+
+    // 2. Client-side abuse & profanity safety check
+    const recipientCheck = checkContentSafety(recipientData.name || '');
+    const messageCheck = checkContentSafety(recipientData.message || '');
+    if (!recipientCheck.valid) {
+      alert(recipientCheck.reason);
+      return;
+    }
+    if (!messageCheck.valid) {
+      alert(messageCheck.reason);
+      return;
+    }
+
     setSaving(true);
+
+    let passcodeHash = '';
+    if (usePasscode && passcode.length === 4) {
+      passcodeHash = await hashPasscode(passcode);
+    }
+
     const cleanedRecipientData = Object.fromEntries(template.fields.map((field) => [field.key, String(recipientData[field.key] || '').trim()]));
     const cleanedContent = Object.fromEntries(defaultContentOrder.map((field) => [field, String(contentData[field] || '').trim()]));
 
     writeJson('selectedTemplateId', template.id);
-    writeJson('finalData', { templateId: template.id, templateSnapshot: template, recipientData: cleanedRecipientData, content: cleanedContent, tone, visibility: 'unlisted' });
+    writeJson('finalData', {
+      templateId: template.id,
+      templateSnapshot: template,
+      recipientData: cleanedRecipientData,
+      content: cleanedContent,
+      tone,
+      visibility: 'unlisted',
+      passcodeHash,
+    });
     navigate('/save');
   };
 
   const fillSampleMessage = () => {
     const sample = defaultWishMessages[template.id] || 'Wishing you all the joy and happiness in the world!';
     updateRecipient('message', sample);
+  };
+
+  const handleQuoteInsert = (quoteText) => {
+    const existing = recipientData.message ? recipientData.message.trim() : '';
+    const updated = existing ? `${existing}\n\n${quoteText}` : quoteText;
+    updateRecipient('message', updated);
   };
 
   return (
@@ -1743,15 +1817,26 @@ function WishFormPage({ templatesState }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                   <span>{field.label}{field.required === false ? '' : ' *'}</span>
                   {field.key === 'message' && (
-                    <button
-                      type="button"
-                      className="topbar-link"
-                      style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                      onClick={fillSampleMessage}
-                      title="Insert pre-written celebration wish"
-                    >
-                      ✨ Reset to sample wish
-                    </button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        className="topbar-link"
+                        style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                        onClick={() => setQuotesOpen(true)}
+                        title="Browse 50+ beautiful quotes & poetry"
+                      >
+                        📜 Quotes library
+                      </button>
+                      <button
+                        type="button"
+                        className="topbar-link"
+                        style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                        onClick={fillSampleMessage}
+                        title="Insert pre-written celebration wish"
+                      >
+                        ✨ Sample wish
+                      </button>
+                    </div>
                   )}
                 </div>
                 {field.type === 'textarea' ? (
@@ -1780,6 +1865,17 @@ function WishFormPage({ templatesState }) {
             ))}
           </div>
 
+          {/* Honeypot field (hidden from real users, catches automated bots) */}
+          <input
+            type="text"
+            name="website_url_trap"
+            style={{ display: 'none' }}
+            tabIndex={-1}
+            autoComplete="off"
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+          />
+
           <div className="share-settings" style={{ marginTop: '22px' }}>
             <div className="share-settings-head">
               <ShieldCheck size={18} />
@@ -1787,6 +1883,31 @@ function WishFormPage({ templatesState }) {
                 <h3>Private unlisted link</h3>
                 <p>Only people with the link can view this card. You can edit or delete it anytime from your device.</p>
               </div>
+            </div>
+            <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
+                <input
+                  type="checkbox"
+                  checked={usePasscode}
+                  onChange={(e) => setUsePasscode(e.target.checked)}
+                />
+                <span>🔒 Lock with secret 4-digit PIN (Recipient must enter code to open)</span>
+              </label>
+              {usePasscode && (
+                <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={4}
+                    value={passcode}
+                    placeholder="••••"
+                    onChange={(e) => setPasscode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    style={{ width: '120px', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1.1rem', letterSpacing: '4px', textAlign: 'center' }}
+                  />
+                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Enter 4 digits (e.g. birthday or milestone year)</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1814,6 +1935,14 @@ function WishFormPage({ templatesState }) {
           </AppButton>
         </div>
       </div>
+
+      {quotesOpen && (
+        <QuotesModal
+          initialOccasion={template.id}
+          onSelectQuote={handleQuoteInsert}
+          onClose={() => setQuotesOpen(false)}
+        />
+      )}
     </PageShell>
   );
 }
@@ -1869,6 +1998,7 @@ function SavePage({ templatesState }) {
           expiresAt,
           revealAt,
           username,
+          passcodeHash: finalData.passcodeHash || '',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         };
@@ -1905,6 +2035,9 @@ function SavePage({ templatesState }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [giftTagOpen, setGiftTagOpen] = useState(false);
+  const [storyExporting, setStoryExporting] = useState(false);
+
   const openWish = () => { if (savedLink) window.open(savedLink, '_blank', 'noopener,noreferrer'); };
   const shareNative = async () => {
     if (!savedLink) return;
@@ -1936,11 +2069,42 @@ function SavePage({ templatesState }) {
         <h1 className="save-status">{status}</h1>
         {preview ? <div className="save-preview"><div className="chip">{preview.chip}</div><strong>{preview.title}</strong><p>{preview.subtitle}</p><WishMetaLines metaLines={preview.metaLines} className="wish-card-meta-inline" /></div> : null}
         <div className="actions-column save-actions">
-          <AppButton onClick={openWish} disabled={!savedLink}>Open Your Wish</AppButton>
-          <AppButton variant="secondary" onClick={() => setShareOpen(true)} disabled={!savedLink}>Share Your Wish</AppButton>
+          <AppButton onClick={openWish} disabled={!savedLink}>Open Your Wish 🎁</AppButton>
+          <AppButton variant="secondary" onClick={() => setShareOpen(true)} disabled={!savedLink}>Share With Loved Ones 🚀</AppButton>
+          <AppButton
+            variant="secondary"
+            onClick={async () => {
+              setStoryExporting(true);
+              const tpl = wishData?.templateSnapshot || resolveTemplate(templatesState.templates, wishData?.templateId);
+              await exportInstagramStory({
+                recipientName: preview?.displayName || 'Friend',
+                occasionTitle: preview?.title || 'Celebration Wish',
+                message: preview?.body?.[0] || 'Wishing you the best day!',
+                fromName: preview?.fromLine || '',
+                theme: tpl?.theme || {},
+                wishUrl: savedLink,
+              });
+              setStoryExporting(false);
+            }}
+            disabled={!savedLink || storyExporting}
+          >
+            {storyExporting ? 'Generating Poster...' : '📸 Download Story Poster'}
+          </AppButton>
+          <AppButton variant="secondary" onClick={() => setGiftTagOpen(true)} disabled={!savedLink}>
+            🎁 Print Mini Gift Tag
+          </AppButton>
           <AppButton variant="secondary" onClick={() => savedLink && navigate(`/manage/${savedLink.split('/').pop()}`)} disabled={!savedLink}>Manage or edit</AppButton>
           <AppButton variant="secondary" onClick={() => navigate('/')}>Back to Home</AppButton>
         </div>
+        {giftTagOpen && (
+          <GiftTagModal
+            url={savedLink}
+            recipientName={preview?.displayName || 'You'}
+            fromName={preview?.fromLine || ''}
+            title={preview?.title || 'Celebration'}
+            onClose={() => setGiftTagOpen(false)}
+          />
+        )}
         {shareOpen ? <ShareDialog message={shareMessage} link={savedLink} onClose={() => setShareOpen(false)} onCopy={async () => navigator.clipboard.writeText(shareMessage).catch(() => {})} onOpenNative={shareNative} /> : null}
       </Panel>
     </div>
@@ -1960,6 +2124,7 @@ function ShareDialog({ message, link, onClose, onCopy, onOpenNative }) {
         <p className="share-hint">Share a direct link to the wish, or copy the message and paste it anywhere.</p>
         <div className="share-grid">
           <a className="share-btn whatsapp" href={channelLinks.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
+          <a className="share-btn telegram" href={`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer" style={{ background: '#0088cc', color: '#fff' }}>Telegram</a>
           <button className="share-btn snapchat" type="button" onClick={onOpenNative}>Snapchat</button>
           <button className="share-btn instagram" type="button" onClick={onOpenNative}>Instagram</button>
           <a className="share-btn twitter" href={channelLinks.twitter} target="_blank" rel="noreferrer">Twitter</a>
@@ -1982,6 +2147,7 @@ function ManageWishPage({ templatesState }) {
   const [status, setStatus] = useState('Verifying ownership…');
   const [wishData, setWishData] = useState(null);
   const [recipientData, setRecipientData] = useState({});
+  const [giftTagOpen, setGiftTagOpen] = useState(false);
   const [tone, setTone] = useState('heartfelt');
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState('');
@@ -2112,6 +2278,15 @@ function ManageWishPage({ templatesState }) {
         {notice ? <div className={`notice ${notice.includes('Could not') ? 'error' : ''}`} role="status">{notice}</div> : null}
         <div className="manage-actions"><AppButton type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</AppButton><AppButton variant="secondary" type="button" onClick={deleteWish}>Delete wish</AppButton></div>
       </form>
+      {giftTagOpen && (
+        <GiftTagModal
+          url={`${window.location.origin}/wish/${username}`}
+          recipientName={preview?.displayName || 'You'}
+          fromName={preview?.fromLine || ''}
+          title={preview?.title || 'Celebration'}
+          onClose={() => setGiftTagOpen(false)}
+        />
+      )}
     </PageShell>
   );
 }
@@ -2122,6 +2297,10 @@ function WishViewPage({ templatesState }) {
   const [status, setStatus] = useState('Loading your wish...');
   const [wishData, setWishData] = useState(null);
   const [viewerUid, setViewerUid] = useState('');
+  const [unlocked, setUnlocked] = useState(false);
+  const [giftTagOpen, setGiftTagOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [storyExporting, setStoryExporting] = useState(false);
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -2205,20 +2384,96 @@ function WishViewPage({ templatesState }) {
     return <RevealCountdownScreen remainingMs={remainingMs} />;
   }
 
+  const handleCopyLink = async () => {
+    if (!username) return;
+    triggerHaptic([30, 40, 30]);
+    await navigator.clipboard.writeText(wishUrl).catch(() => {});
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2200);
+  };
+
+  const handleDownloadStory = async () => {
+    setStoryExporting(true);
+    await exportInstagramStory({
+      recipientName: preview?.displayName || 'Friend',
+      occasionTitle: preview?.title || 'Celebration Wish',
+      message: preview?.body?.[0] || 'Wishing you the best day!',
+      fromName: preview?.fromLine || '',
+      theme: template?.theme || {},
+      wishUrl: wishUrl,
+    });
+    setStoryExporting(false);
+  };
+
+  const senderName = preview?.fromLine ? preview.fromLine.replace(/^from\s+/i, '').trim() : '';
+
   return (
     <div className="wish-view" style={{ '--wish-accent': theme.accent || '#e85d04', '--wish-accent-soft': theme.accentSoft || '#fb8500' }}>
       <div className="wish-view-shell">
         <div className="wish-card-wrap">
-          <WishExperience preview={preview} template={template}>
-            <div className="wish-actions-row wish-experience-actions">
-              <AppButton variant="secondary" onClick={() => window.print()}>Print keepsake</AppButton>
-              <AppButton variant="secondary" onClick={copyLink}>Copy link</AppButton>
-              {viewerUid && viewerUid === wishData.ownerUid ? <AppButton variant="secondary" onClick={() => navigate(`/manage/${username}`)}>Manage wish</AppButton> : null}
+          <EnvelopeUnboxing preview={preview} template={template}>
+            {template?.id === 'birthday' && (
+              <BirthdayCake recipientName={preview?.displayName || 'Friend'} />
+            )}
+            <WishExperience preview={preview} template={template}>
+              <div className="wish-actions-row wish-experience-actions">
+                <AppButton variant="secondary" onClick={() => window.print()}>🖨️ Print Keepsake</AppButton>
+                <AppButton variant="secondary" onClick={handleCopyLink}>
+                  {copiedLink ? '✓ Copied!' : '🔗 Copy Link'}
+                </AppButton>
+                <AppButton
+                  variant="secondary"
+                  onClick={handleDownloadStory}
+                  disabled={storyExporting}
+                >
+                  {storyExporting ? 'Creating...' : '📸 Story Poster'}
+                </AppButton>
+                <AppButton variant="secondary" onClick={() => setGiftTagOpen(true)}>
+                  🎁 Mini Gift Tag
+                </AppButton>
+                {viewerUid && viewerUid === wishData.ownerUid ? (
+                  <AppButton variant="secondary" onClick={() => navigate(`/manage/${username}`)}>
+                    ⚙️ Manage Wish
+                  </AppButton>
+                ) : null}
+              </div>
+            </WishExperience>
+
+            {/* Gratitude & Reaction feedback bar */}
+            <SendLoveBack fromName={preview?.fromLine} title={preview?.title} />
+
+            {/* Viral Growth Loop */}
+            <div className="wish-viral-loop-banner">
+              {senderName ? (
+                <button
+                  className="wish-create-own viral-reply-btn"
+                  type="button"
+                  onClick={() => navigate('/template-picker')}
+                >
+                  Send a card back to {senderName} 💌 <ArrowRight size={16} />
+                </button>
+              ) : null}
+              <button
+                className="wish-create-own"
+                type="button"
+                onClick={() => navigate('/template-picker')}
+              >
+                Create your own free 3D wish <Sparkles size={16} />
+              </button>
             </div>
-          </WishExperience>
-          <button className="wish-create-own" type="button" onClick={() => window.location.assign('/template-picker')}>Create your own wish <ArrowRight size={16} /></button>
+          </EnvelopeUnboxing>
         </div>
       </div>
+
+      {giftTagOpen && (
+        <GiftTagModal
+          url={wishUrl}
+          recipientName={preview?.displayName || 'You'}
+          fromName={preview?.fromLine || ''}
+          title={preview?.title || 'Celebration'}
+          onClose={() => setGiftTagOpen(false)}
+        />
+      )}
     </div>
   );
 }

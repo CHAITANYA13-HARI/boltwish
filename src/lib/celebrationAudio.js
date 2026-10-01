@@ -120,6 +120,40 @@ class CelebrationAudio {
       this.playTone(freq * 2, 0.5, 'triangle', idx * 0.06 + 0.02, 0.06);
     });
   }
+
+  /**
+   * Play dynamic synthesized melody suited for specific occasion themes
+   */
+  playOccasionMelody(themeId = 'celebration') {
+    this.init();
+    if (this.muted) return;
+    const melodies = {
+      birthday: [523.25, 523.25, 587.33, 523.25, 698.46, 659.25], // Happy Birthday motif
+      love: [440, 554.37, 659.25, 830.61, 880], // Romantic arpeggio
+      anniversary: [392, 493.88, 587.33, 783.99, 987.77],
+      wedding: [523.25, 659.25, 783.99, 1046.50],
+      congrats: [523.25, 659.25, 783.99, 1046.50, 1318.51],
+      friendship: [440, 523.25, 659.25, 880],
+    };
+    const notes = melodies[themeId] || melodies.birthday;
+    notes.forEach((freq, idx) => {
+      this.playTone(freq, 0.5, 'sine', idx * 0.12, 0.14);
+    });
+  }
+}
+
+/**
+ * Native Haptic Feedback Vibration helper (Upgrade 44)
+ * Triggers subtle physical vibration on Android & supported mobile devices.
+ */
+export function triggerHaptic(pattern = [30, 40, 30]) {
+  if (typeof window !== 'undefined' && 'navigator' in window && typeof navigator.vibrate === 'function') {
+    try {
+      navigator.vibrate(pattern);
+    } catch {
+      // Haptics blocked by device permissions or settings
+    }
+  }
 }
 
 export const celebrationAudio = new CelebrationAudio();
