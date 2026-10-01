@@ -571,6 +571,7 @@ export function normalizeWishDocument(data = {}) {
     visibility: data.visibility || 'unlisted',
     ownerUid: data.ownerUid || '',
     username: data.username || '',
+    passcodeHash: data.passcodeHash || '',
     expiresAt: data.expiresAt || null,
     revealAt: data.revealAt || null,
     createdAt: data.createdAt || null,

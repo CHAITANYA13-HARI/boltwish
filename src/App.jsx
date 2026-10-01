@@ -2132,30 +2132,42 @@ function SavePage({ templatesState }) {
 }
 
 function ShareDialog({ message, link, onClose, onCopy, onOpenNative }) {
-  const channelLinks = {
-    whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}`,
+  const encodedLink = encodeURIComponent(link);
+  const encodedMsg = encodeURIComponent(message);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(link).catch(() => {});
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   return (
     <div className="share-overlay" role="presentation" onClick={onClose}>
       <div className="share-panel" role="dialog" aria-modal="true" aria-labelledby="share-title" onClick={(event) => event.stopPropagation()}>
-        <div className="share-panel-head"><h3 id="share-title">Share your wish</h3><button className="topbar-link" type="button" onClick={onClose}>Close</button></div>
-        <p className="share-hint">Share a direct link to the wish, or copy the message and paste it anywhere.</p>
+        <div className="share-panel-head"><h3 id="share-title">Share your wish 🎉</h3><button className="topbar-link" type="button" onClick={onClose}>✕ Close</button></div>
+        <p className="share-hint">Send the link directly or share on your favourite platform below.</p>
+
+        {/* Direct link */}
+        <div className="share-link-preview" style={{ marginBottom: 14 }}>
+          <span style={{ flex: 1, overflowWrap: 'anywhere', fontSize: '0.85rem', color: '#475569' }}>{link}</span>
+          <button className="action-btn action-primary small" type="button" style={{ flexShrink: 0, padding: '8px 14px', fontSize: '0.85rem' }} onClick={copyLink}>
+            {linkCopied ? '✓ Copied!' : '🔗 Copy Link'}
+          </button>
+        </div>
+
         <div className="share-grid">
-          <a className="share-btn whatsapp" href={channelLinks.whatsapp} target="_blank" rel="noreferrer">WhatsApp</a>
-          <a className="share-btn telegram" href={`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer" style={{ background: '#0088cc', color: '#fff' }}>Telegram</a>
-          <button className="share-btn snapchat" type="button" onClick={onOpenNative}>Snapchat</button>
-          <button className="share-btn instagram" type="button" onClick={onOpenNative}>Instagram</button>
-          <a className="share-btn twitter" href={channelLinks.twitter} target="_blank" rel="noreferrer">Twitter</a>
-          <button className="share-btn copy" type="button" onClick={onCopy}>Copy Message</button>
-          <button className="share-btn copy" type="button" onClick={onOpenNative}>Native Share</button>
+          <a className="share-btn whatsapp" href={`https://api.whatsapp.com/send?text=${encodedMsg}`} target="_blank" rel="noreferrer">💬 WhatsApp</a>
+          <a className="share-btn telegram" href={`https://t.me/share/url?url=${encodedLink}&text=${encodedMsg}`} target="_blank" rel="noreferrer" style={{ background: '#0088cc', color: '#fff' }}>✈️ Telegram</a>
+          <a className="share-btn twitter" href={`https://twitter.com/intent/tweet?text=${encodedMsg}`} target="_blank" rel="noreferrer">🐦 Twitter / X</a>
+          <a className="share-btn facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`} target="_blank" rel="noreferrer" style={{ background: '#1877f2', color: '#fff' }}>📘 Facebook</a>
+          <button className="share-btn copy" type="button" onClick={onCopy}>📋 Copy Message</button>
+          <button className="share-btn copy" type="button" onClick={onOpenNative}>📤 More options…</button>
         </div>
-        <div className="share-actions-row">
-          <button className="topbar-link" type="button" onClick={onClose}>Close</button>
-          <button className="action-btn action-primary" type="button" onClick={onClose}>Done</button>
+
+        <div className="share-actions-row" style={{ marginTop: 14 }}>
+          <button className="action-btn action-primary" type="button" onClick={onClose}>Done ✓</button>
         </div>
-        <div className="share-link-preview">{link}</div>
       </div>
     </div>
   );
@@ -2402,6 +2414,16 @@ function WishViewPage({ templatesState }) {
 
   if (remainingMs > 0) {
     return <RevealCountdownScreen remainingMs={remainingMs} />;
+  }
+
+  // PIN gate — rendered after countdown so the countdown shows without a pin prompt
+  if (wishData.passcodeHash && !unlocked) {
+    return (
+      <PasscodeGate
+        hashedPasscode={wishData.passcodeHash}
+        onUnlock={() => setUnlocked(true)}
+      />
+    );
   }
 
   const handleCopyLink = async () => {
