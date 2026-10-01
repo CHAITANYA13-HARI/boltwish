@@ -1,58 +1,50 @@
 /**
  * Templates utility module
  * - Provides normalized template documents and helpers for building drafts/previews
+ * - Streamlined to only essential fields: Recipient, Personal Message, Sender, and Date
  */
 
 export const fieldLabels = {
   name: "Recipient's Name",
-  age: 'Age',
-  eventDate: 'Event Date',
-  years: 'Years Together',
-  message: 'Message',
-  from: 'Your Name',
-  achievement: 'Achievement',
-  babyName: 'Baby Name',
-  parentName: 'Parent(s) Name',
-  bride: 'Bride Name',
-  groom: 'Groom Name',
-  to: "Recipient",
-  partnerOne: 'First Partner',
-  partnerTwo: 'Second Partner',
-  relationship: 'Your Relationship',
-  favoriteMemory: 'Favorite Memory',
-  quality: 'What Makes Them Special',
-  futureWish: 'Your Wish for Their Future',
-  effort: 'What It Took',
-  specialWish: 'A Special Wish',
-  friendshipYears: 'Years of Friendship',
-  reason: 'What You Are Thanking Them For',
-  impact: 'The Difference It Made',
+  from: 'Your Name (Sender)',
+  message: 'Personal Message',
+  eventDate: 'Celebration Date',
+  age: 'Age (optional)',
+  years: 'Years Together (optional)',
+  achievement: 'What are they celebrating?',
+  partnerOne: 'Partner 1 Name',
+  partnerTwo: 'Partner 2 Name',
+  bride: "Bride's Name",
+  groom: "Groom's Name",
+  babyName: "Baby's Name",
+  parentName: "Parents' Name",
 };
 
 export const fieldMeta = {
-  name: { type: 'text', placeholder: 'e.g., John Smith', maxLength: 50, required: true },
-  age: { type: 'number', placeholder: 'Enter a number (e.g. 30)', min: 0, max: 150, required: true },
-  eventDate: { type: 'date', required: true },
-  years: { type: 'number', placeholder: 'Enter a number (e.g. 5)', min: 0, max: 100, required: true },
-  message: { type: 'textarea', placeholder: 'Write a short personal message', maxLength: 300, required: true },
-  from: { type: 'text', placeholder: 'e.g., Alex', maxLength: 50, required: true },
-  achievement: { type: 'text', placeholder: 'e.g., New job, Graduation', maxLength: 80, required: true },
-  babyName: { type: 'text', placeholder: 'e.g., Baby Liam', maxLength: 50, required: true },
-  parentName: { type: 'text', placeholder: 'e.g., Sarah & Tom', maxLength: 50, required: true },
-  bride: { type: 'text', placeholder: 'e.g., Jane', maxLength: 50, required: true },
-  groom: { type: 'text', placeholder: 'e.g., Sam', maxLength: 50, required: true },
-  to: { type: 'text', placeholder: "e.g., John Smith", maxLength: 50, required: false },
+  name: { type: 'text', placeholder: 'e.g., Alex', maxLength: 50, required: true },
+  from: { type: 'text', placeholder: 'e.g., Sarah', maxLength: 50, required: true },
+  message: { type: 'textarea', placeholder: 'Write your heartfelt wish or memories...', maxLength: 1000, required: true },
+  eventDate: { type: 'date', required: false },
+  age: { type: 'number', placeholder: 'e.g., 25', min: 1, max: 120, required: false },
+  years: { type: 'number', placeholder: 'e.g., 5', min: 1, max: 100, required: false },
+  achievement: { type: 'text', placeholder: 'e.g., New Job, Graduation', maxLength: 80, required: true },
   partnerOne: { type: 'text', placeholder: 'e.g., Aisha', maxLength: 50, required: true },
   partnerTwo: { type: 'text', placeholder: 'e.g., Rohan', maxLength: 50, required: true },
-  relationship: { type: 'text', placeholder: 'e.g., Best friend, sister, colleague', maxLength: 80, required: true },
-  favoriteMemory: { type: 'textarea', placeholder: 'Share one specific moment you remember', maxLength: 220, required: true },
-  quality: { type: 'textarea', placeholder: 'Describe what makes this person special', maxLength: 180, required: true },
-  futureWish: { type: 'textarea', placeholder: 'What do you hope comes next for them?', maxLength: 180, required: true },
-  effort: { type: 'textarea', placeholder: 'What work, courage, or persistence did this take?', maxLength: 220, required: true },
-  specialWish: { type: 'textarea', placeholder: 'Write a wish that feels personal to this family', maxLength: 200, required: true },
-  friendshipYears: { type: 'number', placeholder: 'e.g., 8', min: 0, max: 100, required: false },
-  reason: { type: 'textarea', placeholder: 'Name the specific kindness, help, or support', maxLength: 220, required: true },
-  impact: { type: 'textarea', placeholder: 'Explain why it mattered to you', maxLength: 220, required: true },
+  bride: { type: 'text', placeholder: 'e.g., Emily', maxLength: 50, required: true },
+  groom: { type: 'text', placeholder: 'e.g., James', maxLength: 50, required: true },
+  babyName: { type: 'text', placeholder: 'e.g., Baby Liam', maxLength: 50, required: true },
+  parentName: { type: 'text', placeholder: 'e.g., Sarah & Tom', maxLength: 50, required: true },
+};
+
+export const defaultWishMessages = {
+  birthday: 'Wishing you a year ahead filled with good health, deep laughter, exciting adventures, and all the happiness you bring to everyone around you. You deserve the best celebration!',
+  anniversary: 'Seeing the love, trust, and laughter you share is a true inspiration. May the years ahead bring even more joy, deeper love, and wonderful memories together.',
+  love: 'I just wanted to take a moment to remind you how deeply special you are to me. Thank you for your love, your smile, and for making my world brighter every day.',
+  congrats: 'Seeing your dedication and hard work pay off is truly inspiring. Wishing you continued success and great happiness in everything that comes next!',
+  newbaby: 'Congratulations on your sweet new arrival! Little one is so blessed to have such wonderful parents. Wishing your family a lifetime of health, joy, and precious cuddles.',
+  wedding: 'Congratulations on your wedding day! It is such a joy to see you begin married life together. May your home always be filled with patience, joy, and endless love.',
+  friendship: 'I am so grateful for our friendship. Thank you for always being someone I can count on, laugh with, and make memories with. Here is to many more great times together!',
+  thankyou: 'Thank you so much for your support, generosity, and kindness. Having you in my corner made all the difference, and I am deeply grateful!',
 };
 
 export const contentFieldMeta = {
@@ -77,22 +69,22 @@ const toneContentByTemplate = {
   birthday: {
     playful: {
       title: '{{name}}, It’s Party Time! 🎂',
-      subtitle: 'Today’s agenda: celebrate you properly and make some excellent memories.',
-      body: 'Dear {{name}},\n\n{{ageCelebration}}\n\nYou deserve a huge celebration because {{quality}}.\n\nI still laugh when I remember {{favoriteMemory}}. That one belongs in the friendship hall of fame.\n\n{{message}}',
+      subtitle: 'Today’s agenda: celebrate you properly and make some great memories.',
+      body: 'Dear {{name}},\n\n{{ageCelebration}}\n\n{{message}}',
       highlight: 'More cake, more laughter, and absolutely no acting your age today.',
       footer: 'Big birthday energy from',
     },
     elegant: {
-      title: 'Celebrating You, {{name}}',
-      subtitle: 'A birthday is a beautiful moment to honor the life you have lived and the joy you bring.',
-      body: 'Dear {{name}},\n\n{{ageCelebration}}\n\nYour {{quality}} has touched more lives than you may realize.\n\nI remain especially grateful for {{favoriteMemory}}, a memory I will always hold close.\n\n{{message}}',
+      title: 'Celebrating You, {{name}} ✨',
+      subtitle: 'A birthday is a beautiful moment to honor the life you live and the joy you bring.',
+      body: 'Dear {{name}},\n\n{{ageCelebration}}\n\n{{message}}',
       highlight: 'May the year ahead be rich with purpose, happiness, and moments worthy of remembering.',
       footer: 'With warmest birthday wishes',
     },
     concise: {
       title: 'Happy Birthday, {{name}}! 🎂',
       subtitle: '{{ageCelebration}}',
-      body: 'What makes you special is {{quality}}.\n\nI will always smile about {{favoriteMemory}}.\n\n{{message}}',
+      body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'Have the wonderful birthday you deserve.',
       footer: 'With love',
     },
@@ -100,22 +92,22 @@ const toneContentByTemplate = {
   anniversary: {
     playful: {
       title: '{{coupleName}}, Still an Amazing Team! 🥂',
-      subtitle: '{{yearsCelebration}} You are still proving that love and laughter make the best partnership.',
-      body: 'Here’s to {{partnerOne}} and {{partnerTwo}}—two people who make together look very good.\n\nI still love remembering {{favoriteMemory}}. It captures your partnership perfectly.\n\n{{message}}',
+      subtitle: '{{yearsCelebration}} Still proving that love and laughter make the best partnership.',
+      body: 'Here’s to {{partnerOne}} and {{partnerTwo}}—two people who make together look very good.\n\n{{message}}',
       highlight: 'Keep choosing each other, laughing loudly, and winning at life as a team.',
       footer: 'Cheers to you both',
     },
     elegant: {
-      title: 'In Celebration of {{coupleName}}',
-      subtitle: '{{yearsCelebration}} your life together continues to be a beautiful testament to love.',
-      body: '{{partnerOne}} and {{partnerTwo}}, the grace and devotion within your partnership are deeply admired.\n\nI will always remember {{favoriteMemory}}, a moment that reflects the strength of your bond.\n\n{{message}}',
+      title: 'In Celebration of {{coupleName}} 🥂',
+      subtitle: '{{yearsCelebration}} your journey together is a beautiful testament to love.',
+      body: '{{partnerOne}} and {{partnerTwo}}, the devotion and warmth in your partnership are deeply admired.\n\n{{message}}',
       highlight: 'May every year deepen the trust, tenderness, and joy you have created together.',
       footer: 'With warm anniversary wishes',
     },
     concise: {
       title: 'Happy Anniversary, {{coupleName}}!',
       subtitle: '{{yearsCelebration}} and still creating a beautiful story.',
-      body: 'I will always remember {{favoriteMemory}}.\n\n{{message}}',
+      body: '{{partnerOne}} and {{partnerTwo}},\n\n{{message}}',
       highlight: 'Here’s to many more happy chapters together.',
       footer: 'Celebrating you both',
     },
@@ -124,44 +116,44 @@ const toneContentByTemplate = {
     playful: {
       title: '{{name}}, You’re My Favorite ❤️',
       subtitle: 'A very official reminder that life is significantly better with you in it.',
-      body: 'I love {{quality}}—and yes, I notice it every time.\n\nI would happily relive {{favoriteMemory}} on repeat.\n\nNext on our list: {{futureWish}}.\n\n{{message}}',
+      body: 'Dearest {{name}},\n\n{{message}}',
       highlight: 'Still choosing you. Still smiling about it.',
       footer: 'All my love',
     },
     elegant: {
-      title: 'For {{name}}, With All My Love',
-      subtitle: 'The deepest affection is often found in the details we quietly treasure.',
-      body: '{{name}}, I cherish {{quality}}.\n\nThe memory of {{favoriteMemory}} remains especially dear to me.\n\nI look forward to {{futureWish}}, and to every chapter we have yet to write.\n\n{{message}}',
+      title: 'For {{name}}, With All My Love ❤️',
+      subtitle: 'The deepest affection is found in the moments we quietly treasure.',
+      body: 'Dearest {{name}},\n\n{{message}}',
       highlight: 'You are both my comfort and my favorite adventure.',
       footer: 'Yours, always',
     },
     concise: {
       title: 'For You, {{name}} ❤️',
       subtitle: 'A little reminder of how much you mean to me.',
-      body: 'I love {{quality}}.\n\nI treasure {{favoriteMemory}}, and I cannot wait for {{futureWish}}.\n\n{{message}}',
+      body: 'Dearest {{name}},\n\n{{message}}',
       highlight: 'You make my world better.',
       footer: 'With all my heart',
     },
   },
   congrats: {
     playful: {
-      title: '{{name}}, You Absolutely Crushed It! 🎉',
+      title: '{{name}}, You Crushed It! 🎉',
       subtitle: '{{achievement}}: completed. Celebration mode: activated.',
-      body: 'This win came from {{effort}}, and now you get to enjoy every bit of it.\n\nNext stop: {{futureWish}}. I cannot wait to see what you do next.\n\n{{message}}',
+      body: 'Dear {{name}},\n\nThis win is huge, and you get to enjoy every bit of it!\n\n{{message}}',
       highlight: 'Be proud, celebrate loudly, and take the victory lap.',
       footer: 'Cheering for you',
     },
     elegant: {
-      title: 'Congratulations, {{name}}',
+      title: 'Congratulations, {{name}} 🎉',
       subtitle: 'Your achievement—{{achievement}}—is worthy of genuine admiration.',
-      body: 'This distinction reflects {{effort}}. Your commitment has led to a truly deserved result.\n\nMay this accomplishment open the way to {{futureWish}}.\n\n{{message}}',
+      body: 'Dear {{name}},\n\nYour dedication and commitment have led to a truly deserved result.\n\n{{message}}',
       highlight: 'May this milestone be the beginning of an even more remarkable chapter.',
       footer: 'With sincere congratulations',
     },
     concise: {
       title: 'You Did It, {{name}}! 🎉',
       subtitle: 'Congratulations on {{achievement}}.',
-      body: 'Your {{effort}} made this possible.\n\nWishing you {{futureWish}}.\n\n{{message}}',
+      body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'This moment is yours—enjoy it.',
       footer: 'So proud of you',
     },
@@ -169,22 +161,22 @@ const toneContentByTemplate = {
   newbaby: {
     playful: {
       title: 'Hello, {{babyName}}! 👶',
-      subtitle: 'Tiny human, enormous personality loading—and a whole family already in love.',
-      body: 'Dear {{parentName}}, your sweetest new adventure has officially begun. As {{relationship}}, I am thrilled for all of you.\n\n{{babyName}}, may your life bring {{specialWish}}.\n\n{{message}}',
+      subtitle: 'Tiny human, enormous personality loading—and a whole family in love.',
+      body: 'Dear {{parentName}},\n\nYour sweetest new adventure has officially begun!\n\n{{message}}',
       highlight: 'Welcome to the cuddles, giggles, and wonderfully sleepy days.',
       footer: 'Sending love and happy wishes',
     },
     elegant: {
-      title: 'Welcome, Dear {{babyName}}',
+      title: 'Welcome, Dear {{babyName}} 👶',
       subtitle: 'A precious new life, received with immeasurable love.',
-      body: 'Dear {{parentName}}, it is a privilege to celebrate this beautiful addition to your family. As {{relationship}}, I share deeply in your joy.\n\nMay {{babyName}} be blessed with {{specialWish}}.\n\n{{message}}',
+      body: 'Dear {{parentName}},\n\nIt is such a joy to celebrate this beautiful addition to your family.\n\n{{message}}',
       highlight: 'May your home be filled with tenderness, wonder, and lasting happiness.',
       footer: 'With warmest wishes to your family',
     },
     concise: {
       title: 'Welcome, {{babyName}}! 👶',
       subtitle: 'So tiny, so loved, and already so special.',
-      body: 'Congratulations, {{parentName}}.\n\nMy wish for {{babyName}} is {{specialWish}}.\n\n{{message}}',
+      body: 'Congratulations, {{parentName}}!\n\n{{message}}',
       highlight: 'Sending love to your beautiful growing family.',
       footer: 'With love',
     },
@@ -192,22 +184,22 @@ const toneContentByTemplate = {
   wedding: {
     playful: {
       title: '{{coupleName}} Made It Official! 💒',
-      subtitle: 'Two favorite people, one excellent decision, and a lifetime of adventures ahead.',
-      body: 'Knowing you as {{relationship}}, seeing this day feels extra special.\n\nI will always remember {{favoriteMemory}}—proof that the two of you are at your best together.\n\nHere’s to {{futureWish}}.',
+      subtitle: 'Two favorite people, one excellent decision, and a lifetime ahead.',
+      body: 'To {{coupleName}},\n\nSeeing this day is so special!\n\n{{message}}',
       highlight: 'Love each other, laugh often, and always share the last piece of cake.',
       footer: 'Celebrating you both',
     },
     elegant: {
-      title: 'With Love to {{coupleName}}',
-      subtitle: 'May this day mark the beginning of a marriage filled with grace, devotion, and joy.',
-      body: 'Our connection as {{relationship}} makes it especially meaningful to witness this new chapter.\n\nI will always treasure {{favoriteMemory}}, a moment that reflects the beauty of your partnership.\n\nMay your marriage bring {{futureWish}}.',
+      title: 'With Love to {{coupleName}} 💒',
+      subtitle: 'May this day mark the beginning of a marriage filled with devotion and joy.',
+      body: 'To {{coupleName}},\n\nIt is a true honor to witness this wonderful new chapter.\n\n{{message}}',
       highlight: 'May you build a life that is both a sanctuary and an adventure.',
       footer: 'With warmest wishes for your marriage',
     },
     concise: {
       title: 'Congratulations, {{coupleName}}! 💒',
       subtitle: 'Wishing you a beautiful life together.',
-      body: 'I will always remember {{favoriteMemory}}.\n\nMay your marriage bring {{futureWish}}.',
+      body: 'To {{coupleName}},\n\n{{message}}',
       highlight: 'Here’s to love, laughter, and a lifetime together.',
       footer: 'With love',
     },
@@ -215,22 +207,22 @@ const toneContentByTemplate = {
   friendship: {
     playful: {
       title: '{{name}}, Thanks for Being My Person 🤝',
-      subtitle: '{{friendshipCelebration}} Somehow, the stories keep getting better.',
-      body: 'Nothing summarizes us better than {{favoriteMemory}}.\n\nYou are a brilliant friend because {{quality}}. Thanks for every laugh, rescue mission, and questionable idea.\n\n{{message}}',
+      subtitle: 'Somehow, the stories keep getting better.',
+      body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'Here’s to more adventures and even better inside jokes.',
       footer: 'Your partner in chaos',
     },
     elegant: {
-      title: 'For My Dear Friend, {{name}}',
-      subtitle: '{{friendshipCelebration}} Your friendship remains one of life’s finest gifts.',
-      body: 'I often think fondly of {{favoriteMemory}}.\n\nYour {{quality}} has made your friendship a source of strength and happiness in my life.\n\n{{message}}',
+      title: 'For My Dear Friend, {{name}} 🤝',
+      subtitle: 'Your friendship remains one of life’s finest gifts.',
+      body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'Thank you for the constancy, honesty, and joy of your friendship.',
       footer: 'With lasting friendship',
     },
     concise: {
       title: 'For You, {{name}} 🤝',
-      subtitle: '{{friendshipCelebration}}',
-      body: 'I will always smile about {{favoriteMemory}}.\n\nThank you for {{quality}}.\n\n{{message}}',
+      subtitle: 'Celebrating our friendship.',
+      body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'Life is better with you as my friend.',
       footer: 'Your friend, always',
     },
@@ -239,21 +231,21 @@ const toneContentByTemplate = {
     playful: {
       title: '{{name}}, You’re the Best! 🙏',
       subtitle: 'A quick but very enthusiastic appreciation announcement.',
-      body: 'Thank you for {{reason}}. Seriously—you made a huge difference.\n\nBecause of you, {{impact}}.\n\n{{message}}',
+      body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'Kindness level: unforgettable.',
       footer: 'A very grateful',
     },
     elegant: {
-      title: 'With Gratitude to {{name}}',
+      title: 'With Gratitude to {{name}} 🙏',
       subtitle: 'Your generosity deserves to be acknowledged with sincerity.',
-      body: 'Please accept my heartfelt thanks for {{reason}}.\n\nYour kindness had a lasting impact: {{impact}}. I remain deeply grateful.\n\n{{message}}',
+      body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'What you gave was not merely help, but genuine encouragement.',
       footer: 'With sincere appreciation',
     },
     concise: {
       title: 'Thank You, {{name}} 🙏',
       subtitle: 'I truly appreciate what you did.',
-      body: 'Thank you for {{reason}}.\n\nIt mattered because {{impact}}.\n\n{{message}}',
+      body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'Your kindness made a real difference.',
       footer: 'With gratitude',
     },
@@ -428,13 +420,17 @@ export function normalizeTemplateDoc(docId, data = {}) {
 }
 
 /**
- * Build an empty recipient draft from a template's fields.
+ * Build an empty or pre-filled recipient draft from a template's fields.
  * @param {object} template
  */
 export function buildRecipientDraft(template = {}) {
   const draft = {};
   (template.fields || []).forEach((f) => {
-    draft[f.key] = '';
+    if (f.key === 'message') {
+      draft[f.key] = defaultWishMessages[template.id] || '';
+    } else {
+      draft[f.key] = '';
+    }
   });
 
   return draft;
@@ -470,41 +466,45 @@ export function composeWishPreview(template, wishData = {}) {
   const tone = wishData.tone || 'heartfelt';
   const toneContent = toneContentByTemplate[safeTemplate.id]?.[tone] || {};
   const content = { ...getContentFieldDefaults(safeTemplate), ...(wishData.content || {}), ...toneContent };
+
+  const defaultMsg = defaultWishMessages[safeTemplate.id] || 'Wishing you a wonderful celebration and great happiness!';
+  const activeMessage = recipientData.message?.trim() || defaultMsg;
+
   const previewRecipient = {
     ...recipientData,
-    name: recipientData.name || 'someone special',
-    babyName: recipientData.babyName || 'little one',
-    parentName: recipientData.parentName || 'the proud family',
-    bride: recipientData.bride || 'one wonderful person',
-    groom: recipientData.groom || 'their favorite person',
-    partnerOne: recipientData.partnerOne || 'one wonderful person',
-    partnerTwo: recipientData.partnerTwo || 'their favorite person',
-    relationship: recipientData.relationship || 'someone close to you',
-    favoriteMemory: recipientData.favoriteMemory || 'a memory you both treasure',
-    quality: recipientData.quality || 'the way you make people feel valued',
-    futureWish: recipientData.futureWish || 'many meaningful adventures ahead',
-    achievement: recipientData.achievement || 'this incredible milestone',
-    effort: recipientData.effort || 'dedication, courage, and persistence',
-    specialWish: recipientData.specialWish || 'a life filled with love and wonder',
-    reason: recipientData.reason || 'the kindness you showed',
-    impact: recipientData.impact || 'it made a real and lasting difference',
+    name: recipientData.name || 'Someone Special',
+    babyName: recipientData.babyName || 'Little One',
+    parentName: recipientData.parentName || 'The Proud Family',
+    bride: recipientData.bride || 'The Bride',
+    groom: recipientData.groom || 'The Groom',
+    partnerOne: recipientData.partnerOne || 'Partner 1',
+    partnerTwo: recipientData.partnerTwo || 'Partner 2',
+    achievement: recipientData.achievement || 'this wonderful milestone',
+    message: activeMessage,
   };
-  const weddingCouple = [previewRecipient.bride, previewRecipient.groom].filter(Boolean).join(' & ');
-  const anniversaryCouple = [previewRecipient.partnerOne, previewRecipient.partnerTwo].filter(Boolean).join(' & ');
-  const coupleName = weddingCouple || anniversaryCouple;
+
+  const weddingCouple = [recipientData.bride, recipientData.groom].filter(Boolean).join(' & ');
+  const anniversaryCouple = [recipientData.partnerOne, recipientData.partnerTwo].filter(Boolean).join(' & ');
+  const coupleName = weddingCouple || anniversaryCouple || 'The Happy Couple';
+
   const ageOrdinal = formatOrdinal(recipientData.age);
   const years = String(recipientData.years || '').trim();
-  const friendshipYears = String(recipientData.friendshipYears || '').trim();
+
   const contentContext = {
     ...previewRecipient,
     ...content,
     coupleName,
     ageOrdinal,
-    ageCelebration: ageOrdinal ? `Cheers to your ${ageOrdinal} birthday and the wonderful person you have become.` : '',
+    ageCelebration: ageOrdinal ? `Cheers to your ${ageOrdinal} birthday and the wonderful person you are!` : '',
     yearsCelebration: years ? `After ${years} wonderful year${years === '1' ? '' : 's'} together,` : 'Through every season together,',
-    friendshipCelebration: friendshipYears ? `${friendshipYears} year${friendshipYears === '1' ? '' : 's'} of friendship, countless memories.` : 'Through every season of friendship,',
   };
-  const displayName = recipientData.name || recipientData.babyName || coupleName || recipientData.parentName || 'there';
+
+  const displayName = recipientData.name
+    || recipientData.babyName
+    || (weddingCouple || anniversaryCouple)
+    || recipientData.parentName
+    || 'there';
+
   const countdown = getCountdownInfo(recipientData.eventDate);
 
   const resolved = {
@@ -519,7 +519,6 @@ export function composeWishPreview(template, wishData = {}) {
     tone,
   };
 
-  // Additional optional lines for final/print preview: show sender and explicit "To:" line
   resolved.fromLine = recipientData.from ? `From: ${recipientData.from}` : '';
   resolved.toLine = `To: ${displayName}`;
   resolved.metaLines = [];
@@ -529,8 +528,7 @@ export function composeWishPreview(template, wishData = {}) {
   }
 
   if (years) resolved.metaLines.push({ label: 'Together', value: `${years} year${years === '1' ? '' : 's'}` });
-  if (friendshipYears) resolved.metaLines.push({ label: 'Friends for', value: `${friendshipYears} year${friendshipYears === '1' ? '' : 's'}` });
-  if (recipientData.achievement) resolved.metaLines.push({ label: 'Achievement', value: String(recipientData.achievement) });
+  if (recipientData.achievement) resolved.metaLines.push({ label: 'Milestone', value: String(recipientData.achievement) });
 
   resolved.countdown = countdown;
 
@@ -548,24 +546,34 @@ export function buildShareMessage(template, wishData, url) {
   const displayName = preview.displayName || 'there';
   const sender = recipientData.from || 'Someone';
   const title = preview.title || template?.label || 'Wish';
-  const body = preview.subtitle || template?.summary || 'Open the wish to see it.';
 
-  return `${sender} created a ${title} for ${displayName} - ${body}. Open it here: ${url}`;
+  return `✨ I made a special celebration card for you, ${displayName}!\n\n"${title}"\n\nOpen your card here: ${url}\n\n— With love from ${sender}`;
+}
+
+export function createWishSchedule(Timestamp, eventDate) {
+  if (!eventDate) return { expiresAt: null, revealAt: null };
+  const target = new Date(`${eventDate}T00:00:00`);
+  if (Number.isNaN(target.getTime())) return { expiresAt: null, revealAt: null };
+
+  const revealAt = Timestamp.fromDate(target);
+  const expiryDate = new Date(target.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const expiresAt = Timestamp.fromDate(expiryDate);
+  return { expiresAt, revealAt };
 }
 
 export function normalizeWishDocument(data = {}) {
   return {
-    templateId: data.templateId || data.template || '',
+    templateId: data.templateId || '',
+    templateSnapshot: data.templateSnapshot || null,
     recipientData: data.recipientData || {},
     content: data.content || {},
-    templateSnapshot: data.templateSnapshot || null,
-    username: data.username || '',
-    createdAt: data.createdAt || null,
-    updatedAt: data.updatedAt || null,
     tone: data.tone || 'heartfelt',
     visibility: data.visibility || 'unlisted',
+    ownerUid: data.ownerUid || '',
+    username: data.username || '',
     expiresAt: data.expiresAt || null,
     revealAt: data.revealAt || null,
-    ownerUid: data.ownerUid || '',
+    createdAt: data.createdAt || null,
+    updatedAt: data.updatedAt || null,
   };
 }

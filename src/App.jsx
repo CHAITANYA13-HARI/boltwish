@@ -34,8 +34,13 @@ import {
   PartyPopper,
 } from 'lucide-react';
 // Firebase initialization (eager) — keep the original import to match existing usage.
+import { EnvelopeUnboxing } from './components/EnvelopeUnboxing';
+import { BirthdayCake } from './components/BirthdayCake';
+import { SendLoveBack } from './components/SendLoveBack';
+import { GiftTagModal } from './components/GiftTagModal';
 import { adminApp, app } from './lib/firebase';
 import {
+  defaultWishMessages,
   buildContentDraft,
   buildRecipientDraft,
   buildShareMessage,
@@ -1025,7 +1030,7 @@ function TemplatePickerPage({ templatesState }) {
 
   return (
     <PageShell
-      kicker="Step 1 of 3 · Choose style"
+      kicker="Choose an occasion · Pick a design"
       title="Choose a template that fits the moment."
       description="Each occasion has its own visual personality, writing tones, and thoughtful prompts."
       actions={<AppButton variant="secondary" onClick={() => navigate('/')}>Back to welcome</AppButton>}
@@ -1481,57 +1486,39 @@ function WishFormPage({ templatesState }) {
   const [recipientData, setRecipientData] = useState({});
   const [contentData, setContentData] = useState({});
   const [tone, setTone] = useState('heartfelt');
-  const [currentStep, setCurrentStep] = useState(2);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!template) return;
     setRecipientData(buildRecipientDraft(template));
     setContentData(buildContentDraft(template));
     setTone('heartfelt');
-    setCurrentStep(2);
   }, [template?.id]);
 
   const preview = useMemo(() => composeWishPreview(template, { recipientData, content: contentData, tone }), [template, recipientData, contentData, tone]);
-  const recipientFieldsComplete = template ? template.fields.every((field) => field.required === false || String(recipientData[field.key] || '').trim().length > 0) : false;
-  const canContinue = currentStep === 2 ? recipientFieldsComplete : true;
-  const wizardSteps = [
-    { step: 1, label: 'Template', done: true },
-    { step: 2, label: 'Personalize', done: currentStep > 2, active: currentStep === 2 },
-    { step: 3, label: 'Preview', done: false, active: currentStep === 3 },
-  ];
+  const canContinue = template ? template.fields.every((field) => field.required === false || String(recipientData[field.key] || '').trim().length > 0) : false;
 
   useSeoMeta({
     title: template ? `${template.label} template | Boltwish` : 'Boltwish',
     description: template?.summary || preview.subtitle || SITE_DESCRIPTION,
     canonicalPath: template ? `/template/${template.id}` : '/template-picker',
     robots: 'noindex,follow',
-    jsonLd: template ? {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: `${template.label} template | Boltwish`,
-      description: template.summary || preview.subtitle || '',
-      url: toAbsoluteUrl(`/template/${template.id}`),
-      mainEntity: {
-        '@type': 'CreativeWork',
-        headline: template.label,
-        description: template.summary || '',
-      },
-    } : null,
-    jsonLdId: 'template-json-ld',
   });
 
   if (templatesState.loading) {
-    return <div className="center-screen"><Panel className="fallback-panel"><h1>Loading templates...</h1><p>Waiting for Firebase to return the available templates.</p></Panel></div>;
+    return <div className="center-screen"><Panel className="fallback-panel"><h1>Loading templates...</h1><p>Waiting for templates to load.</p></Panel></div>;
   }
 
   if (!template) {
-    return <div className="center-screen"><Panel className="fallback-panel"><h1>Choose a template first.</h1><p>That template could not be found in Firebase.</p><AppButton onClick={() => navigate('/template-picker')}>Back to templates</AppButton></Panel></div>;
+    return <div className="center-screen"><Panel className="fallback-panel"><h1>Choose a template first.</h1><p>That template could not be found.</p><AppButton onClick={() => navigate('/template-picker')}>Back to templates</AppButton></Panel></div>;
   }
 
   const updateRecipient = (field, value) => setRecipientData((current) => ({ ...current, [field]: value }));
 
   const handleSubmit = (event) => {
-    event.preventDefault();
+    if (event?.preventDefault) event.preventDefault();
+    if (!canContinue || saving) return;
+    setSaving(true);
     const cleanedRecipientData = Object.fromEntries(template.fields.map((field) => [field.key, String(recipientData[field.key] || '').trim()]));
     const cleanedContent = Object.fromEntries(defaultContentOrder.map((field) => [field, String(contentData[field] || '').trim()]));
 
@@ -1540,35 +1527,23 @@ function WishFormPage({ templatesState }) {
     navigate('/save');
   };
 
-  const goNext = () => {
-    if (currentStep < 3) {
-      if (!canContinue) return;
-      setCurrentStep((step) => Math.min(3, step + 1));
-      return;
-    }
-    handleSubmit(new Event('submit'));
-  };
-
-  const goBack = () => {
-    if (currentStep > 2) {
-      setCurrentStep((step) => Math.max(2, step - 1));
-      return;
-    }
-    navigate('/template-picker');
+  const fillSampleMessage = () => {
+    const sample = defaultWishMessages[template.id] || 'Wishing you all the joy and happiness in the world!';
+    updateRecipient('message', sample);
   };
 
   return (
     <PageShell
-      kicker="Step 2 of 3 · Make it personal"
-      title="Tell us what makes this person special."
-      description="Answer a few occasion-specific prompts and Boltwish will shape them into a finished wish."
+      kicker={`${template.label} celebration card`}
+      title={`Make it personal for ${preview.displayName || 'them'}.`}
+      description="Fill in the essential details below. The live preview updates in real time as you type."
       actions={<AppButton variant="secondary" onClick={() => navigate('/template-picker')}>Change template</AppButton>}
       aside={
         <MotionPanel className="side-panel preview-panel glass-sidebar">
           <div className="preview-rail-top">
             <div>
-                <div className="eyebrow"><Eye size={14} /> Live preview</div>
-              <h2>Preview updates in real time.</h2>
+              <div className="eyebrow"><Eye size={14} /> Live preview</div>
+              <h2>Updates in real time</h2>
             </div>
             <Sparkles size={18} className="rail-icon" />
           </div>
@@ -1579,78 +1554,89 @@ function WishFormPage({ templatesState }) {
         </MotionPanel>
       }
     >
-      <div className="stepper glass-card">
-        {wizardSteps.map((item) => (
-          <div key={item.step} className={`stepper-item ${item.active ? 'active' : ''} ${item.done ? 'done' : ''}`}>
-            <span>{item.step}</span>
-            <strong>{item.label}</strong>
-          </div>
-        ))}
-      </div>
-
       <form id={formId} className="editor-layout wizard-layout" onSubmit={handleSubmit}>
-        <AnimatePresence mode="wait">
-          {currentStep === 2 ? (
-            <motion.section key="recipient" className="editor-card glass-card wizard-card" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.28 }}>
-              <SectionHeading
-                eyebrow="Step 2"
-                title="Add the details only you know."
-                description="Specific memories and honest details make the final wish feel truly personal."
-              />
-              <ToneSelector value={tone} onChange={setTone} />
-              <div className="field-grid">
-                {template.fields.map((field) => (
-                  <label key={field.key} className={`field-group floating-field ${field.type === 'textarea' ? 'field-wide' : ''}`}>
-                    <span>{field.label}{field.required === false ? '' : ' *'}</span>
-                    {field.type === 'textarea' ? (
-                      <textarea value={recipientData[field.key] || ''} required={field.required} maxLength={field.maxLength} placeholder={field.placeholder} onChange={(event) => updateRecipient(field.key, event.target.value)} />
-                    ) : (
-                      <input type={field.type} value={recipientData[field.key] || ''} required={field.required} min={field.key === 'eventDate' ? new Date().toISOString().slice(0, 10) : field.min} max={field.max} maxLength={field.maxLength} placeholder={field.placeholder} onChange={(event) => updateRecipient(field.key, event.target.value)} />
-                    )}
-                    <small>{field.helpText || (field.maxLength ? `${String(recipientData[field.key] || '').length}/${field.maxLength}` : '')}</small>
-                  </label>
-                ))}
-              </div>
-            </motion.section>
-          ) : null}
+        <section className="editor-card glass-card wizard-card">
+          <ToneSelector value={tone} onChange={setTone} />
 
-          {currentStep === 3 ? (
-            <motion.section key="review" className="editor-card glass-card wizard-card" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.28 }}>
-              <SectionHeading
-                eyebrow="Step 3"
-                title={`A wish made for ${preview.displayName}.`}
-                description="Your answers are now part of the story. Go back to adjust anything, or save it when it feels right."
-              />
-              <div className="review-experience" style={{ '--wish-accent': template?.theme?.accent || '#8b5cf6', '--wish-accent-soft': template?.theme?.accentSoft || '#ec4899' }}>
-                <WishExperience preview={preview} template={template} />
-              </div>
-              <div className="share-settings">
-                <div className="share-settings-head"><ShieldCheck size={18} /><div><h3>Automatic private sharing</h3><p>This unlisted wish opens on the event date and expires automatically seven days later.</p></div></div>
-              </div>
-            </motion.section>
-          ) : null}
-        </AnimatePresence>
+          <SectionHeading
+            eyebrow="Details"
+            title="The essential details"
+            description="Just who it is for, your personal message, and who it is from."
+          />
+          <div className="field-grid">
+            {template.fields.map((field) => (
+              <label key={field.key} className={`field-group floating-field ${field.type === 'textarea' ? 'field-wide' : ''}`}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span>{field.label}{field.required === false ? '' : ' *'}</span>
+                  {field.key === 'message' && (
+                    <button
+                      type="button"
+                      className="topbar-link"
+                      style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                      onClick={fillSampleMessage}
+                      title="Insert pre-written celebration wish"
+                    >
+                      ✨ Reset to sample wish
+                    </button>
+                  )}
+                </div>
+                {field.type === 'textarea' ? (
+                  <textarea
+                    rows={4}
+                    value={recipientData[field.key] || ''}
+                    required={field.required}
+                    maxLength={field.maxLength}
+                    placeholder={field.placeholder}
+                    onChange={(event) => updateRecipient(field.key, event.target.value)}
+                  />
+                ) : (
+                  <input
+                    type={field.type}
+                    value={recipientData[field.key] || ''}
+                    required={field.required}
+                    min={field.key === 'eventDate' ? new Date().toISOString().slice(0, 10) : field.min}
+                    max={field.max}
+                    maxLength={field.maxLength}
+                    placeholder={field.placeholder}
+                    onChange={(event) => updateRecipient(field.key, event.target.value)}
+                  />
+                )}
+                <small>{field.helpText || (field.maxLength ? `${String(recipientData[field.key] || '').length}/${field.maxLength}` : '')}</small>
+              </label>
+            ))}
+          </div>
 
-        <div className="wizard-actions actions-row form-actions">
-          <AppButton variant="secondary" type="button" onClick={goBack}>Back</AppButton>
-          <AppButton type={currentStep === 3 ? 'submit' : 'button'} onClick={currentStep === 3 ? undefined : goNext} disabled={!canContinue}>{currentStep === 3 ? 'Save my personalized wish' : 'See my wish'}</AppButton>
-        </div>
+          <div className="share-settings" style={{ marginTop: '22px' }}>
+            <div className="share-settings-head">
+              <ShieldCheck size={18} />
+              <div>
+                <h3>Private unlisted link</h3>
+                <p>Only people with the link can view this card. You can edit or delete it anytime from your device.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="wizard-actions actions-row form-actions" style={{ marginTop: '24px' }}>
+            <AppButton variant="secondary" type="button" onClick={() => navigate('/template-picker')}>Back</AppButton>
+            <AppButton type="submit" disabled={!canContinue || saving}>
+              {saving ? 'Creating wish...' : 'Create & Get Link →'}
+            </AppButton>
+          </div>
+        </section>
       </form>
 
       <div className="mobile-sticky-bar">
         <div>
-          <strong>Step {currentStep} of 3</strong>
-          <span>{currentStep === 3 ? 'Your personalized wish is ready' : 'Tell us what makes them special'}</span>
+          <strong>Ready to send?</strong>
+          <span>Live preview updates as you type</span>
         </div>
         <div className="mobile-sticky-actions">
-          <AppButton variant="secondary" type="button" onClick={goBack}>Back</AppButton>
           <AppButton
-            type={currentStep === 3 ? 'submit' : 'button'}
-            form={currentStep === 3 ? formId : undefined}
-            onClick={currentStep === 3 ? undefined : goNext}
-            disabled={!canContinue}
+            type="submit"
+            form={formId}
+            disabled={!canContinue || saving}
           >
-            {currentStep === 3 ? 'Save' : 'See wish'}
+            {saving ? 'Creating...' : 'Create Wish →'}
           </AppButton>
         </div>
       </div>
@@ -1771,7 +1757,7 @@ function SavePage({ templatesState }) {
     <div className="center-screen save-screen">
       <div className="topbar save-topbar"><button className="topbar-link" type="button" onClick={() => navigate('/')}>← Back to home</button></div>
       <Panel className="save-panel">
-        <div className="progress-card"><div className="progress-label"><span>Step 3 of 3</span><span>100%</span></div><div className="progress-bar"><div className="progress-fill" /></div></div>
+        <div className="progress-card"><div className="progress-label"><span>Your card link is ready!</span><span>🎉 100%</span></div><div className="progress-bar"><div className="progress-fill" /></div></div>
         <div className={`loader ${saving ? '' : 'loader-done'}`} aria-hidden="true" />
         <h1 className="save-status">{status}</h1>
         {preview ? <div className="save-preview"><div className="chip">{preview.chip}</div><strong>{preview.title}</strong><p>{preview.subtitle}</p><WishMetaLines metaLines={preview.metaLines} className="wish-card-meta-inline" /></div> : null}
@@ -1926,7 +1912,12 @@ function ManageWishPage({ templatesState }) {
       kicker="Private creator controls"
       title={`Manage ${preview.displayName}’s wish.`}
       description="Update the personal details, change the writing style, or remove the wish. The event date controls when the link opens and expires."
-      actions={<AppButton variant="secondary" onClick={() => navigate(`/wish/${username}`)}>View shared wish</AppButton>}
+      actions={
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <AppButton variant="secondary" onClick={() => setGiftTagOpen(true)}>Print Gift Tag 🎁</AppButton>
+          <AppButton variant="secondary" onClick={() => navigate(`/wish/${username}`)}>View shared wish</AppButton>
+        </div>
+      }
       aside={<MotionPanel className="side-panel preview-panel glass-sidebar"><div className="eyebrow"><Eye size={14} /> Live preview</div><div className="preview-card premium-preview" style={{ '--wish-accent': template.theme?.accent, '--wish-accent-soft': template.theme?.accentSoft }}><WishExperience preview={preview} template={template} compact /></div></MotionPanel>}
     >
       <form className="editor-card glass-card wizard-card manage-wish-form" onSubmit={saveChanges}>

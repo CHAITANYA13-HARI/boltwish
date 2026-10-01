@@ -4457,3 +4457,919 @@ h1 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* ==========================================================================
+   INTERACTIVE CELEBRATION SUITE (100% Free Upgrades)
+   - 3D Envelope Unboxing & Wax Seal
+   - Interactive Birthday Cake & Candle Blowing
+   - Send Love Back Gratitude Bar & WhatsApp deep link
+   - Printable Boutique Mini Gift Tag with QR Code
+   - Foldable 4-Panel Keepsake Card Print Styles (@media print)
+   ========================================================================== */
+
+/* 1. Floating Celebration Bar */
+.celebration-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.celebration-floating-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  z-index: 10;
+}
+
+.celebration-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  color: #1e293b;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.celebration-pill-btn:hover {
+  transform: translateY(-2px);
+  background: #ffffff;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+  border-color: #cbd5e1;
+}
+
+.celebration-pill-btn.secondary {
+  color: #64748b;
+}
+
+/* 2. 3D Envelope & Wax Seal */
+.envelope-stage {
+  width: min(540px, 94vw);
+  margin: 20px auto 40px;
+  perspective: 1200px;
+}
+
+.envelope-outer {
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.envelope-outer:hover {
+  transform: translateY(-4px);
+}
+
+.envelope-glow {
+  position: absolute;
+  inset: -20px;
+  border-radius: 36px;
+  pointer-events: none;
+  filter: blur(28px);
+  opacity: 0.75;
+  transition: opacity 0.3s;
+}
+
+.envelope-box {
+  position: relative;
+  height: 340px;
+  background: linear-gradient(135deg, #ffffff 0%, #fff0f3 50%, #ffe5ec 100%);
+  border-radius: 24px;
+  box-shadow: 0 26px 65px -12px rgba(225, 29, 72, 0.18), 0 10px 24px -6px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.envelope-back {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #ffeef2 0%, #ffd6e0 100%);
+  z-index: 1;
+}
+
+.envelope-card-peek {
+  position: absolute;
+  top: 36px;
+  width: 82%;
+  height: 160px;
+  background: #ffffff;
+  border-radius: 16px 16px 8px 8px;
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06);
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  padding: 16px 20px;
+  border: 1px solid rgba(241, 245, 249, 0.9);
+  transition: transform 0.3s ease;
+}
+
+.envelope-outer:hover .envelope-card-peek {
+  transform: translateY(-8px);
+}
+
+.envelope-peek-lines {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.envelope-peek-chip {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.envelope-peek-lines strong {
+  font-size: 1rem;
+  color: #1e293b;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pocket Fold Folds */
+.envelope-pocket {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(180deg, transparent 40%, rgba(255, 255, 255, 0.95) 75%, #ffffff 100%);
+  z-index: 3;
+  clip-path: polygon(0 45%, 50% 75%, 100% 45%, 100% 100%, 0 100%);
+  filter: drop-shadow(0 -4px 10px rgba(15, 23, 42, 0.05));
+}
+
+.envelope-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  background: linear-gradient(180deg, #ffffff 0%, #fff5f7 100%);
+  z-index: 4;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  filter: drop-shadow(0 6px 14px rgba(225, 29, 72, 0.12));
+  transform-origin: top center;
+  transition: transform 0.4s ease;
+}
+
+.envelope-to-label {
+  position: absolute;
+  bottom: 40px;
+  z-index: 5;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.envelope-to-kicker {
+  display: block;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #881337;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.envelope-to-name {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+}
+
+/* Wax Seal */
+.envelope-wax-seal {
+  position: absolute;
+  top: 140px;
+  z-index: 6;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--seal-color, #e11d48) 0%, #9f1239 80%, #881337 100%);
+  box-shadow: 0 10px 28px rgba(159, 18, 57, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.seal-ring {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seal-icon {
+  font-size: 26px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.seal-pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--seal-color, #e11d48);
+  opacity: 0.6;
+  animation: sealPulse 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes sealPulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.22); opacity: 0; }
+  100% { transform: scale(1.22); opacity: 0; }
+}
+
+.seal-prompt {
+  position: absolute;
+  bottom: -32px;
+  white-space: nowrap;
+  background: #1e293b;
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.envelope-hint {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 0.92rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.opened-card-stage {
+  width: 100%;
+}
+
+/* 3. Interactive Birthday Cake & Candles */
+.birthday-interactive-section {
+  margin: 32px 0;
+  width: 100%;
+}
+
+.birthday-cake-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 245, 245, 0.92) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border-radius: 24px;
+  padding: 28px 24px;
+  border: 1px solid rgba(254, 205, 211, 0.8);
+  box-shadow: 0 12px 36px rgba(244, 63, 94, 0.08);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.birthday-cake-card:hover {
+  box-shadow: 0 16px 42px rgba(244, 63, 94, 0.13);
+}
+
+.cake-headline {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #e11d48;
+  margin-bottom: 20px;
+}
+
+.sparkle-spin {
+  animation: spinSlow 6s linear infinite;
+}
+
+@keyframes spinSlow {
+  100% { transform: rotate(360deg); }
+}
+
+.cake-stage {
+  position: relative;
+  width: 190px;
+  margin: 10px auto 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cake-candles-row {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-bottom: -4px;
+  z-index: 3;
+}
+
+.cake-candle {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.candle-stick {
+  width: 10px;
+  height: 38px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(45deg, #fbbf24, #fbbf24 6px, #f43f5e 6px, #f43f5e 12px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.candle-wick {
+  width: 2px;
+  height: 6px;
+  background: #334155;
+}
+
+.candle-flame {
+  width: 14px;
+  height: 22px;
+  border-radius: 50% 50% 20% 20%;
+  background: radial-gradient(ellipse at bottom, #ffffff 15%, #ffd166 45%, #ff4d6d 100%);
+  filter: drop-shadow(0 0 10px #fbbf24) drop-shadow(0 0 4px #f43f5e);
+  margin-bottom: 2px;
+}
+
+.flame-wiggle-1 { animation: flameWiggle 1.3s ease-in-out infinite; }
+.flame-wiggle-2 { animation: flameWiggle 1.1s ease-in-out infinite 0.2s; }
+.flame-wiggle-3 { animation: flameWiggle 1.4s ease-in-out infinite 0.4s; }
+
+@keyframes flameWiggle {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  50% { transform: scale(1.1, 0.95) rotate(4deg); }
+}
+
+.candle-smoke {
+  width: 4px;
+  height: 18px;
+  background: rgba(148, 163, 184, 0.7);
+  border-radius: 50%;
+  filter: blur(1px);
+  animation: smokeRise 1.2s ease-out forwards;
+}
+
+@keyframes smokeRise {
+  0% { transform: translateY(0) scaleX(1); opacity: 0.8; }
+  100% { transform: translateY(-24px) scaleX(2.5); opacity: 0; }
+}
+
+.cake-tier {
+  width: 100%;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.cake-tier-top {
+  width: 140px;
+  height: 48px;
+  background: linear-gradient(180deg, #ffcbf2 0%, #f72585 100%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cake-decorations {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.cake-tier-base {
+  width: 180px;
+  height: 52px;
+  background: linear-gradient(180deg, #ffccd5 0%, #fb6f92 100%);
+  margin-top: -6px;
+  z-index: 1;
+}
+
+.cake-plate {
+  width: 210px;
+  height: 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  margin-top: -2px;
+}
+
+.cake-prompt-area {
+  margin-top: 14px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.cake-action-callout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.cake-blow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 22px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(225, 29, 72, 0.35);
+  transition: all 0.2s ease;
+}
+
+.cake-blow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(225, 29, 72, 0.45);
+}
+
+.flame-icon-pulse {
+  animation: flamePulse 1s ease-in-out infinite;
+}
+
+@keyframes flamePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); color: #ffd166; }
+}
+
+.cake-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.cake-wish-granted {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.wish-granted-banner {
+  padding: 12px 18px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.96rem;
+  line-height: 1.4;
+}
+
+.cake-relight-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  background: none;
+  border: 1px solid #cbd5e1;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cake-relight-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+/* 4. Send Love Back Gratitude Bar */
+.send-love-back-card {
+  margin: 36px 0 20px;
+  padding: 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255, 241, 242, 0.7) 0%, rgba(255, 255, 255, 0.85) 100%);
+  border: 1px solid rgba(254, 205, 211, 0.7);
+  box-shadow: 0 10px 30px rgba(225, 29, 72, 0.05);
+  text-align: left;
+}
+
+.send-love-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.send-love-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.send-love-header p {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.love-icon-pulse {
+  color: #e11d48;
+  animation: heartThump 1.4s ease-in-out infinite;
+}
+
+@keyframes heartThump {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.25); }
+  30% { transform: scale(1.05); }
+  45% { transform: scale(1.2); }
+}
+
+.reactions-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.reaction-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+}
+
+.reaction-pill:hover,
+.reaction-pill.active {
+  border-color: #e11d48;
+  background: #fff1f2;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.15);
+}
+
+.reaction-emoji {
+  font-size: 1.3rem;
+}
+
+.reaction-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.send-love-drawer {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(226, 232, 240, 0.9);
+}
+
+.send-love-preview-box {
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 14px;
+}
+
+.preview-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.preview-message {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #1e293b;
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.send-love-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-whatsapp {
+  background: #25d366 !important;
+  color: #ffffff !important;
+  border-color: #25d366 !important;
+}
+
+.action-whatsapp:hover {
+  background: #1ebc59 !important;
+}
+
+/* 5. Printable Gift Tag Modal */
+.gift-tag-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.gift-tag-dialog {
+  background: #ffffff;
+  border-radius: 24px;
+  max-width: 480px;
+  width: 100%;
+  padding: 28px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.gift-tag-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gift-tag-dialog-head h3 {
+  margin: 4px 0 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+}
+
+.gift-tag-explainer {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.gift-tag-sheet-preview {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px dashed #cbd5e1;
+}
+
+.printable-gift-tag {
+  width: 210px;
+  background: #ffffff;
+  border: 2px solid #1e293b;
+  border-radius: 16px;
+  padding: 16px 14px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.tag-punch-hole {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px dashed #94a3b8;
+  margin-bottom: 10px;
+}
+
+.tag-header {
+  margin-bottom: 10px;
+}
+
+.tag-sparkle {
+  color: #e11d48;
+}
+
+.tag-kicker {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.tag-recipient {
+  margin: 2px 0 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.tag-qr-wrap {
+  width: 130px;
+  height: 130px;
+  background: #ffffff;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tag-qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.tag-instruction {
+  font-size: 0.68rem;
+  color: #475569;
+  margin: 0 0 10px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.tag-footer {
+  font-size: 0.72rem;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.tag-footer span {
+  display: block;
+  font-size: 0.62rem;
+  color: #64748b;
+}
+
+.tag-brand {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.gift-tag-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* ==========================================================================
+   6. Foldable 4-Panel Keepsake Print Styles (@media print)
+   ========================================================================== */
+@media print {
+  /* Hide all digital UI elements */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  body::before,
+  .topbar,
+  .celebration-floating-bar,
+  .wish-actions-row,
+  .wish-create-own,
+  .send-love-back-card,
+  .cake-prompt-area,
+  .envelope-stage,
+  .gift-tag-overlay .gift-tag-dialog-head,
+  .gift-tag-overlay .gift-tag-explainer,
+  .gift-tag-overlay .gift-tag-actions {
+    display: none !important;
+  }
+
+  /* When printing the Gift Tag modal */
+  .gift-tag-overlay {
+    position: static !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+  }
+
+  .gift-tag-dialog {
+    box-shadow: none !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .gift-tag-sheet-preview {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  .printable-gift-tag {
+    box-shadow: none !important;
+    border: 2px solid #000 !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* When printing the Keepsake Card (4-Panel foldout) */
+  .wish-view {
+    padding: 0 !important;
+    background: none !important;
+  }
+
+  .wish-view-shell,
+  .wish-card-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .wish-experience {
+    border: 2px solid #334155 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    page-break-inside: avoid !important;
+    padding: 36px 32px !important;
+    border-radius: 12px !important;
+  }
+
+  .wish-aurora,
+  .wish-confetti,
+  .wish-motifs {
+    display: none !important;
+  }
+
+  .wish-experience-content {
+    color: #000000 !important;
+  }
+
+  .wish-recipient-name {
+    font-size: 28pt !important;
+    color: #000000 !important;
+  }
+
+  .wish-story p {
+    font-size: 13pt !important;
+    line-height: 1.6 !important;
+    color: #1e293b !important;
+  }
+
+  .wish-highlight {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  .birthday-cake-card {
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    background: none !important;
+  }
+}
