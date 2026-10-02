@@ -7594,3 +7594,497 @@ h1 {
 .template-card-mint    { background: linear-gradient(150deg, #34d399 0%, #059669 55%, #064e3b 100%) !important; }
 .template-card-teal    { background: linear-gradient(150deg, #2dd4bf 0%, #0d9488 55%, #134e4a 100%) !important; }
 
+/* ==========================================================================
+   UI UPGRADES v8 — Gallery Controls, Step Tracker, FAQ, Reviews, Save Link
+   ========================================================================== */
+
+/* 1. Hero Trust Badges */
+.hero-trust-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 6px;
+}
+
+.hero-trust-badges span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 107, 107, 0.15);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text);
+  backdrop-filter: blur(6px);
+}
+
+/* 2. Gallery Controls Bar (TemplatePickerPage) */
+.gallery-controls-bar {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gallery-search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+}
+
+.gallery-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.gallery-search-input {
+  width: 100%;
+  padding: 12px 38px 12px 42px !important;
+  border-radius: 14px !important;
+  border: 1.5px solid rgba(203, 213, 225, 0.8) !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  font-size: 0.92rem !important;
+  color: var(--text) !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.2s ease !important;
+}
+
+.gallery-search-input:focus {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.15) !important;
+  background: #ffffff !important;
+  outline: none !important;
+}
+
+.gallery-search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.08);
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.gallery-search-clear:hover {
+  background: rgba(0, 0, 0, 0.16);
+  color: var(--text);
+}
+
+.gallery-cat-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gallery-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.gallery-cat-pill:hover {
+  background: #ffffff;
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+.gallery-cat-pill.active {
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(255, 107, 107, 0.35);
+  font-weight: 700;
+}
+
+.gallery-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.84rem;
+  color: var(--muted);
+  padding: 0 2px;
+}
+
+.gallery-reset-btn {
+  background: none;
+  border: none;
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* 3. Wizard Step Tracker (WishFormPage) */
+.wizard-step-tracker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(203, 213, 225, 0.6);
+  border-radius: 14px;
+  margin-bottom: 22px;
+}
+
+.step-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.step-pill.done {
+  color: #059669;
+  cursor: pointer;
+}
+
+.step-pill.done:hover {
+  text-decoration: underline;
+}
+
+.step-pill.active {
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.step-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.step-pill.done .step-num {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.step-pill.active .step-num {
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color: #ffffff;
+}
+
+.step-divider {
+  flex: 1;
+  height: 2px;
+  background: rgba(203, 213, 225, 0.5);
+  border-radius: 2px;
+  min-width: 12px;
+}
+
+/* 4. Message Quick Starters */
+.message-quick-prompts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.quick-prompts-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.quick-prompt-btn {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px dashed rgba(203, 213, 225, 0.9);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.quick-prompt-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* 5. Save Page Direct Link Card */
+.save-link-card {
+  margin: 18px 0;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.85);
+  border: 1.5px solid rgba(203, 213, 225, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.save-link-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  padding: 4px 6px 4px 12px;
+}
+
+.save-link-icon {
+  font-size: 1rem;
+}
+
+.save-link-input {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  font-size: 0.86rem !important;
+  color: #1e293b !important;
+  padding: 6px 0 !important;
+  outline: none !important;
+}
+
+.save-link-copy-btn {
+  padding: 8px 16px !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  white-space: nowrap !important;
+}
+
+.save-direct-shortcuts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shortcut-btn {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  border: none;
+}
+
+.shortcut-btn.whatsapp {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+}
+
+.shortcut-btn.whatsapp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
+}
+
+.shortcut-btn.secondary {
+  background: #ffffff;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  color: var(--text);
+}
+
+.shortcut-btn.secondary:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+/* 6. Testimonials Section (HomePage) */
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.testimonial-card {
+  padding: 22px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.testimonial-stars {
+  color: #f59e0b;
+  font-size: 1.15rem;
+  letter-spacing: 2px;
+}
+
+.testimonial-quote {
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0;
+  font-style: italic;
+}
+
+.testimonial-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid rgba(31, 41, 55, 0.06);
+}
+
+.testimonial-author strong {
+  font-size: 0.88rem;
+  display: block;
+}
+
+.testimonial-author span {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+/* 7. FAQ Accordion Section (HomePage) */
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.faq-item {
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(203, 213, 225, 0.5);
+}
+
+.faq-item.open {
+  border-color: rgba(255, 107, 107, 0.35);
+  box-shadow: 0 8px 24px rgba(255, 107, 107, 0.08);
+}
+
+.faq-question-btn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  gap: 14px;
+  transition: color 0.15s ease;
+}
+
+.faq-question-btn:hover {
+  color: var(--brand);
+}
+
+.faq-icon {
+  color: var(--muted);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.faq-item.open .faq-icon {
+  color: var(--brand);
+}
+
+.faq-answer {
+  padding: 0 20px 18px;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.faq-answer p {
+  margin: 0;
+}
+
+/* Dark mode adjustments for v8 */
+@media (prefers-color-scheme: dark) {
+  .hero-trust-badges span {
+    background: rgba(30, 28, 42, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .gallery-search-input {
+    background: rgba(20, 18, 30, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+  .gallery-cat-pill {
+    background: rgba(30, 28, 42, 0.7);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .wizard-step-tracker {
+    background: rgba(30, 28, 42, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .save-link-card {
+    background: rgba(20, 18, 30, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .save-link-input-wrap {
+    background: rgba(30, 28, 42, 0.9);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .save-link-input {
+    color: #f1f0ff !important;
+  }
+  .shortcut-btn.secondary {
+    background: rgba(30, 28, 42, 0.8);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .faq-item {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+

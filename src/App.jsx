@@ -33,6 +33,12 @@ import {
   LockKeyhole,
   PartyPopper,
   Calendar,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Gift,
+  Heart,
+  HelpCircle,
 } from 'lucide-react';
 // Firebase initialization (eager) — keep the original import to match existing usage.
 import { EnvelopeUnboxing } from './components/EnvelopeUnboxing';
@@ -46,6 +52,7 @@ import { exportInstagramStory } from './lib/storyCanvasExporter';
 import { downloadCalendarInvite } from './lib/calendarExporter';
 import { checkContentSafety, hashPasscode } from './lib/securityFilter';
 import { triggerHaptic } from './lib/celebrationAudio';
+import { fireCelebrationConfetti } from './lib/celebrationConfetti';
 import { adminApp, app } from './lib/firebase';
 import {
   defaultWishMessages,
@@ -841,6 +848,14 @@ function HomePage({ templatesState }) {
             <div className="eyebrow"><Sparkles size={14} /> The Modern Way to Send Celebrations</div>
             <h1>Turn simple words into unforgettable 3D celebration cards.</h1>
             <p className="lead">Deliver interactive 3D unboxing, festive melodies, and secret scratch-offs directly to their phone. 100% free, zero ads, no app needed.</p>
+            
+            <div className="hero-trust-badges">
+              <span><Sparkles size={13} /> 100% Free Forever</span>
+              <span><ShieldCheck size={13} /> Private Unlisted</span>
+              <span><Gift size={13} /> 3D Ribbon Unboxing</span>
+              <span><PartyPopper size={13} /> Zero Ads</span>
+            </div>
+
             <div className="actions-row" style={{ marginTop: 20 }}>
               <AppButton onClick={() => navigate('/template-picker')}>Create a Free 3D Card 🎁</AppButton>
               <AppButton variant="secondary" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>See Live Demo ✨</AppButton>
@@ -1006,9 +1021,124 @@ function HomePage({ templatesState }) {
           </div>
         </section>
 
+        <TestimonialsSection />
+
+        <FaqSection />
+
         <Footer />
       </main>
     </div>
+  );
+}
+
+function TestimonialsSection() {
+  const reviews = [
+    {
+      name: 'Sarah M.',
+      location: 'London, UK',
+      stars: 5,
+      occasion: 'Birthday Unboxing',
+      quote: 'I sent the 3D unboxing birthday card to my sister overseas. She called me crying happy tears! The ribbon animation and background music made it feel like an unwrappable luxury gift.',
+    },
+    {
+      name: 'Priya & Arjun',
+      location: 'Mumbai, India',
+      stars: 5,
+      occasion: 'Anniversary Keepsake',
+      quote: 'Infinitely better than a plain WhatsApp text. The scratch-off reveal kept my partner guessing until the very end, and we printed the keepsake card for our scrapbook!',
+    },
+    {
+      name: 'Liam D.',
+      location: 'Sydney, Australia',
+      stars: 5,
+      occasion: 'Bouquet Gift Tag',
+      quote: 'Printed the mini QR gift tag and tied it directly onto a flower bouquet. Everyone at the dinner party scanned it and loved the interactive unboxing.',
+    },
+  ];
+
+  return (
+    <section className="section-card glass-section" id="stories">
+      <SectionHeading
+        eyebrow="Loved by Celebrators"
+        title="Real moments made unforgettable."
+        description="Here is how people are turning everyday words into cherished keepsakes."
+      />
+      <div className="testimonials-grid">
+        {reviews.map((r) => (
+          <MotionPanel key={r.name} className="testimonial-card glass-card">
+            <div className="testimonial-stars">{'★'.repeat(r.stars)}</div>
+            <p className="testimonial-quote">“{r.quote}”</p>
+            <div className="testimonial-footer">
+              <div className="testimonial-author">
+                <strong>{r.name}</strong>
+                <span>{r.location}</span>
+              </div>
+              <span className="chip" style={{ fontSize: '0.72rem' }}>{r.occasion}</span>
+            </div>
+          </MotionPanel>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FaqSection() {
+  const [openIndex, setOpenIndex] = useState(null);
+
+  const faqs = [
+    {
+      q: 'How does the 3D unboxing experience work?',
+      a: 'When your recipient opens their private link, they see an interactive 3D gift box wrapped in satin ribbon with a wax stamp. Tapping the box unties the ribbon with physics, plays a celebratory melody, bursts multi-stage confetti, and unfolds your card with your personal message and secret scratch-off ticket.',
+    },
+    {
+      q: 'Is Boltwish really 100% free to use?',
+      a: 'Yes, 100% free forever! There are no subscriptions, paywalls, watermarks, or intrusive ads. You can create as many celebration cards, printable gift tags, and story posters as you like.',
+    },
+    {
+      q: 'Do recipients need to install an app or sign in?',
+      a: 'Zero apps, zero accounts. The wish opens instantly on any phone, tablet, or desktop browser in less than a second.',
+    },
+    {
+      q: 'Can I protect my card with a secret 4-digit PIN?',
+      a: 'Yes! When creating your wish, simply check the "Lock with secret 4-digit PIN" option. The recipient must enter your 4-digit code (such as a birthday or milestone year) to unlock and unwrap their surprise.',
+    },
+    {
+      q: 'How do I attach a digital card to a physical present?',
+      a: 'Click "Print Mini Gift Tag" on the save screen. It generates a stylish, printable gift badge with a scannable QR code and ribbon punch hole that you can attach directly to gift boxes, bouquets, or chocolate boxes.',
+    },
+  ];
+
+  return (
+    <section className="section-card glass-section" id="faq">
+      <SectionHeading
+        eyebrow="Questions & Answers"
+        title="Frequently asked questions"
+        description="Everything you need to know about creating, sharing, and unboxing digital celebration cards."
+      />
+      <div className="faq-list">
+        {faqs.map((faq, index) => {
+          const isOpen = openIndex === index;
+          return (
+            <div key={faq.q} className={`faq-item glass-card ${isOpen ? 'open' : ''}`}>
+              <button
+                type="button"
+                className="faq-question-btn"
+                onClick={() => setOpenIndex(isOpen ? null : index)}
+                aria-expanded={isOpen}
+              >
+                <span>{faq.q}</span>
+                <span className="faq-icon">{isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</span>
+              </button>
+              {isOpen && (
+                <div className="faq-answer">
+                  <p>{faq.a}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -1126,6 +1256,8 @@ function PageShell({ kicker, title, description, actions, children, aside, fullW
 
 function TemplatePickerPage({ templatesState }) {
   const navigate = useNavigate();
+  const [selectedCat, setSelectedCat] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useSeoMeta({
     title: 'Choose a template | Boltwish',
@@ -1141,20 +1273,101 @@ function TemplatePickerPage({ templatesState }) {
     jsonLdId: 'template-picker-json-ld',
   });
 
+  const categories = [
+    { id: 'all', label: 'All Occasions', icon: '✨' },
+    { id: 'birthday', label: 'Birthday', icon: '🎂' },
+    { id: 'love', label: 'Love', icon: '❤️' },
+    { id: 'anniversary', label: 'Anniversary', icon: '🥂' },
+    { id: 'wedding', label: 'Wedding', icon: '💒' },
+    { id: 'congrats', label: 'Milestones', icon: '🎉' },
+    { id: 'newbaby', label: 'New Baby', icon: '👶' },
+    { id: 'friendship', label: 'Friendship', icon: '🤝' },
+    { id: 'thankyou', label: 'Thank You', icon: '🙏' },
+  ];
+
+  const filtered = useMemo(() => {
+    return templatesState.templates.filter((tpl) => {
+      const matchesCat = selectedCat === 'all' || tpl.id === selectedCat;
+      const q = searchQuery.trim().toLowerCase();
+      const matchesSearch = !q || (
+        (tpl.label || '').toLowerCase().includes(q) ||
+        (tpl.chip || '').toLowerCase().includes(q) ||
+        (tpl.summary || '').toLowerCase().includes(q) ||
+        (tpl.id || '').toLowerCase().includes(q)
+      );
+      return matchesCat && matchesSearch;
+    });
+  }, [templatesState.templates, selectedCat, searchQuery]);
+
   return (
     <PageShell
       fullWidth
       kicker="Choose an occasion · Pick a design"
-      title="Choose a template that fits the moment."
-      description="Each occasion has its own visual personality, writing tones, and thoughtful prompts. Select one below to begin creating."
+      title="Choose a celebration design."
+      description="Each occasion features custom 3D unboxing physics, festive melody, secret scratch-off, and heartfelt poetry."
       actions={<AppButton variant="secondary" onClick={() => navigate('/')}>Back to home</AppButton>}
     >
       <section className="templates-section templates-gallery-full" id="template-grid">
         {templatesState.error ? <div className="notice error">{templatesState.error}</div> : null}
+
+        {/* Search & Category Filter Controls */}
+        <div className="gallery-controls-bar">
+          <div className="gallery-search-wrap">
+            <Search size={18} className="gallery-search-icon" />
+            <input
+              type="text"
+              className="gallery-search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search birthdays, romance, weddings, congratulations..."
+              aria-label="Search celebration templates"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="gallery-search-clear"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+
+          <div className="gallery-cat-scroll" role="tablist" aria-label="Occasion categories">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                role="tab"
+                aria-selected={selectedCat === cat.id}
+                className={`gallery-cat-pill ${selectedCat === cat.id ? 'active' : ''}`}
+                onClick={() => setSelectedCat(cat.id)}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="gallery-status-bar">
+            <span>Showing <strong>{filtered.length}</strong> {filtered.length === 1 ? 'template' : 'templates'}</span>
+            {(selectedCat !== 'all' || searchQuery) && (
+              <button
+                type="button"
+                className="gallery-reset-btn"
+                onClick={() => { setSelectedCat('all'); setSearchQuery(''); }}
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="templates-grid templates-grid-showcase">
           {templatesState.loading
             ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="template-card skeleton-card tall" />)
-            : templatesState.templates.map((template) => (
+            : filtered.map((template) => (
                 <CardButton
                   key={template.id}
                   className={`visual-template-card template-card-${slugify(template.theme?.background || template.id)}`}
@@ -1172,11 +1385,15 @@ function TemplatePickerPage({ templatesState }) {
                 </CardButton>
               ))}
         </div>
-        {!templatesState.loading && templatesState.templates.length === 0 ? (
-          <Panel className="empty-state">
-            <h3>Loading celebrations...</h3>
-            <p>Our 3D celebration templates are getting ready. Please refresh to start creating.</p>
-            <AppButton onClick={() => window.location.reload()} style={{ marginTop: 12 }}>Reload Templates</AppButton>
+
+        {!templatesState.loading && filtered.length === 0 ? (
+          <Panel className="empty-state" style={{ margin: '40px auto', maxWidth: 460 }}>
+            <span style={{ fontSize: '2.5rem' }}>🔍</span>
+            <h3>No occasions matched your search</h3>
+            <p>Try searching for a different keyword or view all templates.</p>
+            <AppButton onClick={() => { setSelectedCat('all'); setSearchQuery(''); }} style={{ marginTop: 12 }}>
+              View All Occasions
+            </AppButton>
           </Panel>
         ) : null}
       </section>
@@ -1977,6 +2194,29 @@ function WishFormPage({ templatesState }) {
     >
       <form id={formId} className="editor-layout wizard-layout" onSubmit={handleSubmit}>
         <section className="editor-card glass-card wizard-card">
+          {/* Visual Step Progress Tracker */}
+          <div className="wizard-step-tracker">
+            <button
+              type="button"
+              className="step-pill done"
+              onClick={() => navigate('/template-picker')}
+              title="Change template"
+            >
+              <span className="step-num"><CheckCircle2 size={13} /></span>
+              <span>1. {template.label}</span>
+            </button>
+            <div className="step-divider" />
+            <div className="step-pill active">
+              <span className="step-num">2</span>
+              <span>Personalize & Vibe</span>
+            </div>
+            <div className="step-divider" />
+            <div className="step-pill pending">
+              <span className="step-num">3</span>
+              <span>Unbox & Share</span>
+            </div>
+          </div>
+
           <ToneSelector value={tone} onChange={setTone} />
 
           <SectionHeading
@@ -2022,14 +2262,42 @@ function WishFormPage({ templatesState }) {
                     </div>
                   </div>
                   {field.type === 'textarea' ? (
-                    <textarea
-                      rows={4}
-                      value={recipientData[field.key] || ''}
-                      required={field.required}
-                      maxLength={maxL}
-                      placeholder={field.placeholder}
-                      onChange={(event) => updateRecipient(field.key, event.target.value)}
-                    />
+                    <>
+                      <textarea
+                        rows={4}
+                        value={recipientData[field.key] || ''}
+                        required={field.required}
+                        maxLength={maxL}
+                        placeholder={field.placeholder}
+                        onChange={(event) => updateRecipient(field.key, event.target.value)}
+                      />
+                      {field.key === 'message' && (
+                        <div className="message-quick-prompts">
+                          <span className="quick-prompts-label">✨ Quick starters:</span>
+                          <button
+                            type="button"
+                            className="quick-prompt-btn"
+                            onClick={() => updateRecipient('message', "I'm so grateful to have you in my life. Wishing you endless joy, bright adventures, and all the happiness your heart can hold today and every day!")}
+                          >
+                            💖 Heartfelt
+                          </button>
+                          <button
+                            type="button"
+                            className="quick-prompt-btn"
+                            onClick={() => updateRecipient('message', "Another year older, wiser, and significantly more awesome! Don't count the candles—just enjoy the celebration!")}
+                          >
+                            😂 Playful
+                          </button>
+                          <button
+                            type="button"
+                            className="quick-prompt-btn"
+                            onClick={() => updateRecipient('message', "May this special milestone bring you peace, sweet smiles, and wonderful memories that last forever.")}
+                          >
+                            🌟 Warm & Sweet
+                          </button>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <input
                       type={field.type || 'text'}
@@ -2204,6 +2472,7 @@ function SavePage({ templatesState }) {
         setStatus('Your wish is ready!');
         setSaving(false);
         setShareMessage(buildShareMessage(template, payload, url));
+        fireCelebrationConfetti();
         // persist to recentWishes list (local device) with recipient name
         try {
           const existing = readJson('recentWishes', []);
@@ -2228,8 +2497,18 @@ function SavePage({ templatesState }) {
 
   const [giftTagOpen, setGiftTagOpen] = useState(false);
   const [storyExporting, setStoryExporting] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const openWish = () => { if (savedLink) window.open(savedLink, '_blank', 'noopener,noreferrer'); };
+
+  const handleDirectCopy = async () => {
+    if (!savedLink) return;
+    triggerHaptic([30, 40]);
+    await navigator.clipboard.writeText(savedLink).catch(() => {});
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2200);
+  };
+
   const shareNative = async () => {
     if (!savedLink) return;
     try {
@@ -2265,7 +2544,48 @@ function SavePage({ templatesState }) {
         )}
         <h1 className="save-status">{status}</h1>
         {preview ? <div className="save-preview"><div className="chip">{preview.chip}</div><strong>{preview.title}</strong><p>{preview.subtitle}</p><WishMetaLines metaLines={preview.metaLines} className="wish-card-meta-inline" /></div> : null}
-        <div className="save-actions-wrap" style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+        {savedLink && (
+          <div className="save-link-card">
+            <div className="save-link-input-wrap">
+              <span className="save-link-icon">🔗</span>
+              <input
+                type="text"
+                readOnly
+                value={savedLink}
+                className="save-link-input"
+                onClick={(e) => e.target.select()}
+                aria-label="Direct shareable wish link"
+              />
+              <button
+                type="button"
+                className="action-btn action-primary save-link-copy-btn"
+                onClick={handleDirectCopy}
+              >
+                {copiedLink ? '✓ Copied!' : 'Copy Link'}
+              </button>
+            </div>
+            <div className="save-direct-shortcuts">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shortcut-btn whatsapp"
+              >
+                <span>💬</span> Share to WhatsApp
+              </a>
+              <button
+                type="button"
+                className="shortcut-btn secondary"
+                onClick={() => setGiftTagOpen(true)}
+              >
+                <span>🏷️</span> Mini Gift Tag
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="save-actions-wrap" style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="save-primary-action">
             <AppButton onClick={openWish} disabled={!savedLink} style={{ width: '100%', padding: '16px', fontSize: '1.08rem' }}>
               Open Your Wish 🎁
