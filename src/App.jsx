@@ -15,6 +15,7 @@ import {
   Mail,
   Palette,
   Eye,
+  EyeOff,
   ExternalLink,
   Copy,
   LayoutDashboard,
@@ -505,10 +506,40 @@ function TopbarNav({ showLinks = true }) {
 function AdminGate({ onUnlock, error, busy }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [capsLockActive, setCapsLockActive] = useState(false);
+  const [resetNotice, setResetNotice] = useState('');
+  const [sendingReset, setSendingReset] = useState(false);
+
+  const checkCapsLock = (e) => {
+    if (e.getModifierState) {
+      setCapsLockActive(e.getModifierState('CapsLock'));
+    }
+  };
 
   const submit = (event) => {
     event.preventDefault();
     onUnlock({ email: email.trim(), password });
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email.trim()) {
+      setResetNotice('Please enter your admin email address first.');
+      return;
+    }
+    setSendingReset(true);
+    setResetNotice('');
+    try {
+      const { getAuth, sendPasswordResetEmail } = await import('firebase/auth');
+      await sendPasswordResetEmail(getAuth(adminApp), email.trim());
+      setResetNotice('Password recovery email sent. Please check your inbox.');
+    } catch (err) {
+      setResetNotice(err?.code === 'auth/user-not-found'
+        ? 'No account found with this email address.'
+        : (err?.message || 'Could not send recovery email.'));
+    } finally {
+      setSendingReset(false);
+    }
   };
 
   return (
@@ -517,29 +548,93 @@ function AdminGate({ onUnlock, error, busy }) {
       <div className="eyebrow">Protected admin area</div>
       <h1>Sign in to manage Boltwish.</h1>
       <p className="lead">Your password is checked securely by Firebase Authentication. It is never stored in this website's code.</p>
+
       <form className="admin-gate-form" onSubmit={submit}>
-        <input
-          className="admin-input"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="Admin email"
-          autoComplete="username"
-          required
-        />
-        <input
-          className="admin-input"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="Password"
-          autoComplete="current-password"
-          minLength={6}
-          required
-        />
-        <AppButton type="submit" disabled={busy}>{busy ? 'Checking access…' : 'Sign in securely'}</AppButton>
+        <div className="admin-form-field" style={{ textAlign: 'left', marginBottom: '14px' }}>
+          <label htmlFor="admin-email-input" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+            Admin Email
+          </label>
+          <input
+            id="admin-email-input"
+            className="admin-input"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="admin@example.com"
+            autoComplete="username"
+            required
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        <div className="admin-form-field" style={{ textAlign: 'left', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label htmlFor="admin-password-input" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+              Password
+            </label>
+            <button
+              type="button"
+              onClick={handlePasswordReset}
+              disabled={sendingReset}
+              style={{ background: 'none', border: 'none', color: 'var(--brand)', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              {sendingReset ? 'Sending reset…' : 'Forgot password?'}
+            </button>
+          </div>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input
+              id="admin-password-input"
+              className="admin-input"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              onKeyDown={checkCapsLock}
+              onKeyUp={checkCapsLock}
+              placeholder="••••••••••••"
+              autoComplete="current-password"
+              minLength={6}
+              required
+              style={{ width: '100%', paddingRight: '40px' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--muted)',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '4px',
+              }}
+              title={showPassword ? 'Hide password' : 'Show password'}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          {capsLockActive && (
+            <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#f59e0b', fontWeight: 600 }} role="alert">
+              ⚠️ Caps Lock is ON
+            </p>
+          )}
+        </div>
+
+        {resetNotice && (
+          <div className="notice" style={{ marginBottom: '14px', fontSize: '0.85rem' }} role="status">
+            {resetNotice}
+          </div>
+        )}
+
+        <AppButton type="submit" disabled={busy} style={{ width: '100%', marginTop: '6px' }}>
+          {busy ? 'Checking access…' : 'Sign in securely'}
+        </AppButton>
       </form>
-      <p className="admin-security-note"><ShieldCheck size={16} /> Access also requires an admin record in the backend.</p>
+
+      <p className="admin-security-note"><ShieldCheck size={16} /> Access requires authorization in the Firestore admins collection.</p>
       {error ? <div className="notice error" role="alert">{error}</div> : null}
     </Panel>
   );
@@ -1419,17 +1514,47 @@ function AdminPage() {
   const [liveWishes, setLiveWishes] = useState([]);
   const [loadingWishes, setLoadingWishes] = useState(false);
   const [wishSearch, setWishSearch] = useState('');
+  const [wishFilter, setWishFilter] = useState('all');
+  const [revealedWishes, setRevealedWishes] = useState({});
+  const [firestoreHealth, setFirestoreHealth] = useState({ status: 'checking', latencyMs: null, checkedAt: null });
 
   const isUnlocked = authStatus === 'authorized';
+
+  const checkFirestoreHealth = async () => {
+    const start = Date.now();
+    try {
+      const { doc, getDoc, getFirestore } = await import('firebase/firestore');
+      await getDoc(doc(getFirestore(adminApp), 'templates', 'birthday'));
+      setFirestoreHealth({
+        status: 'online',
+        latencyMs: Date.now() - start,
+        checkedAt: new Date().toLocaleTimeString(),
+      });
+    } catch {
+      setFirestoreHealth({
+        status: 'degraded',
+        latencyMs: Date.now() - start,
+        checkedAt: new Date().toLocaleTimeString(),
+      });
+    }
+  };
 
   const loadWishes = async () => {
     setLoadingWishes(true);
     try {
-      const { collection, getDocs, getFirestore, limit, query } = await import('firebase/firestore');
+      const { collection, getDocs, getFirestore, limit, orderBy, query } = await import('firebase/firestore');
       const db = getFirestore(adminApp);
-      const snapshot = await getDocs(query(collection(db, 'wishes'), limit(80)));
-      const list = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
-      setLiveWishes(list);
+      // Attempt sorted by newest first
+      try {
+        const snapshot = await getDocs(query(collection(db, 'wishes'), orderBy('createdAt', 'desc'), limit(80)));
+        const list = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+        setLiveWishes(list);
+      } catch {
+        // Fallback if composite index is pending
+        const fallbackSnap = await getDocs(query(collection(db, 'wishes'), limit(80)));
+        const list = fallbackSnap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+        setLiveWishes(list);
+      }
     } catch (err) {
       setNotice('Could not load live wishes: ' + (err?.message || 'Error'));
     } finally {
@@ -1438,15 +1563,31 @@ function AdminPage() {
   };
 
   const deleteWishAsAdmin = async (wishId) => {
-    if (!window.confirm(`Permanently delete wish "${wishId}"? This will immediately remove it from live viewing.`)) return;
+    const reason = window.prompt(`Enter moderation reason for deleting wish "${wishId}" (required for audit logging):`);
+    if (!reason || !reason.trim()) {
+      alert('Deletion cancelled: a moderation reason is required for safety.');
+      return;
+    }
+
     try {
       const { doc, deleteDoc, getFirestore } = await import('firebase/firestore');
       await deleteDoc(doc(getFirestore(adminApp), 'wishes', wishId));
       setLiveWishes((prev) => prev.filter((w) => w.id !== wishId));
-      setNotice(`Wish "${wishId}" successfully deleted.`);
+      setNotice(`Wish "${wishId}" deleted. Reason recorded: "${reason.trim()}".`);
+      console.info(`[ADMIN AUDIT] Wish ${wishId} deleted by ${adminUser?.email} at ${new Date().toISOString()}. Reason: ${reason.trim()}`);
     } catch (err) {
       setNotice('Failed to delete wish: ' + (err?.message || 'Error'));
     }
+  };
+
+  const toggleRevealWish = (wishId) => {
+    setRevealedWishes((prev) => {
+      const next = !prev[wishId];
+      if (next) {
+        console.info(`[ADMIN AUDIT] Sensitive content for wish ${wishId} inspected by ${adminUser?.email} at ${new Date().toISOString()}`);
+      }
+      return { ...prev, [wishId]: next };
+    });
   };
   const cloneTemplate = (template) => JSON.parse(JSON.stringify(template));
   const templateSignature = (template) => JSON.stringify(cleanForFirestore(template || {}));
@@ -1539,13 +1680,35 @@ function AdminPage() {
     return undefined;
   }, [isUnlocked]);
 
-  // Automatic Admin session inactivity timeout (Upgrade 10)
+  // Periodic and on-demand active Firestore health check
+  useEffect(() => {
+    if (!isUnlocked) return;
+    checkFirestoreHealth();
+    const interval = setInterval(checkFirestoreHealth, 60000);
+    return () => clearInterval(interval);
+  }, [isUnlocked, adminTab]);
+
+  // Automatic Admin session management (30m inactivity + 8h absolute max)
   useEffect(() => {
     if (!isUnlocked) return undefined;
-    let timer;
+    const sessionStartTime = Date.now();
+    let inactivityTimer;
+
+    const checkAbsoluteAge = async () => {
+      if (Date.now() - sessionStartTime > 8 * 60 * 60 * 1000) {
+        try {
+          const { getAuth, signOut } = await import('firebase/auth');
+          await signOut(getAuth(adminApp));
+          setAdminError('Admin session reached maximum 8-hour lifetime. Please sign in again.');
+          setAuthStatus('signed-out');
+        } catch {}
+      }
+    };
+
     const resetTimer = () => {
-      clearTimeout(timer);
-      timer = setTimeout(async () => {
+      checkAbsoluteAge();
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(async () => {
         try {
           const { getAuth, signOut } = await import('firebase/auth');
           await signOut(getAuth(adminApp));
@@ -1560,7 +1723,7 @@ function AdminPage() {
     events.forEach((ev) => window.addEventListener(ev, resetTimer, { passive: true }));
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(inactivityTimer);
       events.forEach((ev) => window.removeEventListener(ev, resetTimer));
     };
   }, [isUnlocked]);
@@ -1797,23 +1960,47 @@ function AdminPage() {
 
       {adminTab === 'wishes' && (
         <section className="admin-wishes-panel glass-card">
-          <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <h2>Live Wishes Moderation</h2>
-              <p>Browse, inspect, and moderate cards created across the platform.</p>
+              <p>Inspect, audit, and moderate cards created across the platform.</p>
             </div>
             <AppButton onClick={loadWishes} disabled={loadingWishes}>
-              {loadingWishes ? 'Refreshing…' : 'Refresh list'}
+              {loadingWishes ? 'Refreshing…' : '🔄 Refresh List'}
             </AppButton>
           </div>
 
-          <div className="admin-search-row" style={{ margin: '16px 0' }}>
+          <div className="admin-filters-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '16px 0 10px' }}>
+            {[
+              { id: 'all', label: `All (${liveWishes.length})` },
+              { id: 'active', label: 'Active' },
+              { id: 'pin', label: '🔒 PIN Protected' },
+              { id: 'future', label: '⏳ Scheduled' },
+              { id: 'expired', label: 'Expired' },
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                className={`action-btn action-secondary small ${wishFilter === f.id ? 'active' : ''}`}
+                style={{
+                  background: wishFilter === f.id ? 'var(--brand)' : undefined,
+                  color: wishFilter === f.id ? '#fff' : undefined,
+                }}
+                onClick={() => setWishFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="admin-search-row" style={{ margin: '0 0 16px' }}>
             <input
               type="text"
-              placeholder="Search wishes by recipient name or wish ID..."
+              placeholder="Search wishes by recipient name, ID, or sender..."
               value={wishSearch}
               onChange={(e) => setWishSearch(e.target.value)}
               className="admin-search-input"
+              aria-label="Search live wishes"
             />
           </div>
 
@@ -1825,7 +2012,8 @@ function AdminPage() {
                 <thead>
                   <tr>
                     <th>Recipient</th>
-                    <th>Template</th>
+                    <th>Occasion</th>
+                    <th>Status</th>
                     <th>Sender</th>
                     <th>Created</th>
                     <th>Actions</th>
@@ -1834,18 +2022,53 @@ function AdminPage() {
                 <tbody>
                   {liveWishes
                     .filter((w) => {
+                      // Filter by status tab
+                      const now = Date.now();
+                      const isExpired = w.expiresAt?.seconds ? (w.expiresAt.seconds * 1000) < now : false;
+                      const isFuture = w.revealAt?.seconds ? (w.revealAt.seconds * 1000) > now : false;
+                      const hasPin = Boolean(w.passcodeHash);
+
+                      if (wishFilter === 'active' && (isExpired || isFuture)) return false;
+                      if (wishFilter === 'pin' && !hasPin) return false;
+                      if (wishFilter === 'future' && !isFuture) return false;
+                      if (wishFilter === 'expired' && !isExpired) return false;
+
+                      // Filter by search query
                       if (!wishSearch.trim()) return true;
                       const q = wishSearch.toLowerCase();
                       const name = (w.recipientData?.name || w.recipientData?.babyName || w.id || '').toLowerCase();
-                      return name.includes(q) || (w.id || '').toLowerCase().includes(q);
+                      const sender = (w.recipientData?.from || '').toLowerCase();
+                      return name.includes(q) || (w.id || '').toLowerCase().includes(q) || sender.includes(q);
                     })
                     .map((w) => {
                       const name = w.recipientData?.name || w.recipientData?.babyName || w.recipientData?.bride || 'Recipient';
-                      const sender = w.recipientData?.from || 'Unknown';
+                      const sender = w.recipientData?.from || 'Anonymous';
+                      const now = Date.now();
+                      const isExpired = w.expiresAt?.seconds ? (w.expiresAt.seconds * 1000) < now : false;
+                      const isFuture = w.revealAt?.seconds ? (w.revealAt.seconds * 1000) > now : false;
+                      const isInspected = Boolean(revealedWishes[w.id]);
+
                       return (
-                        <tr key={w.id}>
-                          <td><strong>{name}</strong></td>
+                        <tr key={w.id} style={{ borderBottom: isInspected ? 'none' : undefined }}>
+                          <td>
+                            <strong>{name}</strong>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '2px' }}><code>{w.id}</code></div>
+                          </td>
                           <td><span className="chip" style={{ fontSize: '0.72rem' }}>{w.templateId || 'Wish'}</span></td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                              {w.passcodeHash ? (
+                                <span className="chip" style={{ fontSize: '0.68rem', background: '#fef3c7', color: '#92400e' }}>🔒 PIN</span>
+                              ) : null}
+                              {isExpired ? (
+                                <span className="chip" style={{ fontSize: '0.68rem', background: '#f1f5f9', color: '#64748b' }}>Expired</span>
+                              ) : isFuture ? (
+                                <span className="chip" style={{ fontSize: '0.68rem', background: '#e0f2fe', color: '#0369a1' }}>⏳ Future</span>
+                              ) : (
+                                <span className="chip" style={{ fontSize: '0.68rem', background: '#dcfce7', color: '#15803d' }}>Active</span>
+                              )}
+                            </div>
+                          </td>
                           <td>{sender}</td>
                           <td><small>{w.createdAt?.seconds ? new Date(w.createdAt.seconds * 1000).toLocaleDateString() : 'Recent'}</small></td>
                           <td>
@@ -1860,6 +2083,14 @@ function AdminPage() {
                               </a>
                               <button
                                 type="button"
+                                className="action-btn action-secondary small"
+                                onClick={() => toggleRevealWish(w.id)}
+                                title="Safely inspect wish content (Audit logged)"
+                              >
+                                {isInspected ? 'Hide 👁️' : 'Inspect 👁️'}
+                              </button>
+                              <button
+                                type="button"
                                 className="action-btn small"
                                 style={{ background: '#fee2e2', color: '#b91c1c' }}
                                 onClick={() => deleteWishAsAdmin(w.id)}
@@ -1867,6 +2098,16 @@ function AdminPage() {
                                 Delete
                               </button>
                             </div>
+                            {isInspected && (
+                              <div style={{ margin: '8px 0', padding: '10px 14px', background: '#f8fafc', borderLeft: '3px solid var(--brand)', borderRadius: '6px', fontSize: '0.84rem' }}>
+                                <div style={{ fontWeight: 700, color: '#b91c1c', fontSize: '0.75rem', marginBottom: '4px' }}>
+                                  ⚠️ SENSITIVE CONTENT AUDIT INSPECTION
+                                </div>
+                                <div><strong>Title:</strong> {w.content?.title || 'N/A'}</div>
+                                <div><strong>Message:</strong> {w.recipientData?.message || (Array.isArray(w.content?.body) ? w.content.body.join(' ') : w.content?.body) || 'N/A'}</div>
+                                {w.recipientData?.favoriteMemory && <div><strong>Memory:</strong> {w.recipientData.favoriteMemory}</div>}
+                              </div>
+                            )}
                           </td>
                         </tr>
                       );
@@ -1890,16 +2131,18 @@ function AdminPage() {
           />
           <div className="stats-grid" style={{ margin: '20px 0' }}>
             <div className="stat-card">
-              <strong>{templates.length}</strong>
-              <span>Active Templates</span>
+              <strong>{enabledCount}</strong>
+              <span>Active Templates ({hiddenCount} draft{hiddenCount === 1 ? '' : 's'})</span>
             </div>
             <div className="stat-card">
               <strong>{liveWishes.length}</strong>
               <span>Loaded Live Wishes</span>
             </div>
             <div className="stat-card">
-              <strong style={{ color: '#059669' }}>Online</strong>
-              <span>Firestore Status</span>
+              <strong style={{ color: firestoreHealth.status === 'online' ? '#059669' : firestoreHealth.status === 'checking' ? '#f59e0b' : '#dc2626' }}>
+                {firestoreHealth.status === 'online' ? `Online (${firestoreHealth.latencyMs}ms)` : firestoreHealth.status === 'checking' ? 'Checking…' : 'Degraded'}
+              </strong>
+              <span>Firestore Status ({firestoreHealth.checkedAt || 'checking'})</span>
             </div>
             <div className="stat-card">
               <strong>{totalPrompts}</strong>
@@ -2090,8 +2333,10 @@ function WishFormPage({ templatesState }) {
     setTone('heartfelt');
   }, [template?.id]);
 
-  const preview = useMemo(() => composeWishPreview(template, { recipientData, content: contentData, tone }), [template, recipientData, contentData, tone]);
-  const canContinue = template ? template.fields.every((field) => field.required === false || String(recipientData[field.key] || '').trim().length > 0) : false;
+  const isPinValid = !usePasscode || (passcode && passcode.length === 4 && /^\d{4}$/.test(passcode));
+  const canContinue = template
+    ? template.fields.every((field) => field.required === false || String(recipientData[field.key] || '').trim().length > 0) && isPinValid
+    : false;
 
   useSeoMeta({
     title: template ? `${template.label} template | Boltwish` : 'Boltwish',
@@ -2120,7 +2365,13 @@ function WishFormPage({ templatesState }) {
       return;
     }
 
-    // 2. Client-side abuse & profanity safety check
+    // 2. PIN completeness validation
+    if (usePasscode && (!passcode || passcode.length !== 4 || !/^\d{4}$/.test(passcode))) {
+      alert('Please enter a full 4-digit PIN to lock your card, or uncheck the secret PIN option.');
+      return;
+    }
+
+    // 3. Client-side abuse & profanity safety check
     const recipientCheck = checkContentSafety(recipientData.name || '');
     const messageCheck = checkContentSafety(recipientData.message || '');
     if (!recipientCheck.valid) {
@@ -2345,18 +2596,31 @@ function WishFormPage({ templatesState }) {
                 <span>🔒 Lock with secret 4-digit PIN (Recipient must enter code to open)</span>
               </label>
               {usePasscode && (
-                <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={4}
-                    value={passcode}
-                    placeholder="••••"
-                    onChange={(e) => setPasscode(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    style={{ width: '120px', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1.1rem', letterSpacing: '4px', textAlign: 'center' }}
-                  />
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Enter 4 digits (e.g. birthday or milestone year)</span>
+                <div style={{ marginTop: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={4}
+                      value={passcode}
+                      placeholder="••••"
+                      onChange={(e) => setPasscode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      style={{
+                        width: '120px',
+                        padding: '6px 10px',
+                        borderRadius: '8px',
+                        border: passcode.length === 4 ? '2px solid #22c55e' : '1px solid #cbd5e1',
+                        fontSize: '1.1rem',
+                        letterSpacing: '4px',
+                        textAlign: 'center',
+                      }}
+                      aria-label="Secret 4-digit lock PIN"
+                    />
+                    <span style={{ fontSize: '0.82rem', color: passcode.length === 4 ? '#15803d' : '#64748b', fontWeight: passcode.length === 4 ? 600 : 400 }}>
+                      {passcode.length === 4 ? '✔ 4-digit PIN complete' : `${passcode.length}/4 digits (e.g. birthday or birth year)`}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -2903,8 +3167,12 @@ function WishViewPage({ templatesState }) {
 
         setWishData(normalizeWishDocument(snapshot.data()));
         setStatus('');
-      } catch {
-        setStatus('Something went wrong loading your wish.');
+      } catch (err) {
+        if (err?.code === 'permission-denied') {
+          setStatus('locked-future');
+        } else {
+          setStatus('Something went wrong loading your wish.');
+        }
       }
     };
 
@@ -2924,7 +3192,7 @@ function WishViewPage({ templatesState }) {
 
   const wishUrl = `${SITE_URL}/wish/${wishData?.username || username}`;
   const imageUrl = wishData?.username
-    ? `${SITE_URL}/api/og/wish/${wishData.username}?title=${encodeURIComponent(preview.title)}&subtitle=${encodeURIComponent(preview.subtitle)}&chip=${encodeURIComponent(preview.chip)}`
+    ? `${SITE_URL}/api/og?title=${encodeURIComponent(preview.title)}&subtitle=${encodeURIComponent(preview.subtitle)}&chip=${encodeURIComponent(preview.chip)}`
     : DEFAULT_OG_IMAGE;
 
   useSeoMeta({
@@ -2947,6 +3215,40 @@ function WishViewPage({ templatesState }) {
     },
     jsonLdId: 'wish-json-ld',
   });
+
+  if (status === 'locked-future') {
+    return (
+      <div className="wish-view" style={{ '--wish-accent': '#ff6b6b', '--wish-accent-soft': '#ff8fa3' }}>
+        <div className="wish-ambient-glow" aria-hidden="true" />
+        <div className="center-screen">
+          <motion.div
+            className="panel glass-card"
+            style={{ textAlign: 'center', maxWidth: 440, padding: '36px 28px' }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div style={{ fontSize: '3.5rem', marginBottom: 16 }}>⏳</div>
+            <div className="eyebrow eyebrow-dark">Scheduled Celebration</div>
+            <h1 style={{ fontSize: '1.6rem', margin: '8px 0' }}>Surprise in Progress!</h1>
+            <p className="lead" style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'var(--text)' }}>
+              The sender scheduled this celebration card to be revealed on its celebration date.
+            </p>
+            <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: 12 }}>
+              Card content is protected until reveal time. Please return on the celebration day to unwrap your card! 🎁
+            </p>
+            <button
+              type="button"
+              className="action-btn action-secondary"
+              style={{ marginTop: 20 }}
+              onClick={() => window.location.reload()}
+            >
+              🔄 Refresh Check
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   if (status && !wishData) {
     return (
@@ -2980,7 +3282,9 @@ function WishViewPage({ templatesState }) {
   if (wishData.passcodeHash && !unlocked) {
     return (
       <PasscodeGate
-        hashedPasscode={wishData.passcodeHash}
+        passcodeHash={wishData.passcodeHash}
+        recipientName={preview?.displayName || preview?.title || 'You'}
+        wishId={wishData.username || username}
         onUnlock={() => setUnlocked(true)}
       />
     );

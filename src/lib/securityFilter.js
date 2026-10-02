@@ -47,23 +47,35 @@ export function checkContentSafety(text) {
 }
 
 /**
- * Computes SHA-256 hash using native browser crypto API
+/**
+ * Computes SHA-256 hash using Web Crypto API (supported in modern browsers and Node 18+)
  */
 export async function hashPasscode(pin) {
   const cleanPin = String(pin || '').trim();
-  if (!cleanPin) return '';
+  if (!cleanPin || cleanPin.length !== 4 || !/^\d{4}$/.test(cleanPin)) return '';
+  const cryptoObj = typeof globalThis !== 'undefined' ? (globalThis.crypto || globalThis.msCrypto) : null;
+  if (!cryptoObj?.subtle) {
+    throw new Error('Web Crypto API is not available.');
+  }
   const encoder = new TextEncoder();
   const data = encoder.encode(`boltwish_salt_${cleanPin}`);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await cryptoObj.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
- * Verifies entered PIN against stored SHA-256 hash
+ * Verifies entered PIN against stored SHA-256 hash.
+ * Returns false if hash is missing, invalid, or PIN does not match.
  */
 export async function verifyPasscode(enteredPin, storedHash) {
-  if (!storedHash) return true;
-  const computed = await hashPasscode(enteredPin);
-  return computed === storedHash;
+  if (!storedHash || typeof storedHash !== 'string' || !storedHash.trim()) {
+    return false;
+  }
+  const cleanPin = String(enteredPin || '').trim();
+  if (cleanPin.length !== 4 || !/^\d{4}$/.test(cleanPin)) {
+    return false;
+  }
+  const computed = await hashPasscode(cleanPin);
+  return Boolean(computed && computed.toLowerCase() === storedHash.trim().toLowerCase());
 }

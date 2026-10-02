@@ -7,7 +7,9 @@
     "dev": "vite",
     "generate-sitemap": "node ./scripts/generate-sitemap.js",
     "verify-personalization": "node ./scripts/verify-personalization.mjs",
-    "prebuild": "node ./scripts/generate-sitemap.js",
+    "verify-security": "node ./scripts/verify-security.mjs",
+    "test": "node ./scripts/verify-security.mjs && node ./scripts/verify-personalization.mjs",
+    "prebuild": "node ./scripts/verify-security.mjs && node ./scripts/generate-sitemap.js",
     "build": "vite build",
     "preview": "vite preview"
   },
