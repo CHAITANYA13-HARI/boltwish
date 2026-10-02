@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Navigate,
   Route,
@@ -50,9 +50,9 @@ import { GiftTagModal } from './components/GiftTagModal';
 import { QuotesModal } from './components/QuotesModal';
 import { PasscodeGate } from './components/PasscodeGate';
 import { exportInstagramStory } from './lib/storyCanvasExporter';
-import { downloadCalendarInvite } from './lib/calendarExporter';
+import { downloadCalendarInvite, getGoogleCalendarUrl } from './lib/calendarExporter';
 import { checkContentSafety, hashPasscode } from './lib/securityFilter';
-import { triggerHaptic } from './lib/celebrationAudio';
+import { celebrationAudio, triggerHaptic } from './lib/celebrationAudio';
 import { fireCelebrationConfetti } from './lib/celebrationConfetti';
 import { adminApp, app } from './lib/firebase';
 import {
@@ -189,8 +189,9 @@ function App() {
   const templatesState = useFirestoreTemplates();
 
   return (
-    <Routes>
-      <Route path="/" element={<HomePage templatesState={templatesState} />} />
+    <PwaProvider>
+      <Routes>
+        <Route path="/" element={<HomePage templatesState={templatesState} />} />
       <Route path="/social" element={<SocialPage />} />
       <Route path="/template-picker" element={<TemplatePickerPage templatesState={templatesState} />} />
       <Route path="/template/:templateId" element={<WishFormPage templatesState={templatesState} />} />
@@ -370,7 +371,8 @@ function App() {
       <Route path="/wish/:username" element={<WishViewPage templatesState={templatesState} />} />
       <Route path="/manage/:username" element={<ManageWishPage templatesState={templatesState} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </PwaProvider>
   );
 }
 
@@ -515,8 +517,127 @@ function Brand({ to = '/' }) {
   );
 }
 
+const PwaContext = createContext({
+  canInstall: false,
+  isInstalled: false,
+  openInstall: () => {},
+});
+
+export const usePwa = () => useContext(PwaContext);
+
+function PwaInstallModal({ onClose, onInstall, canPrompt }) {
+  return (
+    <div className="share-overlay" role="presentation" onClick={onClose}>
+      <div className="share-panel" role="dialog" aria-modal="true" aria-labelledby="pwa-title" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
+        <div className="share-panel-head">
+          <h3 id="pwa-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            📲 Install Boltwish App
+          </h3>
+          <button className="topbar-link" type="button" onClick={onClose}>✕ Close</button>
+        </div>
+        <p className="share-hint">
+          Install Boltwish on your device for instant 1-tap unboxing, full-screen celebration mode, and offline card access. 100% free with zero app store download needed.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '16px 0' }}>
+          {canPrompt ? (
+            <AppButton onClick={onInstall} style={{ width: '100%', padding: '14px' }}>
+              Add to Home Screen 📱
+            </AppButton>
+          ) : (
+            <div style={{ background: 'var(--surface-sunken, #f8fafc)', border: '1px solid var(--border)', borderRadius: 12, padding: 14 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 6 }}>🍎 For iPhone / iPad (Safari):</div>
+              <ol style={{ paddingLeft: 18, margin: 0, fontSize: '0.82rem', lineHeight: 1.6, color: 'var(--text)' }}>
+                <li>Tap the <strong>Share</strong> button (box with upward arrow) at the bottom.</li>
+                <li>Scroll down and tap <strong>&ldquo;Add to Home Screen&rdquo;</strong>.</li>
+                <li>Tap <strong>&ldquo;Add&rdquo;</strong> in the top-right corner.</li>
+              </ol>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem', marginTop: 12, marginBottom: 6 }}>🤖 For Android / Chrome / Edge:</div>
+              <p style={{ margin: 0, fontSize: '0.82rem', lineHeight: 1.6, color: 'var(--text)' }}>
+                Tap the three dots (<strong>⋮</strong> or <strong>⋯</strong>) in your browser menu and choose <strong>&ldquo;Install app&rdquo;</strong> or <strong>&ldquo;Add to Home Screen&rdquo;</strong>.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="share-actions-row">
+          <button className="action-btn action-secondary" type="button" onClick={onClose} style={{ width: '100%' }}>
+            Done ✓
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PwaProvider({ children }) {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handlePrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+      setModalOpen(false);
+    };
+
+    window.addEventListener('beforeinstallprompt', handlePrompt);
+    window.addEventListener('appinstalled', handleInstalled);
+
+    if (typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true)) {
+      setIsInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handlePrompt);
+      window.removeEventListener('appinstalled', handleInstalled);
+    };
+  }, []);
+
+  const openInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') setIsInstalled(true);
+      setDeferredPrompt(null);
+    } else {
+      setModalOpen(true);
+    }
+  };
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') setIsInstalled(true);
+      setDeferredPrompt(null);
+    }
+    setModalOpen(false);
+  };
+
+  return (
+    <PwaContext.Provider value={{ canInstall: !isInstalled, isInstalled, openInstall }}>
+      {children}
+      {modalOpen && (
+        <PwaInstallModal
+          onClose={() => setModalOpen(false)}
+          canPrompt={Boolean(deferredPrompt)}
+          onInstall={handleInstallClick}
+        />
+      )}
+    </PwaContext.Provider>
+  );
+}
+
 function TopbarNav({ showLinks = true }) {
   const navigate = useNavigate();
+  const { openInstall, isInstalled } = usePwa();
   return (
     <nav className="topbar-nav" aria-label="Main navigation">
       {showLinks && (
@@ -536,6 +657,17 @@ function TopbarNav({ showLinks = true }) {
             Templates
           </button>
         </>
+      )}
+      {!isInstalled && (
+        <button
+          type="button"
+          className="topbar-nav-link"
+          onClick={openInstall}
+          title="Install Boltwish App on this device"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+        >
+          📲 Install App
+        </button>
       )}
       <button
         type="button"
@@ -848,15 +980,83 @@ function WishExperience({ preview, template, compact = false, children }) {
         </div>
         {preview.highlight ? <div className="wish-highlight"><Sparkles size={18} /> <span>{preview.highlight}</span></div> : null}
         {preview.quote ? <blockquote>“{preview.quote}”</blockquote> : null}
-        {(preview.footer || preview.fromLine) ? (
+        {(preview.footer || preview.fromLine || preview.coSigners) ? (
           <div className="wish-signoff">
             {preview.footer ? preview.footer.split('\n').map((line, index) => <span key={`${line}-${index}`}>{line}</span>) : null}
             {preview.fromLine ? <strong>{preview.fromLine}</strong> : null}
+            {preview.coSigners ? (
+              <div className="wish-cosigners" style={{ marginTop: '8px', fontSize: '0.88rem', color: 'var(--text-muted, #64748b)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <span>👥 Co-signed with love by:</span>
+                <strong style={{ color: 'var(--text-strong, #0f172a)' }}>{preview.coSigners}</strong>
+              </div>
+            ) : null}
           </div>
         ) : null}
         {children}
       </div>
     </article>
+  );
+}
+
+const WAX_SEALS = [
+  { id: 'ruby', name: 'Ruby Red', color: '#dc2626' },
+  { id: 'gold', name: 'Imperial Gold', color: '#d97706' },
+  { id: 'violet', name: 'Royal Violet', color: '#7c3aed' },
+  { id: 'emerald', name: 'Emerald Green', color: '#059669' },
+  { id: 'sapphire', name: 'Sapphire Blue', color: '#2563eb' },
+  { id: 'rose', name: 'Rose Pink', color: '#db2777' },
+];
+
+function WaxSealSelector({ value, onChange }) {
+  return (
+    <div className="wax-seal-selector-wrap" style={{ margin: '16px 0 22px' }}>
+      <div className="field-label-row" style={{ marginBottom: '8px' }}>
+        <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-strong)' }}>
+          🏷️ Envelope Wax Seal Color
+        </span>
+        <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>Pick the 3D unboxing stamp style</span>
+      </div>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+        {WAX_SEALS.map((s) => {
+          const isSelected = value === s.color;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              className={`wax-seal-btn ${isSelected ? 'active' : ''}`}
+              onClick={() => onChange(s.color)}
+              title={s.name}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                borderRadius: '999px',
+                border: isSelected ? `2px solid ${s.color}` : '1.5px solid var(--border)',
+                background: isSelected ? `${s.color}15` : 'var(--surface)',
+                color: isSelected ? s.color : 'var(--text)',
+                fontWeight: isSelected ? 700 : 500,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                transition: 'all 0.18s ease',
+                boxShadow: isSelected ? `0 2px 8px ${s.color}35` : 'none',
+              }}
+            >
+              <span
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  backgroundColor: s.color,
+                  boxShadow: `0 0 4px ${s.color}`,
+                }}
+              />
+              <span>{s.name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -920,16 +1120,217 @@ function CountdownBadge({ eventDate }) {
   return <div className="countdown-badge">Reveal in {formatCountdownDuration(remainingMs)}</div>;
 }
 
-function RevealCountdownScreen({ remainingMs }) {
+function NoPeekingLockedBox({ remainingMs, eventDate, title = 'Celebration Surprise' }) {
+  const [shaking, setShaking] = useState(false);
+  const [shakeCount, setShakeCount] = useState(0);
+  const [showRattleNotice, setShowRattleNotice] = useState(false);
+
+  const totalSeconds = Math.max(0, Math.floor((remainingMs || 0) / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const handleBoxTap = () => {
+    setShaking(true);
+    setShakeCount((c) => c + 1);
+    setShowRattleNotice(true);
+    triggerHaptic([40, 60, 40]);
+    celebrationAudio.playPop();
+
+    setTimeout(() => setShaking(false), 650);
+    setTimeout(() => setShowRattleNotice(false), 3000);
+  };
+
+  const gCalUrl = getGoogleCalendarUrl({
+    title: `${title} — Unbox your Boltwish!`,
+    description: 'Your secret celebration card is ready to open today on Boltwish!',
+    eventDate,
+    url: typeof window !== 'undefined' ? window.location.href : '',
+  });
+
+  const handleIcsDownload = () => {
+    downloadCalendarInvite({
+      title,
+      description: 'Your secret celebration card is ready to open today on Boltwish!',
+      eventDate,
+      url: typeof window !== 'undefined' ? window.location.href : '',
+    });
+  };
+
   return (
-    <div className="center-screen reveal-gate-screen">
-      <Panel className="reveal-gate-panel">
-        <div className="eyebrow eyebrow-dark">Grand reveal</div>
-        <h1>Grand reveal in {formatCountdownDuration(remainingMs)}</h1>
-        <p className="lead">Your wish is locked until the timer finishes.</p>
-      </Panel>
+    <div className="wish-view" style={{ '--wish-accent': '#ff6b6b', '--wish-accent-soft': '#ff8fa3', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
+      <div className="wish-ambient-glow" aria-hidden="true" />
+      <motion.div
+        className="panel glass-card"
+        style={{ textAlign: 'center', maxWidth: 460, width: '100%', padding: '36px 24px', position: 'relative' }}
+        initial={{ opacity: 0, scale: 0.94 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <div className="eyebrow eyebrow-dark">
+          <Sparkles size={14} /> Scheduled Surprise Delivery
+        </div>
+
+        {/* Interactive Locked Box */}
+        <motion.div
+          role="button"
+          tabIndex={0}
+          onClick={handleBoxTap}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleBoxTap()}
+          aria-label="Tap to shake the locked celebration box"
+          style={{
+            cursor: 'pointer',
+            margin: '20px auto 16px',
+            width: 140,
+            height: 140,
+            borderRadius: '24px',
+            background: 'linear-gradient(135deg, #f43f5e 0%, #be123c 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            position: 'relative',
+            boxShadow: '0 16px 36px rgba(244, 63, 94, 0.35)',
+            userSelect: 'none',
+          }}
+          animate={
+            shaking
+              ? {
+                  x: [0, -12, 12, -9, 9, -5, 5, 0],
+                  rotate: [0, -5, 5, -3, 3, -1, 1, 0],
+                  scale: [1, 1.06, 0.98, 1.04, 1],
+                }
+              : { scale: 1, y: [0, -4, 0] }
+          }
+          transition={shaking ? { duration: 0.6 } : { repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {/* Gold ribbon on box */}
+          <div style={{ position: 'absolute', top: 0, bottom: 0, width: 22, background: 'linear-gradient(180deg, #fef08a 0%, #eab308 100%)', borderRadius: 2 }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, height: 22, background: 'linear-gradient(90deg, #fef08a 0%, #eab308 100%)', borderRadius: 2 }} />
+          <div style={{
+            position: 'relative',
+            zIndex: 2,
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            background: 'rgba(15, 23, 42, 0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fbbf24',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          }}>
+            <LockKeyhole size={28} />
+          </div>
+          <span style={{ position: 'absolute', bottom: 6, zIndex: 3, fontSize: '0.68rem', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: 0.8, background: 'rgba(0,0,0,0.4)', padding: '2px 8px', borderRadius: 999 }}>
+            Tap to rattle
+          </span>
+        </motion.div>
+
+        <AnimatePresence>
+          {showRattleNotice && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              style={{
+                background: '#fff1f2',
+                color: '#e11d48',
+                border: '1px solid #fecdd3',
+                borderRadius: '8px',
+                padding: '6px 14px',
+                fontSize: '0.84rem',
+                fontWeight: 600,
+                display: 'inline-block',
+                margin: '0 auto 12px',
+              }}
+            >
+              🤫 Shhh! No Peeking! Sealed until the big day! ({shakeCount > 3 ? 'Excited, aren\'t you?! 🎉' : 'Rattled! 📦'})
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <h1 style={{ fontSize: '1.5rem', margin: '4px 0 8px', fontWeight: 800 }}>
+          Surprise in Progress! 🎁
+        </h1>
+        <p style={{ color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.5, margin: '0 0 20px' }}>
+          This celebration card was scheduled by the sender to open on its celebration date.
+        </p>
+
+        {/* Live Countdown Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', margin: '0 0 24px' }}>
+          {[
+            { label: 'DAYS', value: days },
+            { label: 'HOURS', value: hours },
+            { label: 'MINUTES', value: minutes },
+            { label: 'SECONDS', value: seconds },
+          ].map((item) => (
+            <div
+              key={item.label}
+              style={{
+                background: 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '10px 4px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+              }}
+            >
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-strong)', lineHeight: 1.1 }}>
+                {String(item.value).padStart(2, '0')}
+              </div>
+              <div style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--muted)', marginTop: 4, letterSpacing: 0.6 }}>
+                {item.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar reminder options */}
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 18, marginTop: 12 }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-strong)', fontWeight: 600, margin: '0 0 10px' }}>
+            📅 Don't miss the reveal — add a reminder:
+          </p>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a
+              href={gCalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="action-btn action-secondary small"
+              style={{ fontSize: '0.82rem', padding: '7px 12px', textDecoration: 'none' }}
+            >
+              Google Calendar ↗
+            </a>
+            <button
+              type="button"
+              className="action-btn action-secondary small"
+              style={{ fontSize: '0.82rem', padding: '7px 12px' }}
+              onClick={handleIcsDownload}
+            >
+              Apple / Outlook (.ics) 📥
+            </button>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 20 }}>
+          <button
+            type="button"
+            className="action-btn"
+            style={{ fontSize: '0.82rem', padding: '6px 14px', color: 'var(--muted)' }}
+            onClick={() => window.location.reload()}
+          >
+            🔄 Refresh Reveal Check
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
+}
+
+function RevealCountdownScreen({ remainingMs, eventDate, title }) {
+  return <NoPeekingLockedBox remainingMs={remainingMs} eventDate={eventDate} title={title} />;
 }
 
 function HomePage({ templatesState }) {
@@ -1046,8 +1447,7 @@ function HomePage({ templatesState }) {
                           >
                             <Sparkles size={14} />
                           </button>
-                          <button className="action-btn small" type="button" title="Remove" aria-label="Remove" onClick={() => {
-                            if (!window.confirm('Remove this saved wish?')) return;
+                          <button className="action-btn small" type="button" title="Remove from this device" aria-label="Remove from this device" onClick={() => {
                             const next = recentWishes.filter((i, j) => j !== idx);
                             setRecentWishes(next);
                             writeJson('recentWishes', next);
@@ -1620,6 +2020,7 @@ function StaticPage({ title, children }) {
 
 function Footer() {
   const navigate = useNavigate();
+  const { openInstall, isInstalled } = usePwa();
   return (
     <footer className="site-footer" aria-label="Site footer">
       {/* Left: Brand */}
@@ -1641,6 +2042,9 @@ function Footer() {
           <button className="footer-link" type="button" onClick={() => navigate('/privacy')}>Privacy</button>
           <button className="footer-link" type="button" onClick={() => navigate('/contact')}>Contact</button>
           <button className="footer-link" type="button" onClick={() => navigate('/vision')}>Vision</button>
+          {!isInstalled && (
+            <button className="footer-link" type="button" onClick={openInstall}>📲 Install App</button>
+          )}
         </div>
         <div className="footer-socials">
           <a className="footer-icon-link" href="mailto:rlmsgames.help@gmail.com" aria-label="Email us" title="Email us">
@@ -1737,6 +2141,8 @@ function TemplatePickerPage({ templatesState }) {
     { id: 'anniversary', label: 'Anniversary', icon: '🥂' },
     { id: 'wedding', label: 'Wedding', icon: '💒' },
     { id: 'congrats', label: 'Milestones', icon: '🎉' },
+    { id: 'graduation', label: 'Graduation', icon: '🎓' },
+    { id: 'farewell', label: 'Farewell', icon: '🚀' },
     { id: 'newbaby', label: 'New Baby', icon: '👶' },
     { id: 'friendship', label: 'Friendship', icon: '🤝' },
     { id: 'thankyou', label: 'Thank You', icon: '🙏' },
@@ -2944,12 +3350,18 @@ function WishFormPage({ templatesState }) {
   const [honeypot, setHoneypot] = useState('');
   const [formError, setFormError] = useState('');
   const [previousMessage, setPreviousMessage] = useState('');
+  const [waxSeal, setWaxSeal] = useState(() => template?.theme?.accent || '#dc2626');
+  const [coSigners, setCoSigners] = useState('');
+  const [showCoSigners, setShowCoSigners] = useState(false);
 
   useEffect(() => {
     if (!template) return;
     setRecipientData(buildRecipientDraft(template));
     setContentData(buildContentDraft(template));
     setTone('heartfelt');
+    setWaxSeal(template?.theme?.accent || '#dc2626');
+    setCoSigners('');
+    setShowCoSigners(false);
     setFormError('');
   }, [template?.id]);
 
@@ -2959,8 +3371,11 @@ function WishFormPage({ templatesState }) {
     : false;
 
   const preview = useMemo(
-    () => composeWishPreview(template || {}, { recipientData, content: contentData, tone }),
-    [template, recipientData, contentData, tone]
+    () => composeWishPreview(
+      { ...template, waxSeal, theme: { ...(template?.theme || {}), waxSeal, coSigners } },
+      { recipientData: { ...recipientData, specialWish: coSigners || recipientData.specialWish }, content: contentData, tone }
+    ),
+    [template, recipientData, contentData, tone, waxSeal, coSigners]
   );
 
   useSeoMeta({
@@ -3026,8 +3441,11 @@ function WishFormPage({ templatesState }) {
     writeJson('selectedTemplateId', template.id);
     writeJson('finalData', {
       templateId: template.id,
-      templateSnapshot: template,
-      recipientData: cleanedRecipientData,
+      templateSnapshot: { ...template, theme: { ...(template.theme || {}), waxSeal, coSigners } },
+      recipientData: {
+        ...cleanedRecipientData,
+        specialWish: coSigners || cleanedRecipientData.specialWish || '',
+      },
       content: cleanedContent,
       tone,
       visibility: 'unlisted',
@@ -3091,8 +3509,8 @@ function WishFormPage({ templatesState }) {
             </div>
             <Sparkles size={18} className="rail-icon" />
           </div>
-          <div className="preview-card premium-preview" style={{ '--wish-accent': template?.theme?.accent || '#8b5cf6', '--wish-accent-soft': template?.theme?.accentSoft || '#ec4899' }}>
-            <WishExperience preview={preview} template={template} compact />
+          <div className="preview-card premium-preview" style={{ '--wish-accent': waxSeal || template?.theme?.accent || '#8b5cf6', '--wish-accent-soft': template?.theme?.accentSoft || '#ec4899' }}>
+            <WishExperience preview={preview} template={{ ...template, waxSeal, theme: { ...(template?.theme || {}), waxSeal, coSigners } }} compact />
             {recipientData.eventDate && preview.countdown ? <CountdownBadge eventDate={recipientData.eventDate} /> : null}
           </div>
         </MotionPanel>
@@ -3114,16 +3532,17 @@ function WishFormPage({ templatesState }) {
             <div className="step-divider" />
             <div className="step-pill active">
               <span className="step-num">2</span>
-              <span>Personalize & Vibe</span>
+              <span>Personalize &amp; Vibe</span>
             </div>
             <div className="step-divider" />
             <div className="step-pill pending">
               <span className="step-num">3</span>
-              <span>Unbox & Share</span>
+              <span>Unbox &amp; Share</span>
             </div>
           </div>
 
           <ToneSelector value={tone} onChange={setTone} />
+          <WaxSealSelector value={waxSeal} onChange={setWaxSeal} />
 
           <SectionHeading
             eyebrow="Details"
@@ -3255,6 +3674,53 @@ function WishFormPage({ templatesState }) {
                 </label>
               );
             })}
+          </div>
+
+          {/* Group / Collaborative Co-signers */}
+          <div className="cosigners-group-toggle" style={{ marginTop: '16px' }}>
+            {!showCoSigners ? (
+              <button
+                type="button"
+                className="topbar-link"
+                style={{
+                  fontSize: '0.84rem',
+                  padding: '8px 14px',
+                  border: '1.5px dashed var(--border)',
+                  borderRadius: '10px',
+                  color: 'var(--text-strong)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                onClick={() => setShowCoSigners(true)}
+              >
+                👥 Sending from a group, family, or team? Add co-signers +
+              </button>
+            ) : (
+              <div className="field-group floating-field field-wide" style={{ border: '1px solid var(--border)', borderRadius: '12px', padding: '14px', background: 'var(--surface-sunken, #f8fafc)' }}>
+                <div className="field-label-row">
+                  <span style={{ fontWeight: 600 }}>👥 Co-signers &amp; Team Members</span>
+                  <button
+                    type="button"
+                    className="topbar-link"
+                    style={{ fontSize: '0.78rem', color: 'var(--muted)' }}
+                    onClick={() => { setShowCoSigners(false); setCoSigners(''); }}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={coSigners}
+                  onChange={(e) => setCoSigners(e.target.value)}
+                  maxLength={180}
+                  placeholder="e.g. Maya, Jordan, Alex &amp; the Whole Team"
+                />
+                <small style={{ fontSize: '0.76rem', color: 'var(--muted)', marginTop: '4px', display: 'block' }}>
+                  Signatures appear warmly signed on the unboxed card keepsake.
+                </small>
+              </div>
+            )}
           </div>
 
           {/* Honeypot field (hidden from real users, catches automated bots) */}
@@ -3801,6 +4267,84 @@ function ManageWishPage({ templatesState }) {
       aside={<MotionPanel className="side-panel preview-panel glass-sidebar"><div className="eyebrow"><Eye size={14} /> Live preview</div><div className="preview-card premium-preview" style={{ '--wish-accent': template.theme?.accent, '--wish-accent-soft': template.theme?.accentSoft }}><WishExperience preview={preview} template={template} compact /></div></MotionPanel>}
     >
       <form className="editor-card glass-card wizard-card manage-wish-form" onSubmit={saveChanges}>
+        {/* Creator Delivery & Access Tracking Card */}
+        {(() => {
+          const now = Date.now();
+          const revealMs = valueToMillis(wishData.revealAt || wishData.recipientData?.eventDate);
+          const expiresMs = valueToMillis(wishData.expiresAt) || (revealMs + 7 * 86400000);
+          const isExpired = expiresMs ? expiresMs < now : false;
+          const isFuture = revealMs ? revealMs > now : false;
+          const daysLeft = isFuture ? Math.ceil((revealMs - now) / 86400000) : 0;
+
+          return (
+            <div className="manage-status-card" style={{
+              background: isExpired ? '#fef2f2' : isFuture ? '#eff6ff' : '#f0fdf4',
+              border: `1.5px solid ${isExpired ? '#fecaca' : isFuture ? '#bfdbfe' : '#bbf7d0'}`,
+              borderRadius: '14px',
+              padding: '16px 20px',
+              marginBottom: '20px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '1.4rem' }}>
+                    {isExpired ? '⌛' : isFuture ? '⏳' : '🟢'}
+                  </span>
+                  <div>
+                    <strong style={{ fontSize: '0.96rem', color: isExpired ? '#991b1b' : isFuture ? '#1e40af' : '#166534' }}>
+                      {isExpired
+                        ? 'Card Expired'
+                        : isFuture
+                        ? `Scheduled: Unwraps in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`
+                        : 'Active & Unwrapped for Recipient'}
+                    </strong>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '2px' }}>
+                      {isFuture
+                        ? 'Recipient sees the interactive "No Peeking!" wobble box until the date.'
+                        : 'Recipient can unbox and read your personal message right now.'}
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href={`/wish/${username}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="action-btn action-secondary small"
+                  style={{ fontSize: '0.8rem', padding: '6px 12px', textDecoration: 'none' }}
+                >
+                  👁️ View as Recipient ↗
+                </a>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                gap: '10px',
+                marginTop: '14px',
+                paddingTop: '12px',
+                borderTop: '1px solid rgba(0,0,0,0.06)',
+                fontSize: '0.8rem',
+              }}>
+                <div>
+                  <span style={{ color: 'var(--muted)', display: 'block' }}>Event Date</span>
+                  <strong>{recipientData.eventDate || 'Today'}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--muted)', display: 'block' }}>PIN Protection</span>
+                  <strong>{wishData.passcodeHash ? '🔒 4-Digit PIN' : '🔓 Open Access'}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--muted)', display: 'block' }}>Access Closes</span>
+                  <strong>{new Date(expiresMs).toLocaleDateString()}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--muted)', display: 'block' }}>Wax Seal</span>
+                  <strong>{wishData.templateSnapshot?.theme?.waxSeal ? '🎨 Custom Seal' : '✨ Default Seal'}</strong>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         <ToneSelector value={tone} onChange={setTone} />
         <div className="field-grid">
           {template.fields.map((field) => (
@@ -3928,37 +4472,7 @@ function WishViewPage({ templatesState }) {
   });
 
   if (status === 'locked-future') {
-    return (
-      <div className="wish-view" style={{ '--wish-accent': '#ff6b6b', '--wish-accent-soft': '#ff8fa3' }}>
-        <div className="wish-ambient-glow" aria-hidden="true" />
-        <div className="center-screen">
-          <motion.div
-            className="panel glass-card"
-            style={{ textAlign: 'center', maxWidth: 440, padding: '36px 28px' }}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <div style={{ fontSize: '3.5rem', marginBottom: 16 }}>⏳</div>
-            <div className="eyebrow eyebrow-dark">Scheduled Celebration</div>
-            <h1 style={{ fontSize: '1.6rem', margin: '8px 0' }}>Surprise in Progress!</h1>
-            <p className="lead" style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'var(--text)' }}>
-              The sender scheduled this celebration card to be revealed on its celebration date.
-            </p>
-            <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: 12 }}>
-              Card content is protected until reveal time. Please return on the celebration day to unwrap your card! 🎁
-            </p>
-            <button
-              type="button"
-              className="action-btn action-secondary"
-              style={{ marginTop: 20 }}
-              onClick={() => window.location.reload()}
-            >
-              🔄 Refresh Check
-            </button>
-          </motion.div>
-        </div>
-      </div>
-    );
+    return <NoPeekingLockedBox remainingMs={remainingMs || 86400000} eventDate={wishData?.recipientData?.eventDate} title={preview?.title || 'Celebration'} />;
   }
 
   if (status && !wishData) {
@@ -3986,7 +4500,7 @@ function WishViewPage({ templatesState }) {
   if (!wishData) return null;
 
   if (remainingMs > 0) {
-    return <RevealCountdownScreen remainingMs={remainingMs} />;
+    return <RevealCountdownScreen remainingMs={remainingMs} eventDate={wishData?.recipientData?.eventDate} title={preview?.title || 'Celebration'} />;
   }
 
   // PIN gate — rendered after countdown so the countdown shows without a pin prompt
@@ -4107,6 +4621,8 @@ function WishViewPage({ templatesState }) {
                 wedding: 'Secret wedding toast: May your love always be each other’s safe haven and greatest adventure. 💒💍',
                 friendship: 'Friendship secret: Friends like you are once in a lifetime. So lucky to have you! 🤝✨',
                 thankyou: 'Secret blessing: May every ounce of kindness and love you share return to you multiplied a thousandfold. 🙏💫',
+                graduation: 'Graduation prophecy: The degree is the key, but your passion is the engine. Go change the world! 🎓🌟',
+                farewell: 'Adventure blessing: May doors swing wide open for you wherever you walk next! So proud of you! 🚀✨',
               }[template?.id] || 'May every kindness and happiness you share return to you multiplied a thousand times! ✨'}
               title="✨ Scratch to Reveal Secret Bonus Wish"
             />

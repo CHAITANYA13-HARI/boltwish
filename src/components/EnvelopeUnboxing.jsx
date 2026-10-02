@@ -11,7 +11,7 @@ export function EnvelopeUnboxing({ preview, template, children }) {
   const icon = template?.icon || '✨';
   const displayName = preview?.displayName && preview.displayName !== 'there' ? preview.displayName : 'You';
   const theme = template?.theme || {};
-  const accentColor = theme.accent || '#e85d04';
+  const accentColor = template?.waxSeal || theme.waxSeal || theme.accent || '#e85d04';
   const templateId = template?.id || 'celebration';
 
   const handleMouseMove = (e) => {
@@ -89,6 +89,20 @@ export function EnvelopeUnboxing({ preview, template, children }) {
       tagline: 'Thank you for your kindness & support',
       coverPattern: 'leaves',
       ribbonColor: '#0f766e',
+      ribbonAccent: '#99f6e4',
+    },
+    graduation: {
+      badge: '🎓 Academic Milestone',
+      tagline: 'Celebrating the degree, diploma & bright career ahead',
+      coverPattern: 'stars',
+      ribbonColor: '#2563eb',
+      ribbonAccent: '#93c5fd',
+    },
+    farewell: {
+      badge: '🚀 Farewell & Adventure',
+      tagline: 'Cheering you on into your next big chapter',
+      coverPattern: 'stars',
+      ribbonColor: '#0d9488',
       ribbonAccent: '#99f6e4',
     },
   };

@@ -57,3 +57,20 @@ export function downloadCalendarInvite({
   document.body.removeChild(a);
   URL.revokeObjectURL(downloadUrl);
 }
+
+export function getGoogleCalendarUrl({
+  title = 'Celebration Wish',
+  description = 'Open your special Boltwish celebration card',
+  eventDate,
+  url = window.location.href,
+}) {
+  const safeDate = eventDate ? new Date(eventDate) : new Date();
+  const year = safeDate.getFullYear();
+  const month = String(safeDate.getMonth() + 1).padStart(2, '0');
+  const day = String(safeDate.getDate()).padStart(2, '0');
+  const dateStr = `${year}${month}${day}`;
+  const text = encodeURIComponent(`🎉 ${title}`);
+  const details = encodeURIComponent(`${description}\n\nOpen your card: ${url}`);
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dateStr}/${dateStr}&details=${details}`;
+}
+

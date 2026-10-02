@@ -45,6 +45,8 @@ export const defaultWishMessages = {
   wedding: 'Congratulations on your wedding day! It is such a joy to see you two begin married life together. May your home always be filled with deep patience, loud laughter, and a love that grows stronger with every sunrise.',
   friendship: 'To the friend who knows all my wildest stories because you were right there laughing with me: thank you for being my anchor, my comic relief, and my favorite person to talk to. Here is to a lifetime of memories ahead!',
   thankyou: 'Thank you from the bottom of my heart for your kindness, support, and generosity. Having you in my corner made all the difference when I needed it most, and I will always remember it with deep gratitude!',
+  graduation: 'Congratulations on graduating! Watching your commitment, late-night study sessions, and perseverance pay off makes everyone so proud today. The diploma is yours, and the future is waiting for you to conquer it!',
+  farewell: 'Working alongside you has been an absolute delight. Your positive energy, dedication, and humor made every day better. Wishing you soaring success, exciting new projects, and endless happiness in this next chapter!',
 };
 
 export const contentFieldMeta = {
@@ -248,6 +250,52 @@ const toneContentByTemplate = {
       body: 'Dear {{name}},\n\n{{message}}',
       highlight: 'Your kindness made a real difference.',
       footer: 'With gratitude',
+    },
+  },
+  graduation: {
+    playful: {
+      title: 'Cap Tossed, Future Bossed! 🎓',
+      subtitle: '{{achievement}} is officially complete—time to celebrate properly.',
+      body: 'Dear {{name}},\n\n{{message}}',
+      highlight: 'Turn the tassel, throw the cap, and take a bow!',
+      footer: 'Your biggest fan',
+    },
+    elegant: {
+      title: 'Honoring Your Graduation, {{name}} 🎓',
+      subtitle: 'Celebrating your milestone accomplishment in {{achievement}}.',
+      body: 'Dear {{name}},\n\n{{message}}',
+      highlight: 'May your education be the foundation of a purposeful and inspiring career.',
+      footer: 'With proud congratulations',
+    },
+    concise: {
+      title: 'Congratulations, Graduate {{name}}! 🎓',
+      subtitle: 'Celebrating {{achievement}}.',
+      body: 'Dear {{name}},\n\n{{message}}',
+      highlight: 'So proud of everything you’ve achieved.',
+      footer: 'With love and pride',
+    },
+  },
+  farewell: {
+    playful: {
+      title: '{{name}}, We’ll Miss You Like Crazy! 🚀',
+      subtitle: 'Off to conquer {{achievement}}—don’t forget us back here.',
+      body: 'Dear {{name}},\n\n{{message}}',
+      highlight: 'Whoever gets to work with you next is extraordinarily lucky.',
+      footer: 'Your favorite team',
+    },
+    elegant: {
+      title: 'Wishing You Great Success, {{name}} 🚀',
+      subtitle: 'As you embark upon your new journey in {{achievement}}.',
+      body: 'Dear {{name}},\n\n{{message}}',
+      highlight: 'May every step of this new chapter bring fulfillment, triumph, and joy.',
+      footer: 'With highest regards and best wishes',
+    },
+    concise: {
+      title: 'Best of Luck, {{name}}! 🚀',
+      subtitle: 'On your new chapter in {{achievement}}.',
+      body: 'Dear {{name}},\n\n{{message}}',
+      highlight: 'Wishing you all the best on your journey ahead.',
+      footer: 'Warmest wishes',
     },
   },
 };
@@ -520,6 +568,10 @@ export function composeWishPreview(template, wishData = {}) {
   };
 
   resolved.fromLine = recipientData.from ? `From: ${recipientData.from}` : '';
+  const coSigners = wishData?.templateSnapshot?.theme?.coSigners || template?.theme?.coSigners || recipientData.specialWish;
+  if (coSigners && String(coSigners).trim()) {
+    resolved.coSigners = String(coSigners).trim();
+  }
   resolved.toLine = `To: ${displayName}`;
   resolved.metaLines = [];
 
