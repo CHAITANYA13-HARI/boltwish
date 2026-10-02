@@ -62,13 +62,19 @@ import { templateSeed } from './data/templateSeed';
 import { createSecureId, readJson, slugify, writeJson } from './lib/storage';
 const SITE_NAME = 'Boltwish';
 const SITE_DESCRIPTION = 'Create and share beautiful wish cards with personalized templates, live previews, and one-tap sharing.';
-const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://boltwish.vercel.app').replace(/\/$/, '');
+const getDynamicSiteUrl = () => {
+  if (import.meta.env.VITE_SITE_URL) return import.meta.env.VITE_SITE_URL.replace(/\/$/, '');
+  if (typeof window !== 'undefined' && window.location.origin) return window.location.origin;
+  return 'https://boltwish.vercel.app';
+};
+const SITE_URL = getDynamicSiteUrl();
 const DEFAULT_OG_IMAGE = `${SITE_URL}/brand-mark.svg`;
 
 function toAbsoluteUrl(pathname = '/') {
-  if (!pathname) return SITE_URL;
+  const currentBase = typeof window !== 'undefined' && window.location.origin ? window.location.origin : SITE_URL;
+  if (!pathname) return currentBase;
   if (/^https?:\/\//i.test(pathname)) return pathname;
-  return `${SITE_URL}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
+  return `${currentBase}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
 }
 
 function upsertMeta(selector, attribute, value) {

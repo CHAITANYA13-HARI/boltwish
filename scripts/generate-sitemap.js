@@ -46,11 +46,27 @@ function buildUrlXml(loc, changefreq = 'monthly', priority = '0.5', lastmod) {
 async function main() {
   const deploymentHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
   const siteUrl = process.env.SITE_URL || (deploymentHost ? `https://${deploymentHost}` : 'https://boltwish.vercel.app');
-  const staticRoutes = ['/', '/template-picker', '/terms', '/contact', '/vision', '/social'];
+  
+  // All core static pages
+  const staticRoutes = [
+    { path: '/', changefreq: 'daily', priority: '1.0' },
+    { path: '/template-picker', changefreq: 'weekly', priority: '0.9' },
+    // All 8 dedicated template landing routes for SEO discovery
+    { path: '/template/birthday', changefreq: 'weekly', priority: '0.9' },
+    { path: '/template/anniversary', changefreq: 'weekly', priority: '0.8' },
+    { path: '/template/love', changefreq: 'weekly', priority: '0.8' },
+    { path: '/template/congrats', changefreq: 'weekly', priority: '0.8' },
+    { path: '/template/newbaby', changefreq: 'weekly', priority: '0.8' },
+    { path: '/template/wedding', changefreq: 'weekly', priority: '0.8' },
+    { path: '/template/friendship', changefreq: 'weekly', priority: '0.8' },
+    { path: '/template/thankyou', changefreq: 'weekly', priority: '0.8' },
+    { path: '/vision', changefreq: 'monthly', priority: '0.5' },
+    { path: '/terms', changefreq: 'monthly', priority: '0.3' },
+    { path: '/contact', changefreq: 'monthly', priority: '0.4' },
+    { path: '/social', changefreq: 'monthly', priority: '0.4' },
+  ];
 
-  const urls = [];
-  // static
-  for (const r of staticRoutes) urls.push({ path: r, changefreq: r === '/' ? 'daily' : 'monthly', priority: r === '/' ? '1.0' : '0.5' });
+  const urls = [...staticRoutes];
 
   // optional: fetch wishes from Firestore when FETCH_WISHES=true and credentials are supplied
   const wishPaths = await fetchWishesFromFirestore();
@@ -63,9 +79,16 @@ async function main() {
   }
   xmlParts.push('</urlset>');
 
-  const outPath = path.join(__dirname, '..', 'public', 'sitemap.xml');
+  const publicDir = path.join(__dirname, '..', 'public');
+  const outPath = path.join(publicDir, 'sitemap.xml');
   fs.writeFileSync(outPath, xmlParts.join('\n') + '\n', 'utf8');
   console.log(`Wrote sitemap with ${urls.length} URLs to ${outPath}`);
+
+  // Automatically sync robots.txt with active domain
+  const robotsPath = path.join(publicDir, 'robots.txt');
+  const robotsContent = `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /save\nSitemap: ${siteUrl.replace(/\/$/, '')}/sitemap.xml\n`;
+  fs.writeFileSync(robotsPath, robotsContent, 'utf8');
+  console.log(`Synchronized robots.txt with ${siteUrl}/sitemap.xml`);
 }
 
 main().catch((err) => {
