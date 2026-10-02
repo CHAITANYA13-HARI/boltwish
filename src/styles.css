@@ -5284,36 +5284,37 @@ h1 {
   .wish-create-own,
   .send-love-back-card,
   .cake-prompt-area,
+  .birthday-cake-card,
   .envelope-stage,
+  .scratch-card-container,
+  .wish-viral-loop-banner,
+  .wish-scroll-hint,
+  .mobile-sticky-bar,
   .gift-tag-overlay .gift-tag-dialog-head,
   .gift-tag-overlay .gift-tag-explainer,
   .gift-tag-overlay .gift-tag-actions {
     display: none !important;
   }
 
-  /* When printing the Gift Tag modal */
-  .gift-tag-overlay {
-    position: static !important;
-    background: none !important;
-    backdrop-filter: none !important;
-    padding: 0 !important;
+  /* When printing the Gift Tag modal specifically */
+  body.printing-gift-tag * {
+    visibility: hidden !important;
   }
-
-  .gift-tag-dialog {
+  body.printing-gift-tag .gift-tag-overlay,
+  body.printing-gift-tag .gift-tag-dialog,
+  body.printing-gift-tag .gift-tag-sheet-preview,
+  body.printing-gift-tag .printable-gift-tag,
+  body.printing-gift-tag .printable-gift-tag * {
+    visibility: visible !important;
+  }
+  body.printing-gift-tag .printable-gift-tag {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50px !important;
+    transform: translateX(-50%) !important;
     box-shadow: none !important;
-    padding: 0 !important;
-    border: none !important;
-  }
-
-  .gift-tag-sheet-preview {
-    background: none !important;
-    border: none !important;
-    padding: 0 !important;
-  }
-
-  .printable-gift-tag {
-    box-shadow: none !important;
-    border: 2px solid #000 !important;
+    border: 2px solid #1e293b !important;
+    background: #ffffff !important;
     page-break-inside: avoid !important;
   }
 
@@ -5350,9 +5351,15 @@ h1 {
     color: #000000 !important;
   }
 
+  .wish-experience h2 {
+    color: #000000 !important;
+  }
+
   .wish-recipient-name {
     font-size: 28pt !important;
     color: #000000 !important;
+    background: none !important;
+    -webkit-text-fill-color: #000000 !important;
   }
 
   .wish-story p {
@@ -5365,12 +5372,6 @@ h1 {
     background: #f8fafc !important;
     border: 1px solid #cbd5e1 !important;
     color: #0f172a !important;
-  }
-
-  .birthday-cake-card {
-    border: 1px solid #cbd5e1 !important;
-    box-shadow: none !important;
-    background: none !important;
   }
 }
 
@@ -5645,50 +5646,42 @@ h1 {
    ========================================================================== */
 
 /* 1. Birthday */
-.giftcard-theme-birthday .giftcard-cover-card,
-.theme-wrap-birthday .wish-style-sunrise {
+.giftcard-theme-birthday .giftcard-cover-card {
   background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fed7aa 100%) !important;
 }
 
 /* 2. Anniversary */
-.giftcard-theme-anniversary .giftcard-cover-card,
-.theme-wrap-anniversary .wish-style-blush {
+.giftcard-theme-anniversary .giftcard-cover-card {
   background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 50%, #fecdd3 100%) !important;
 }
 
 /* 3. Love */
-.giftcard-theme-love .giftcard-cover-card,
-.theme-wrap-love .wish-style-rose {
+.giftcard-theme-love .giftcard-cover-card {
   background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 40%, #fda4af 100%) !important;
 }
 
 /* 4. Congrats */
-.giftcard-theme-congrats .giftcard-cover-card,
-.theme-wrap-congrats .wish-style-violet {
+.giftcard-theme-congrats .giftcard-cover-card {
   background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 50%, #ddd6fe 100%) !important;
 }
 
 /* 5. New Baby */
-.giftcard-theme-newbaby .giftcard-cover-card,
-.theme-wrap-newbaby .wish-style-sky {
+.giftcard-theme-newbaby .giftcard-cover-card {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%) !important;
 }
 
 /* 6. Wedding */
-.giftcard-theme-wedding .giftcard-cover-card,
-.theme-wrap-wedding .wish-style-peach {
+.giftcard-theme-wedding .giftcard-cover-card {
   background: linear-gradient(135deg, #fdfbf7 0%, #fae8e0 50%, #f7d6c8 100%) !important;
 }
 
 /* 7. Friendship */
-.giftcard-theme-friendship .giftcard-cover-card,
-.theme-wrap-friendship .wish-style-mint {
+.giftcard-theme-friendship .giftcard-cover-card {
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%) !important;
 }
 
 /* 8. Thank You */
-.giftcard-theme-thankyou .giftcard-cover-card,
-.theme-wrap-thankyou .wish-style-teal {
+.giftcard-theme-thankyou .giftcard-cover-card {
   background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #99f6e4 100%) !important;
 }
 
@@ -5875,32 +5868,49 @@ h1 {
 
 .quotes-categories-scroll {
   display: flex;
-  gap: 8px;
-  padding: 14px 28px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
   overflow-x: auto;
   border-bottom: 1px solid #f1f5f9;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .quotes-categories-scroll::-webkit-scrollbar {
-  display: none;
+  height: 4px;
+}
+
+.quotes-categories-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
 }
 
 .quotes-cat-pill {
-  padding: 6px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 38px;
+  line-height: 1;
+  padding: 0 16px;
   border-radius: 999px;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   font-weight: 600;
   white-space: nowrap;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   background: #f8fafc;
-  color: #475569;
+  color: #334155;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .quotes-cat-pill:hover {
-  background: #f1f5f9;
+  background: #ffffff;
+  border-color: #94a3b8;
   color: #0f172a;
 }
 
@@ -5908,7 +5918,22 @@ h1 {
   background: #7c3aed;
   color: #ffffff;
   border-color: #7c3aed;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+}
+
+.quote-use-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 104px !important;
+  white-space: nowrap !important;
+  padding: 8px 14px !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
 }
 
 .quotes-grid {
@@ -7386,4 +7411,186 @@ h1 {
   color: var(--muted);
   font-size: 0.82rem;
 }
+
+/* ===================================================
+   BOLTWISH CELEBRATION MASTER POLISH OVERRIDES
+   =================================================== */
+
+/* ── 1. Warm Celebration Theme Variables ─────────── */
+:root {
+  --brand: #ff6b6b;
+  --brand-2: #ff8fa3;
+  --accent: #ff6b6b;
+  --accent-soft: #ffd6e0;
+}
+
+/* ── 2. Button Hierarchy & Celebration Primary ─────── */
+.action-primary,
+.action-btn.action-primary {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8fa3 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 10px 24px rgba(255, 107, 107, 0.28) !important;
+}
+
+.action-primary:hover,
+.action-btn.action-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(255, 107, 107, 0.38) !important;
+}
+
+/* ── 3. Full-Width Template Gallery ────────────────── */
+.hero-full-width {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  width: 100% !important;
+}
+
+.hero-card-full {
+  width: 100% !important;
+  padding: clamp(24px, 4vw, 42px) !important;
+}
+
+.templates-gallery-full {
+  margin-top: 24px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.templates-grid-showcase {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+  gap: 22px !important;
+  width: 100% !important;
+}
+
+/* ── 4. Vibrant Template Card Redesign ─────────────── */
+.visual-template-card {
+  border-radius: 22px !important;
+  padding: 24px 20px 20px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  min-height: 250px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12) !important;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  text-align: left !important;
+}
+
+.visual-template-card:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.22) !important;
+}
+
+/* Floating Frosted Glass Badge */
+.visual-template-card .template-badge {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  z-index: 5 !important;
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-radius: 999px !important;
+  padding: 5px 12px !important;
+  font-size: 0.74rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+  white-space: nowrap !important;
+  width: fit-content !important;
+}
+
+.visual-template-card .template-card-art {
+  position: absolute !important;
+  top: 20px !important;
+  left: 20px !important;
+  transform: none !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.visual-template-card .template-card-art i {
+  font-style: normal !important;
+  font-size: 3.2rem !important;
+  display: block !important;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.2)) !important;
+  animation: card-icon-float 3.5s ease-in-out infinite !important;
+}
+
+.visual-template-card .chip {
+  position: relative !important;
+  z-index: 2 !important;
+  align-self: flex-start !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  font-size: 0.74rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  padding: 5px 11px !important;
+  border-radius: 999px !important;
+  margin-bottom: 8px !important;
+}
+
+.visual-template-card > strong {
+  position: relative !important;
+  z-index: 2 !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  font-family: 'Playfair Display', serif !important;
+  margin-bottom: 6px !important;
+  padding: 0 !important;
+}
+
+.visual-template-card .template-desc {
+  position: relative !important;
+  z-index: 2 !important;
+  font-size: 0.84rem !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  line-height: 1.5 !important;
+  margin-bottom: 14px !important;
+  padding: 0 !important;
+}
+
+.visual-template-card .template-card-cta {
+  position: relative !important;
+  z-index: 2 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 0.84rem !important;
+  padding-top: 10px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Occasion Card Rich Themes */
+.template-card-sunrise { background: linear-gradient(150deg, #ff8c42 0%, #e85d04 55%, #b23b00 100%) !important; }
+.template-card-blush   { background: linear-gradient(150deg, #f472b6 0%, #db2777 55%, #9d174d 100%) !important; }
+.template-card-rose    { background: linear-gradient(150deg, #fb7185 0%, #e11d48 55%, #9f1239 100%) !important; }
+.template-card-violet  { background: linear-gradient(150deg, #a78bfa 0%, #7c3aed 55%, #4c1d95 100%) !important; }
+.template-card-sky     { background: linear-gradient(150deg, #38bdf8 0%, #0284c7 55%, #0369a1 100%) !important; }
+.template-card-peach   { background: linear-gradient(150deg, #f472b6 0%, #ea580c 55%, #9a3412 100%) !important; }
+.template-card-mint    { background: linear-gradient(150deg, #34d399 0%, #059669 55%, #064e3b 100%) !important; }
+.template-card-teal    { background: linear-gradient(150deg, #2dd4bf 0%, #0d9488 55%, #134e4a 100%) !important; }
 

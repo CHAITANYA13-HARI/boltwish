@@ -80,7 +80,7 @@ export function QuotesModal({ initialOccasion = 'all', onSelectQuote, onClose })
                 <span className="quote-author">— {q.author}</span>
                 <button
                   type="button"
-                  className={`action-btn small ${copiedId === q.id ? 'action-primary' : 'action-secondary'}`}
+                  className={`action-btn quote-use-btn ${copiedId === q.id ? 'action-primary' : 'action-secondary'}`}
                   onClick={() => handleUseQuote(q)}
                 >
                   {copiedId === q.id ? <><Check size={14} /> Inserted!</> : <><Sparkles size={14} /> Use Quote</>}

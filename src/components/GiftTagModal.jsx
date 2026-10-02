@@ -8,6 +8,13 @@ export function GiftTagModal({ url, recipientName, fromName, title, onClose }) {
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
+    document.body.classList.add('printing-gift-tag');
+    return () => {
+      document.body.classList.remove('printing-gift-tag');
+    };
+  }, []);
+
+  useEffect(() => {
     if (!url) return;
     QRCode.toDataURL(url, {
       width: 280,
@@ -100,7 +107,7 @@ export function GiftTagModal({ url, recipientName, fromName, title, onClose }) {
             {fromName && (
               <div className="tag-footer">
                 <span>With love from</span>
-                <strong>{fromName.replace(/^from\s+/i, '')}</strong>
+                <strong>{fromName.replace(/^from\s*:?\s*/i, '')}</strong>
               </div>
             )}
 

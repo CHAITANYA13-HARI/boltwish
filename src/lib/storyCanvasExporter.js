@@ -118,16 +118,20 @@ export async function exportInstagramStory({
   ctx.fillText('“', 160, 620);
 
   // Render wrapped message text
+  const cleanMsg = String(message || '').trim();
+  const fontSize = cleanMsg.length > 300 ? 28 : cleanMsg.length > 180 ? 32 : 36;
+  const lineHeight = fontSize * 1.45;
   ctx.fillStyle = '#f8fafc';
-  ctx.font = '36px Georgia, serif';
+  ctx.font = `${fontSize}px Georgia, serif`;
   ctx.textAlign = 'center';
-  const cleanMsg = message.replace(/\n+/g, ' ');
-  wrapText(ctx, cleanMsg, 540, 660, 760, 54, 8);
+  
+  const startY = cleanMsg.length > 200 ? 630 : 660;
+  wrapText(ctx, cleanMsg, 540, startY, 780, lineHeight, 9);
 
   // Sender sign-off
   if (fromName) {
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = 'italic bold 32px Georgia, serif';
+    ctx.font = 'italic bold 30px Georgia, serif';
     ctx.fillText(`— With heartfelt love, ${fromName}`, 540, 1140);
   }
   ctx.restore();
@@ -208,29 +212,39 @@ function roundRect(ctx, x, y, width, height, radius) {
   ctx.closePath();
 }
 
-function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 8) {
-  const words = text.split(' ');
-  let line = '';
+function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 9) {
+  const paragraphs = String(text || '').split(/\n+/);
   let linesDrawn = 0;
 
-  for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0) {
-      ctx.fillText(line.trim(), x, y);
-      line = words[n] + ' ';
-      y += lineHeight;
-      linesDrawn++;
-      if (linesDrawn >= maxLines - 1 && n < words.length - 1) {
-        ctx.fillText((line + '...').trim(), x, y);
-        return;
+  for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
+    const p = paragraphs[pIdx].trim();
+    if (!p) continue;
+    const words = p.split(/\s+/);
+    let line = '';
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line ? `${line} ${words[n]}` : words[n];
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && n > 0) {
+        ctx.fillText(line.trim(), x, y);
+        line = words[n];
+        y += lineHeight;
+        linesDrawn++;
+        if (linesDrawn >= maxLines - 1 && (n < words.length - 1 || pIdx < paragraphs.length - 1)) {
+          ctx.fillText(`${line}...`.trim(), x, y);
+          return;
+        }
+      } else {
+        line = testLine;
       }
-    } else {
-      line = testLine;
     }
+    if (line) {
+      ctx.fillText(line.trim(), x, y);
+      linesDrawn++;
+      y += lineHeight * 1.15; // slightly larger paragraph gap
+    }
+    if (linesDrawn >= maxLines) return;
   }
-  ctx.fillText(line.trim(), x, y);
 }
 
 function drawCornerOrnament(ctx, x, y, angle) {

@@ -1100,9 +1100,9 @@ function SocialPage() {
   );
 }
 
-function PageShell({ kicker, title, description, actions, children, aside }) {
+function PageShell({ kicker, title, description, actions, children, aside, fullWidth = false }) {
   return (
-    <div className="page-shell">
+    <div className={`page-shell ${fullWidth ? 'page-shell-full' : ''}`.trim()}>
       <header className="topbar">
         <Brand />
         <div className="topbar-actions">
@@ -1111,8 +1111,8 @@ function PageShell({ kicker, title, description, actions, children, aside }) {
           </div>
         </div>
       </header>
-      <main id="main-content" className="hero-grid">
-        <Panel className="hero-card">
+      <main id="main-content" className={aside ? 'hero-grid' : 'hero-full-width'}>
+        <Panel className={`hero-card ${aside ? '' : 'hero-card-full'}`.trim()}>
           {kicker ? <div className="eyebrow">{kicker}</div> : null}
           <h1>{title}</h1>
           {description ? <p className="lead">{description}</p> : null}
@@ -1143,27 +1143,31 @@ function TemplatePickerPage({ templatesState }) {
 
   return (
     <PageShell
+      fullWidth
       kicker="Choose an occasion · Pick a design"
       title="Choose a template that fits the moment."
-      description="Each occasion has its own visual personality, writing tones, and thoughtful prompts."
-      actions={<AppButton variant="secondary" onClick={() => navigate('/')}>Back to welcome</AppButton>}
-      aside={<Panel className="side-panel"><h2>Next step</h2><p>Choose a writing tone, answer a few personal prompts, and watch the finished wish come to life.</p></Panel>}
+      description="Each occasion has its own visual personality, writing tones, and thoughtful prompts. Select one below to begin creating."
+      actions={<AppButton variant="secondary" onClick={() => navigate('/')}>Back to home</AppButton>}
     >
-      <div className="actions-row"><AppButton onClick={() => document.getElementById('template-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Pick a template</AppButton></div>
-      <section className="templates-section" id="template-grid">
+      <section className="templates-section templates-gallery-full" id="template-grid">
         {templatesState.error ? <div className="notice error">{templatesState.error}</div> : null}
-        <div className="templates-grid">
+        <div className="templates-grid templates-grid-showcase">
           {templatesState.loading
             ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="template-card skeleton-card tall" />)
             : templatesState.templates.map((template) => (
-                <CardButton key={template.id} className={`visual-template-card template-card-${slugify(template.theme?.background || template.id)}`} style={{ '--template-accent': template.theme?.accent, '--template-soft': template.theme?.accentSoft }} onClick={() => { writeJson('selectedTemplateId', template.id); navigate(`/template/${template.id}`); }}>
+                <CardButton
+                  key={template.id}
+                  className={`visual-template-card template-card-${slugify(template.theme?.background || template.id)}`}
+                  style={{ '--template-accent': template.theme?.accent, '--template-soft': template.theme?.accentSoft }}
+                  onClick={() => { writeJson('selectedTemplateId', template.id); navigate(`/template/${template.id}`); }}
+                >
                   {['birthday', 'love'].includes(template.id) && <span className="template-badge">🔥 Popular</span>}
                   {['wedding', 'anniversary'].includes(template.id) && <span className="template-badge">✨ Favorite</span>}
                   {['congrats', 'newbaby'].includes(template.id) && <span className="template-badge">🎉 Trending</span>}
-                  <span className="template-card-art" aria-hidden="true"><i>{template.icon}</i><b>✦</b><b>●</b></span>
+                  <span className="template-card-art" aria-hidden="true"><i>{template.icon}</i></span>
                   <span className="chip">{template.label}</span>
                   <strong>{template.chip}</strong>
-                  <span>{template.summary || 'A thoughtful wish for this occasion.'}</span>
+                  <span className="template-desc">{template.summary || 'A thoughtful wish for this occasion.'}</span>
                   <span className="template-card-cta">Personalize this design <ArrowRight size={14} /></span>
                 </CardButton>
               ))}
@@ -2252,7 +2256,13 @@ function SavePage({ templatesState }) {
       <div className="topbar save-topbar"><button className="topbar-link" type="button" onClick={() => navigate('/')}>← Back to home</button></div>
       <Panel className="save-panel">
         <div className="progress-card"><div className="progress-label"><span>Your card link is ready!</span><span>🎉 100%</span></div><div className="progress-bar"><div className="progress-fill" /></div></div>
-        <div className={`loader ${saving ? '' : 'loader-done'}`} aria-hidden="true" />
+        {saving ? (
+          <div className="loader" aria-hidden="true" />
+        ) : (
+          <div className="save-ready-badge" style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }} aria-hidden="true">
+            <CheckCircle2 size={56} color="#10b981" />
+          </div>
+        )}
         <h1 className="save-status">{status}</h1>
         {preview ? <div className="save-preview"><div className="chip">{preview.chip}</div><strong>{preview.title}</strong><p>{preview.subtitle}</p><WishMetaLines metaLines={preview.metaLines} className="wish-card-meta-inline" /></div> : null}
         <div className="save-actions-wrap" style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -2270,10 +2280,11 @@ function SavePage({ templatesState }) {
               onClick={async () => {
                 setStoryExporting(true);
                 const tpl = wishData?.templateSnapshot || resolveTemplate(templatesState.templates, wishData?.templateId);
+                const fullMsg = Array.isArray(preview?.body) ? preview.body.join('\n\n') : (preview?.body || wishData?.recipientData?.message || 'Wishing you the best day!');
                 await exportInstagramStory({
                   recipientName: preview?.displayName || 'Friend',
                   occasionTitle: preview?.title || 'Celebration Wish',
-                  message: preview?.body?.[0] || 'Wishing you the best day!',
+                  message: fullMsg,
                   fromName: preview?.fromLine || '',
                   theme: tpl?.theme || {},
                   wishUrl: savedLink,
@@ -2651,10 +2662,11 @@ function WishViewPage({ templatesState }) {
 
   const handleDownloadStory = async () => {
     setStoryExporting(true);
+    const fullMsg = Array.isArray(preview?.body) ? preview.body.join('\n\n') : (preview?.body || wishData?.recipientData?.message || 'Wishing you the best day!');
     await exportInstagramStory({
       recipientName: preview?.displayName || 'Friend',
       occasionTitle: preview?.title || 'Celebration Wish',
-      message: preview?.body?.[0] || 'Wishing you the best day!',
+      message: fullMsg,
       fromName: preview?.fromLine || '',
       theme: template?.theme || {},
       wishUrl: wishUrl,
@@ -2662,7 +2674,7 @@ function WishViewPage({ templatesState }) {
     setStoryExporting(false);
   };
 
-  const senderName = preview?.fromLine ? preview.fromLine.replace(/^from\s+/i, '').trim() : '';
+  const senderName = preview?.fromLine ? preview.fromLine.replace(/^from\s*:?\s*/i, '').trim() : '';
 
   return (
     <div className="wish-view" style={{ '--wish-accent': theme.accent || '#e85d04', '--wish-accent-soft': theme.accentSoft || '#fb8500' }}>
