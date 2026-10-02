@@ -400,9 +400,19 @@ function useFirestoreTemplates() {
           .filter((template) => template.enabled !== false)
           .sort(sortTemplates);
 
+        const mergeWithSeed = (fetched) => {
+          const list = [...(fetched || [])];
+          templateSeed.forEach((seedTpl) => {
+            if (!list.some((t) => t.id === seedTpl.id)) {
+              list.push(seedTpl);
+            }
+          });
+          return list.sort(sortTemplates);
+        };
+
         if (active) {
           setState({
-            templates: initialTemplates.length ? initialTemplates : templateSeed,
+            templates: mergeWithSeed(initialTemplates),
             loading: false,
             error: '',
           });
@@ -418,7 +428,7 @@ function useFirestoreTemplates() {
 
             if (active) {
               setState({
-                templates: templates.length ? templates : templateSeed,
+                templates: mergeWithSeed(templates),
                 loading: false,
                 error: '',
               });
@@ -2162,13 +2172,33 @@ function TemplatePickerPage({ templatesState }) {
   return (
     <PageShell
       fullWidth
-      kicker="Choose an occasion · Pick a design"
+      kicker="✨ Interactive Keepsake Gallery"
       title="Choose a celebration design."
-      description="Each occasion features custom 3D unboxing physics, festive melody, secret scratch-off, and heartfelt poetry."
+      description="Every card features interactive 3D unboxing physics, custom melody, secret scratch-off messages, and personalized poetry."
       actions={<AppButton variant="secondary" onClick={() => navigate('/')}>Back to home</AppButton>}
     >
       <section className="templates-section templates-gallery-full" id="template-grid">
         {templatesState.error ? <div className="notice error">{templatesState.error}</div> : null}
+
+        {/* Feature Highlights Bar */}
+        <div className="gallery-feature-highlights">
+          <div className="gallery-highlight-item">
+            <span className="gallery-highlight-icon">🎁</span>
+            <div><strong>3D Unboxing Physics</strong><span>Ribbon &amp; lid unwrap</span></div>
+          </div>
+          <div className="gallery-highlight-item">
+            <span className="gallery-highlight-icon">🎵</span>
+            <div><strong>Festive Audio</strong><span>Celebration melodies</span></div>
+          </div>
+          <div className="gallery-highlight-item">
+            <span className="gallery-highlight-icon">✨</span>
+            <div><strong>Secret Scratch-Off</strong><span>Tactile reveal card</span></div>
+          </div>
+          <div className="gallery-highlight-item">
+            <span className="gallery-highlight-icon">📱</span>
+            <div><strong>One-Tap Sharing</strong><span>WhatsApp &amp; web link</span></div>
+          </div>
+        </div>
 
         {/* Search & Category Filter Controls */}
         <div className="gallery-controls-bar">
@@ -2231,33 +2261,68 @@ function TemplatePickerPage({ templatesState }) {
                 let badge = null;
                 if (['birthday', 'love'].includes(template.id)) badge = '🔥 Popular';
                 else if (['wedding', 'anniversary'].includes(template.id)) badge = '✨ Favorite';
-                else if (['congrats', 'newbaby'].includes(template.id)) badge = '🎉 Trending';
+                else if (['congrats', 'newbaby', 'graduation'].includes(template.id)) badge = '🎉 Trending';
+
+                let features = ['🎵 Custom Melody', '🎁 3D Unwrap', '✨ Scratch-Off'];
+                if (template.id === 'birthday') features = ['🎵 Birthday Song', '🎁 3D Box', '✨ Scratch-Off'];
+                else if (template.id === 'love') features = ['🎵 Ambient Melody', '💌 Keepsake', '✨ Scratch-Off'];
+                else if (template.id === 'wedding') features = ['🔔 Wedding Bells', '🎁 Luxury Box', '✨ Scratch-Off'];
+                else if (template.id === 'anniversary') features = ['🥂 Festive Chime', '🎁 3D Keepsake', '✨ Scratch-Off'];
+                else if (template.id === 'congrats') features = ['🎺 Fanfare Chime', '🎁 3D Box', '✨ Scratch-Off'];
+                else if (template.id === 'newbaby') features = ['🎵 Gentle Lullaby', '🎁 Cuddle Box', '✨ Scratch-Off'];
 
                 return (
-                <CardButton
-                  key={template.id}
-                  className={`visual-template-card template-card-${slugify(template.theme?.background || template.id)}`}
-                  style={{ '--template-accent': template.theme?.accent, '--template-soft': template.theme?.accentSoft }}
-                  onClick={() => { writeJson('selectedTemplateId', template.id); navigate(`/template/${template.id}`); }}
-                >
-                    <div className="template-card-topbar">
-                      <span className="chip">{template.label}</span>
-                      {badge && <span className="template-badge">{badge}</span>}
+                  <CardButton
+                    key={template.id}
+                    className={`visual-template-card template-card-${slugify(template.theme?.background || template.id)}`}
+                    style={{
+                      '--template-accent': template.theme?.accent || '#e85d04',
+                      '--template-soft': template.theme?.accentSoft || '#fb8500',
+                    }}
+                    onClick={() => {
+                      writeJson('selectedTemplateId', template.id);
+                      navigate(`/template/${template.id}`);
+                    }}
+                  >
+                    <div className="template-card-stage">
+                      <div className="template-card-topbar">
+                        <span className="template-card-chip">
+                          <span>{template.icon}</span>
+                          <span>{template.label}</span>
+                        </span>
+                        {badge && <span className="template-badge">{badge}</span>}
+                      </div>
+
+                      <div className="template-card-art" aria-hidden="true">
+                        <i className="template-art-emoji">{template.icon}</i>
+                      </div>
+
+                      <div className="template-card-stage-footer">
+                        <span className="template-stage-pill">
+                          <Sparkles size={11} /> 3D Unboxing &amp; Audio
+                        </span>
+                      </div>
                     </div>
-                    <div className="template-card-art" aria-hidden="true">
-                      <i>{template.icon}</i>
-                    </div>
-                    <div className="template-card-info">
-                  <strong>{template.chip}</strong>
-                  <span className="template-desc">{template.summary || 'A thoughtful wish for this occasion.'}</span>
-                    </div>
-                    <div className="template-card-cta">
-                      <span>Personalize this design</span>
-                      <ArrowRight size={14} />
+
+                    <div className="template-card-body">
+                      <div className="template-card-text">
+                        <h3 className="template-card-title">{template.chip}</h3>
+                        <div className="template-card-feature-list">
+                          {features.map((feat) => (
+                            <span key={feat} className="template-feature-tag">{feat}</span>
+                          ))}
+                        </div>
+                        <p className="template-desc">{template.summary || 'A thoughtful celebration wish with unboxing magic.'}</p>
+                      </div>
+
+                      <div className="template-card-btn">
+                        <span>Personalize this card</span>
+                        <ArrowRight size={14} className="template-btn-arrow" />
+                      </div>
                     </div>
                   </CardButton>
                 );
-                })}
+              })}
         </div>
 
         {!templatesState.loading && filtered.length === 0 ? (

@@ -4098,92 +4098,12 @@ h1 {
   background: #f8fafc;
 }
 
+/* Cleaned legacy visual-template-card placeholder */
 .visual-template-card {
   position: relative;
-  isolation: isolate;
   overflow: hidden;
-  min-height: 280px;
-  padding: 18px;
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.16);
-  background:
-    radial-gradient(circle at 80% 10%, var(--template-soft), transparent 32%),
-    linear-gradient(150deg, var(--template-accent), #111827 72%);
   text-align: left;
 }
-
-.visual-template-card::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 15%, rgba(3,7,18,0.78) 100%);
-}
-
-.visual-template-card .template-card-art {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 58px;
-  height: 58px;
-  margin: 4px 0 10px;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 22px;
-  background: rgba(255,255,255,0.08);
-}
-
-.template-card-art i {
-  font-size: 3rem;
-  font-style: normal;
-}
-
-.template-card-art b {
-  position: absolute;
-  color: rgba(255,255,255,0.62);
-}
-
-.template-card-art b:nth-child(2) { top: 14px; left: 18px; }
-.template-card-art b:nth-child(3) { right: 20px; bottom: 15px; font-size: 0.6rem; }
-
-.visual-template-card .chip {
-  width: fit-content;
-  color: #fff !important;
-  background: rgba(255,255,255,0.14) !important;
-}
-
-.visual-template-card > strong,
-.visual-template-card > span:not(.chip):not(.template-card-art) {
-  position: relative;
-  z-index: 2;
-  color: #fff !important;
-}
-
-.visual-template-card > strong {
-  margin-top: 12px;
-  font-size: 1.15rem;
-}
-
-.visual-template-card > span:not(.chip):not(.template-card-art):not(.template-card-cta) {
-  color: rgba(255,255,255,0.72) !important;
-}
-
-.visual-template-card .template-card-cta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 14px;
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.template-card-blush .template-card-art,
-.template-card-rose .template-card-art { border-radius: 50% 50% 18px 18px; }
-.template-card-violet .template-card-art { transform: rotate(-1deg); border-radius: 12px; }
-.template-card-sky .template-card-art { border-radius: 999px 999px 22px 22px; }
-.template-card-peach .template-card-art { border: 1px solid rgba(253,230,138,0.32); }
-.template-card-mint .template-card-art { transform: rotate(1deg); }
-.template-card-teal { background: repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 16px), linear-gradient(150deg, var(--template-accent), #111827 72%); }
-
 .tone-section-head,
 .share-settings-head {
   display: flex;
@@ -7476,98 +7396,114 @@ h1 {
   width: 100% !important;
 }
 
-/* ── 4. Vibrant Template Card Redesign ─────────────── */
+/* ==========================================================================
+   STUDIO CELEBRATION TEMPLATE CARDS (Modern Luxury 2-Stage Design)
+   ========================================================================== */
+
+/* 1. Feature Highlights Bar on Template Picker */
+.gallery-feature-highlights {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 18px 0 24px;
+}
+
+@media (max-width: 860px) {
+  .gallery-feature-highlights {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .gallery-feature-highlights {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gallery-highlight-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(203, 213, 225, 0.7);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.gallery-highlight-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.gallery-highlight-item strong {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+  line-height: 1.2;
+}
+
+.gallery-highlight-item span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+  line-height: 1.3;
+}
+
+/* 2. Visual Template Card Container */
 .visual-template-card {
+  background: #ffffff !important;
   border-radius: 22px !important;
-  padding: 24px 20px 20px !important;
+  border: 1.5px solid rgba(226, 232, 240, 0.95) !important;
+  padding: 0 !important;
   overflow: hidden !important;
   position: relative !important;
-  min-height: 280px !important;
-  gap: 12px !important;
+  min-height: 380px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12) !important;
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04) !important;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease !important;
   cursor: pointer !important;
   text-align: left !important;
-}
-
-.visual-template-card:hover {
-  transform: translateY(-8px) scale(1.02) !important;
-  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.22) !important;
-}
-
-/* Floating Frosted Glass Badge */
-.visual-template-card .template-badge {
-  position: static !important;
-  margin: 0 !important;
-  z-index: 5 !important;
-  background: rgba(15, 23, 42, 0.8) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border-radius: 999px !important;
-  padding: 5px 12px !important;
-  font-size: 0.74rem !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.04em !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
-  white-space: nowrap !important;
-  width: fit-content !important;
-}
-
-.visual-template-card .template-card-art {
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  width: 58px !important;
-  height: 58px !important;
-  border-radius: 18px !important;
-  display: grid !important;
-  place-items: center !important;
-  background: rgba(255, 255, 255, 0.16) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  margin: 4px 0 !important;
-  z-index: 2 !important;
-  transform: none !important;
-  pointer-events: none !important;
   user-select: none !important;
 }
 
-.visual-template-card .template-card-art i {
-  font-style: normal !important;
-  font-size: 2.2rem !important;
-  display: block !important;
-  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.2)) !important;
-  animation: card-icon-float 3.5s ease-in-out infinite !important;
+.visual-template-card:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 20px 35px -8px rgba(232, 93, 4, 0.22), 0 8px 16px -4px rgba(15, 23, 42, 0.08) !important;
+  border-color: var(--template-accent, var(--brand)) !important;
 }
 
-.visual-template-card .chip {
+/* 3. Card Visual Art Showcase Stage (Top 160px) */
+.template-card-stage {
   position: relative !important;
-  z-index: 2 !important;
-  align-self: flex-start !important;
-  background: rgba(255, 255, 255, 0.22) !important;
-  color: #ffffff !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
-  font-size: 0.74rem !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.05em !important;
-  text-transform: uppercase !important;
-  padding: 5px 11px !important;
-  border-radius: 999px !important;
-  margin: 0 !important;
+  height: 160px !important;
+  border-radius: 20px 20px 0 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  padding: 14px 16px 12px !important;
+  flex-shrink: 0 !important;
+  transition: filter 0.2s ease !important;
 }
 
+.visual-template-card:hover .template-card-stage {
+  filter: brightness(1.03) !important;
+}
+
+/* Stage Header Bar */
 .template-card-topbar {
   display: flex !important;
   align-items: center !important;
@@ -7577,66 +7513,229 @@ h1 {
   z-index: 2 !important;
 }
 
-.visual-template-card .template-card-info {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 4px !important;
-  z-index: 2 !important;
-  margin-top: 2px !important;
-  margin-bottom: auto !important;
+.template-card-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: rgba(0, 0, 0, 0.32) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  color: #ffffff !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
 }
 
-.visual-template-card > strong,
-.visual-template-card .template-card-info strong {
+.template-badge {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border-radius: 999px !important;
+  padding: 4px 10px !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.03em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  white-space: nowrap !important;
+}
+
+/* 3D Art Pod in Stage */
+.template-card-art {
   position: relative !important;
+  width: 66px !important;
+  height: 66px !important;
+  border-radius: 20px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+  margin: auto !important;
   z-index: 2 !important;
-  font-size: 1.25rem !important;
+  pointer-events: none !important;
+}
+
+.template-art-emoji {
+  font-style: normal !important;
+  font-size: 2.5rem !important;
+  line-height: 1 !important;
+  display: block !important;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.25)) !important;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.visual-template-card:hover .template-art-emoji {
+  transform: scale(1.15) rotate(4deg) !important;
+}
+
+/* Stage Bottom Pill */
+.template-card-stage-footer {
+  display: flex !important;
+  justify-content: center !important;
+  width: 100% !important;
+  z-index: 2 !important;
+}
+
+.template-stage-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 0.68rem !important;
   font-weight: 700 !important;
-  color: #ffffff !important;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
-  font-family: 'Playfair Display', serif !important;
-  margin-bottom: 6px !important;
-  padding: 0 !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  padding: 3px 9px !important;
+  border-radius: 999px !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* 4. Card Content Section (Bottom) */
+.template-card-body {
+  padding: 16px 18px 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  background: #ffffff !important;
+}
+
+.template-card-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+.template-card-title {
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  margin: 0 !important;
+  line-height: 1.3 !important;
+}
+
+.template-card-feature-list {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  margin: 2px 0 !important;
+}
+
+.template-feature-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  background: #f1f5f9 !important;
+  border-radius: 6px !important;
+  padding: 2px 7px !important;
 }
 
 .visual-template-card .template-desc {
-  position: relative !important;
-  z-index: 2 !important;
-  font-size: 0.84rem !important;
-  color: rgba(255, 255, 255, 0.88) !important;
+  font-size: 0.86rem !important;
+  color: #64748b !important;
   line-height: 1.5 !important;
   margin: 0 !important;
-  padding: 0 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
 }
 
-.visual-template-card .template-card-cta {
-  position: relative !important;
-  z-index: 2 !important;
-  display: inline-flex !important;
+/* 5. Tactile Card Action Button */
+.template-card-btn {
+  display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   width: 100% !important;
-  margin-top: auto !important;
-  gap: 6px !important;
-  color: #ffffff !important;
+  padding: 11px 16px !important;
+  border-radius: 12px !important;
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  color: #0f172a !important;
   font-weight: 700 !important;
-  font-size: 0.84rem !important;
-  padding-top: 10px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  font-size: 0.88rem !important;
+  transition: all 0.22s ease !important;
+  margin-top: 4px !important;
 }
 
-/* Occasion Card Rich Themes */
-.template-card-sunrise { background: linear-gradient(150deg, #ff8c42 0%, #e85d04 55%, #b23b00 100%) !important; }
-.template-card-blush   { background: linear-gradient(150deg, #f472b6 0%, #db2777 55%, #9d174d 100%) !important; }
-.template-card-rose    { background: linear-gradient(150deg, #fb7185 0%, #e11d48 55%, #9f1239 100%) !important; }
-.template-card-violet  { background: linear-gradient(150deg, #a78bfa 0%, #7c3aed 55%, #4c1d95 100%) !important; }
-.template-card-sky     { background: linear-gradient(150deg, #38bdf8 0%, #0284c7 55%, #0369a1 100%) !important; }
-.template-card-peach   { background: linear-gradient(150deg, #f472b6 0%, #ea580c 55%, #9a3412 100%) !important; }
-.template-card-mint    { background: linear-gradient(150deg, #34d399 0%, #059669 55%, #064e3b 100%) !important; }
-.template-card-teal    { background: linear-gradient(150deg, #2dd4bf 0%, #0d9488 55%, #134e4a 100%) !important; }
+.template-btn-arrow {
+  transition: transform 0.22s ease !important;
+  color: var(--muted, #94a3b8) !important;
+}
 
+.visual-template-card:hover .template-card-btn {
+  background: linear-gradient(135deg, var(--template-accent, #e85d04), var(--template-soft, #fb8500)) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(232, 93, 4, 0.28) !important;
+}
+
+.visual-template-card:hover .template-btn-arrow {
+  color: #ffffff !important;
+  transform: translateX(4px) !important;
+}
+
+/* 6. Occasion-specific Theme Stage Gradients (Matches both background theme slugs and occasion IDs) */
+.template-card-sunrise .template-card-stage,
+.template-card-birthday .template-card-stage {
+  background: linear-gradient(135deg, #ff8c42 0%, #e85d04 55%, #c2410c 100%) !important;
+}
+
+.template-card-blush .template-card-stage,
+.template-card-anniversary .template-card-stage {
+  background: linear-gradient(135deg, #f472b6 0%, #db2777 55%, #be185d 100%) !important;
+}
+
+.template-card-rose .template-card-stage,
+.template-card-love .template-card-stage {
+  background: linear-gradient(135deg, #fb7185 0%, #e11d48 55%, #be123c 100%) !important;
+}
+
+.template-card-violet .template-card-stage,
+.template-card-congrats .template-card-stage {
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 55%, #6d28d9 100%) !important;
+}
+
+.template-card-sky .template-card-stage,
+.template-card-newbaby .template-card-stage,
+.template-card-graduation .template-card-stage {
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 55%, #0369a1 100%) !important;
+}
+
+.template-card-peach .template-card-stage,
+.template-card-wedding .template-card-stage {
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 55%, #c2410c 100%) !important;
+}
+
+.template-card-mint .template-card-stage,
+.template-card-friendship .template-card-stage {
+  background: linear-gradient(135deg, #34d399 0%, #059669 55%, #047857 100%) !important;
+}
+
+.template-card-teal .template-card-stage,
+.template-card-thankyou .template-card-stage,
+.template-card-farewell .template-card-stage {
+  background: linear-gradient(135deg, #2dd4bf 0%, #0d9488 55%, #0f766e 100%) !important;
+}
+
+.template-card-amber .template-card-stage {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 55%, #b45309 100%) !important;
+}
 /* ==========================================================================
    UI UPGRADES v8 — Gallery Controls, Step Tracker, FAQ, Reviews, Save Link
    ========================================================================== */
@@ -7688,8 +7787,8 @@ h1 {
 
 .gallery-search-input {
   width: 100%;
-  padding: 12px 38px 12px 42px !important;
-  border-radius: 14px !important;
+  padding: 13px 42px 13px 46px !important;
+  border-radius: 999px !important;
   border: 1.5px solid rgba(203, 213, 225, 0.8) !important;
   background: rgba(255, 255, 255, 0.85) !important;
   font-size: 0.92rem !important;
@@ -7745,8 +7844,8 @@ h1 {
 .gallery-cat-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 7px;
+  padding: 9px 18px;
   border-radius: 999px;
   border: 1px solid rgba(203, 213, 225, 0.9);
   background: rgba(255, 255, 255, 0.7);
