@@ -8,7 +8,7 @@ export function SendLoveBack({ fromName, title }) {
   const [selectedReaction, setSelectedReaction] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  const sender = fromName ? fromName.replace(/^from\s+/i, '').trim() : 'them';
+  const sender = fromName ? fromName.replace(/^from\s*:?\s*/i, '').trim() : 'them';
   const cleanTitle = title ? title.replace(/[✨🎉🎂❤️👶💍🤝🙏]/g, '').trim() : 'celebration wish';
 
   const reactions = [

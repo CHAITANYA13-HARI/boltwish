@@ -2665,9 +2665,10 @@ function ShareDialog({ message, link, onClose, onCopy, onOpenNative }) {
   const [linkCopied, setLinkCopied] = useState(false);
 
   const copyLink = async () => {
+    triggerHaptic([30, 40]);
     await navigator.clipboard.writeText(link).catch(() => {});
     setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
+    setTimeout(() => setLinkCopied(false), 2200);
   };
 
   return (
@@ -2677,23 +2678,36 @@ function ShareDialog({ message, link, onClose, onCopy, onOpenNative }) {
         <p className="share-hint">Send the link directly or share on your favourite platform below.</p>
 
         {/* Direct link */}
-        <div className="share-link-preview" style={{ marginBottom: 14 }}>
+        <div className="share-link-preview" style={{ marginBottom: 16 }}>
           <span style={{ flex: 1, overflowWrap: 'anywhere', fontSize: '0.85rem', color: '#475569' }}>{link}</span>
-          <button className="action-btn action-primary small" type="button" style={{ flexShrink: 0, padding: '8px 14px', fontSize: '0.85rem' }} onClick={copyLink}>
+          <button className="action-btn action-primary share-dialog-copy-btn" type="button" onClick={copyLink}>
             {linkCopied ? '✓ Copied!' : '🔗 Copy Link'}
           </button>
         </div>
 
-        <div className="share-grid">
-          <a className="share-btn whatsapp" href={`https://api.whatsapp.com/send?text=${encodedMsg}`} target="_blank" rel="noreferrer">💬 WhatsApp</a>
-          <a className="share-btn telegram" href={`https://t.me/share/url?url=${encodedLink}&text=${encodedMsg}`} target="_blank" rel="noreferrer" style={{ background: '#0088cc', color: '#fff' }}>✈️ Telegram</a>
-          <a className="share-btn twitter" href={`https://twitter.com/intent/tweet?text=${encodedMsg}`} target="_blank" rel="noreferrer">🐦 Twitter / X</a>
-          <a className="share-btn facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`} target="_blank" rel="noreferrer" style={{ background: '#1877f2', color: '#fff' }}>📘 Facebook</a>
-          <button className="share-btn copy" type="button" onClick={onCopy}>📋 Copy Message</button>
-          <button className="share-btn copy" type="button" onClick={onOpenNative}>📤 More options…</button>
+        {/* Delivery options - named to prevent adblock filter collision */}
+        <div className="wish-delivery-grid">
+          <a className="delivery-pill-btn delivery-wa" href={`https://api.whatsapp.com/send?text=${encodedMsg}`} target="_blank" rel="noreferrer">
+            <span>💬</span> WhatsApp
+          </a>
+          <a className="delivery-pill-btn delivery-tg" href={`https://t.me/share/url?url=${encodedLink}&text=${encodedMsg}`} target="_blank" rel="noreferrer">
+            <span>✈️</span> Telegram
+          </a>
+          <a className="delivery-pill-btn delivery-x" href={`https://twitter.com/intent/tweet?text=${encodedMsg}`} target="_blank" rel="noreferrer">
+            <span>🐦</span> Twitter / X
+          </a>
+          <a className="delivery-pill-btn delivery-fb" href={`https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`} target="_blank" rel="noreferrer">
+            <span>📘</span> Facebook
+          </a>
+          <button className="delivery-pill-btn delivery-copy" type="button" onClick={onCopy}>
+            <span>📋</span> Copy Text
+          </button>
+          <button className="delivery-pill-btn delivery-native" type="button" onClick={onOpenNative}>
+            <span>📤</span> More options…
+          </button>
         </div>
 
-        <div className="share-actions-row" style={{ marginTop: 14 }}>
+        <div className="share-actions-row" style={{ marginTop: 16 }}>
           <button className="action-btn action-primary" type="button" onClick={onClose}>Done ✓</button>
         </div>
       </div>
@@ -3009,48 +3023,56 @@ function WishViewPage({ templatesState }) {
               <span>Scroll down for message & actions</span>
               <div className="wish-scroll-arrow" />
             </div>
-            <WishExperience preview={preview} template={template}>
-              <div className="wish-actions-row wish-experience-actions">
-                <AppButton variant="secondary" onClick={() => window.print()}>🖨️ Print Keepsake</AppButton>
-                <AppButton variant="secondary" onClick={handleCopyLink}>
-                  {copiedLink ? '✓ Copied!' : '🔗 Copy Link'}
-                </AppButton>
-                <AppButton
-                  variant="secondary"
-                  onClick={handleDownloadStory}
-                  disabled={storyExporting}
-                >
-                  {storyExporting ? 'Creating...' : '📸 Story Poster'}
-                </AppButton>
-                <AppButton
-                  variant="secondary"
-                  onClick={() => {
-                    downloadCalendarInvite({
-                      title: preview?.title || 'Celebration Wish',
-                      description: preview?.subtitle || 'Celebration card with Boltwish',
-                      eventDate: wishData?.recipientData?.eventDate,
-                      url: wishUrl,
-                    });
-                  }}
-                  title="Add celebration date to Calendar"
-                >
-                  📅 Add to Calendar
-                </AppButton>
-                <AppButton variant="secondary" onClick={() => setGiftTagOpen(true)}>
-                  🎁 Mini Gift Tag
-                </AppButton>
-                {viewerUid && viewerUid === wishData.ownerUid ? (
-                  <AppButton variant="secondary" onClick={() => navigate(`/manage/${username}`)}>
-                    ⚙️ Manage Wish
-                  </AppButton>
-                ) : null}
-              </div>
-            </WishExperience>
+            <WishExperience preview={preview} template={template} />
 
-            {/* Interactive Scratch-off Mystery Card */}
+            {/* Clean Action Grid for Card Tools */}
+            <div className="wish-view-actions-grid">
+              <button type="button" className="wish-action-pill" onClick={() => window.print()}>
+                <span>🖨️</span> Print Keepsake
+              </button>
+              <button type="button" className="wish-action-pill" onClick={handleCopyLink}>
+                <span>🔗</span> {copiedLink ? '✓ Copied!' : 'Copy Link'}
+              </button>
+              <button type="button" className="wish-action-pill" onClick={handleDownloadStory} disabled={storyExporting}>
+                <span>📸</span> {storyExporting ? 'Creating...' : 'Story Poster'}
+              </button>
+              <button
+                type="button"
+                className="wish-action-pill"
+                onClick={() => {
+                  downloadCalendarInvite({
+                    title: preview?.title || 'Celebration Wish',
+                    description: preview?.subtitle || 'Celebration card with Boltwish',
+                    eventDate: wishData?.recipientData?.eventDate,
+                    url: wishUrl,
+                  });
+                }}
+              >
+                <span>📅</span> Add to Calendar
+              </button>
+              <button type="button" className="wish-action-pill" onClick={() => setGiftTagOpen(true)}>
+                <span>🎁</span> Mini Gift Tag
+              </button>
+              {viewerUid && viewerUid === wishData.ownerUid ? (
+                <button type="button" className="wish-action-pill" onClick={() => navigate(`/manage/${username}`)}>
+                  <span>⚙️</span> Manage Wish
+                </button>
+              ) : null}
+            </div>
+
+            {/* Interactive Scratch-off Mystery Card with unique secret bonus fortune */}
             <ScratchCard
-              secretMessage={preview?.highlight || preview?.quote || 'Wishing you endless joy, bright adventures, and unforgettable memories! ✨'}
-              title="✨ Scratch to Reveal Secret Wish"
+              secretMessage={{
+                birthday: 'Bonus secret wish: May your biggest unspoken dream come true this year! 🌟🎂',
+                anniversary: 'Bonus secret wish: May you fall in love with each other a little more every single day! 🥂❤️',
+                love: 'Secret note: Out of eight billion people, having you in my life is my favorite miracle. ❤️✨',
+                congrats: 'Milestone prophecy: This is only chapter one—the best is still to come! 🚀🎉',
+                newbaby: 'Baby blessing: May tiny hands always hold big dreams and pure joy. 👶🍼',
+                wedding: 'Secret wedding toast: May your love always be each other’s safe haven and greatest adventure. 💒💍',
+                friendship: 'Friendship secret: Friends like you are once in a lifetime. So lucky to have you! 🤝✨',
+                thankyou: 'Secret blessing: May every ounce of kindness and love you share return to you multiplied a thousandfold. 🙏💫',
+              }[template?.id] || 'May every kindness and happiness you share return to you multiplied a thousand times! ✨'}
+              title="✨ Scratch to Reveal Secret Bonus Wish"
             />
 
             {/* Gratitude & Reaction feedback bar */}

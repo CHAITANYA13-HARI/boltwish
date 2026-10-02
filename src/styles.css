@@ -5302,15 +5302,22 @@ h1 {
   }
   body.printing-gift-tag .gift-tag-overlay,
   body.printing-gift-tag .gift-tag-dialog,
-  body.printing-gift-tag .gift-tag-sheet-preview,
+  body.printing-gift-tag .gift-tag-sheet-preview {
+    visibility: hidden !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
   body.printing-gift-tag .printable-gift-tag,
   body.printing-gift-tag .printable-gift-tag * {
     visibility: visible !important;
   }
   body.printing-gift-tag .printable-gift-tag {
-    position: fixed !important;
+    position: absolute !important;
     left: 50% !important;
-    top: 50px !important;
+    top: 40px !important;
     transform: translateX(-50%) !important;
     box-shadow: none !important;
     border: 2px solid #1e293b !important;
@@ -8085,6 +8092,129 @@ h1 {
   }
   .faq-item {
     border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* ==========================================================================
+   Share Dialog & Wish View Action Grid Styles
+   ========================================================================== */
+
+/* Unsquashed Share Dialog Copy Button */
+.share-dialog-copy-btn {
+  white-space: nowrap !important;
+  width: auto !important;
+  min-width: 104px !important;
+  height: auto !important;
+  padding: 8px 14px !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+/* Adblock-Resilient Delivery Grid */
+.wish-delivery-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin: 14px 0 !important;
+}
+
+.delivery-pill-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 12px 14px !important;
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  border: none !important;
+  white-space: nowrap !important;
+}
+
+.delivery-pill-btn:hover {
+  transform: translateY(-2px) !important;
+}
+
+.delivery-pill-btn.delivery-wa {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.28) !important;
+}
+
+.delivery-pill-btn.delivery-tg {
+  background: linear-gradient(135deg, #2AABEE 0%, #229ED9 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(42, 171, 238, 0.28) !important;
+}
+
+.delivery-pill-btn.delivery-x {
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+
+.delivery-pill-btn.delivery-fb {
+  background: linear-gradient(135deg, #1877F2 0%, #0d65d9 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(24, 119, 242, 0.28) !important;
+}
+
+.delivery-pill-btn.delivery-copy,
+.delivery-pill-btn.delivery-native {
+  background: #f1f5f9 !important;
+  color: #1e293b !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.delivery-pill-btn.delivery-copy:hover,
+.delivery-pill-btn.delivery-native:hover {
+  background: #ffffff !important;
+}
+
+/* Wish View Action Grid (Outside of inner card) */
+.wish-view-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 24px;
+  width: 100%;
+}
+
+.wish-action-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  white-space: nowrap;
+}
+
+.wish-action-pill:hover {
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 480px) {
+  .wish-delivery-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 

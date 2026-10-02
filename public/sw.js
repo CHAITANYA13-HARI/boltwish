@@ -1,5 +1,5 @@
-// Boltwish offline-capable service worker
-const CACHE_NAME = 'boltwish-v1';
+// Boltwish offline-capable service worker (v3)
+const CACHE_NAME = 'boltwish-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -32,18 +32,31 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass through non-GET requests or Firebase / API calls
+  // Pass through non-GET requests or Firestore API calls
   if (event.request.method !== 'GET' || event.request.url.includes('firestore.googleapis.com')) {
     return;
   }
 
+  // Network-First for navigation (HTML) so new app deployments load immediately
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((res) => res || caches.match('/index.html') || caches.match('/')))
+    );
+    return;
+  }
+
+  // Cache-First with network fallback for static hashed assets
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
-      });
+      return cached || fetch(event.request);
     })
   );
 });
