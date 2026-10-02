@@ -37,14 +37,14 @@ export const fieldMeta = {
 };
 
 export const defaultWishMessages = {
-  birthday: 'Wishing you a year ahead filled with good health, deep laughter, exciting adventures, and all the happiness you bring to everyone around you. You deserve the best celebration!',
-  anniversary: 'Seeing the love, trust, and laughter you share is a true inspiration. May the years ahead bring even more joy, deeper love, and wonderful memories together.',
-  love: 'I just wanted to take a moment to remind you how deeply special you are to me. Thank you for your love, your smile, and for making my world brighter every day.',
-  congrats: 'Seeing your dedication and hard work pay off is truly inspiring. Wishing you continued success and great happiness in everything that comes next!',
-  newbaby: 'Congratulations on your sweet new arrival! Little one is so blessed to have such wonderful parents. Wishing your family a lifetime of health, joy, and precious cuddles.',
-  wedding: 'Congratulations on your wedding day! It is such a joy to see you begin married life together. May your home always be filled with patience, joy, and endless love.',
-  friendship: 'I am so grateful for our friendship. Thank you for always being someone I can count on, laugh with, and make memories with. Here is to many more great times together!',
-  thankyou: 'Thank you so much for your support, generosity, and kindness. Having you in my corner made all the difference, and I am deeply grateful!',
+  birthday: 'Today is a celebration of the laughter you bring into every room and the way you make life brighter for everyone around you. I hope this year treats you with the same warmth, big adventures, and joy you give to the world. Eat the extra slice of cake—you have earned every bit of today!',
+  anniversary: 'Seeing the love, trust, and deep laughter you share is a true inspiration. May the years ahead bring even more quiet comfort, shared jokes, and reasons to fall in love all over again. Happy Anniversary!',
+  love: 'In a world that moves fast, you are my favorite place to slow down. Thank you for your warmth, your smile, and for making ordinary days feel like moments worth remembering forever. Loving you is the easiest choice I make every single day.',
+  congrats: 'You did that! People see the victory today, but we remember all the grit, late nights, and perseverance it took to get here. This milestone is proof of what happens when dedication meets pure heart. Enjoy every second of this win!',
+  newbaby: 'Congratulations on your beautiful new arrival! A tiny new life has filled the world with unimaginable wonder. Wishing your growing family a lifetime of health, peaceful sleep, and precious cuddles.',
+  wedding: 'Congratulations on your wedding day! It is such a joy to see you two begin married life together. May your home always be filled with deep patience, loud laughter, and a love that grows stronger with every sunrise.',
+  friendship: 'To the friend who knows all my wildest stories because you were right there laughing with me: thank you for being my anchor, my comic relief, and my favorite person to talk to. Here is to a lifetime of memories ahead!',
+  thankyou: 'Thank you from the bottom of my heart for your kindness, support, and generosity. Having you in my corner made all the difference when I needed it most, and I will always remember it with deep gratitude!',
 };
 
 export const contentFieldMeta = {

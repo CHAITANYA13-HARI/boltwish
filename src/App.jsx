@@ -278,40 +278,34 @@ function App() {
   }
 />
       <Route
-  path="/vision"
-  element={
-    <StaticPage title="Our Vision">
-      <p style={{ marginTop: 6 }}>
-        Our vision is to make expressing emotions and sending heartfelt wishes
-        simple, fast, and meaningful for everyone.
-      </p>
+        path="/vision"
+        element={
+          <StaticPage title="Our Vision">
+            <p style={{ marginTop: 6, fontSize: '1.05rem', lineHeight: 1.7 }}>
+              <strong>Traditional greeting cards are broken.</strong> A paper card in a grocery aisle costs \$6 to \$8, gets glanced at for ten seconds, and ends up forgotten in a drawer or recycling bin. Meanwhile, sending a plain blue text bubble on WhatsApp or iMessage feels rushed, cold, and forgettable.
+            </p>
 
-      <p style={{ marginTop: 12 }}>
-        We believe that even small messages can create memorable moments. 
-        That’s why we built a platform where users can generate personalized wishes 
-        in just 4 easy steps without needing design or writing skills.
-      </p>
+            <p style={{ marginTop: 12, lineHeight: 1.7 }}>
+              We built <strong>Boltwish</strong> to bring the genuine magic and emotion back to digital celebrations. An interactive 3D gift card that opens with ribbon physics, festive melodies, heartfelt poetry, and secret scratch-offs—delivered instantly to anyone on Earth for <strong>100% free</strong>, with no apps to download and zero intrusive ads.
+            </p>
 
-      <h3 style={{ marginTop: 16 }}>What We Aim To Provide</h3>
+            <h3 style={{ marginTop: 22 }}>What We Stand For</h3>
 
-      <ul style={{ marginTop: 12, paddingLeft: 20 }}>
-        <li>Simple and beginner-friendly experience</li>
-        <li>Fast wish generation in only a few steps</li>
-        <li>Beautiful and shareable message templates</li>
-        <li>Mobile-first and clean user interface</li>
-        <li>Easy personalization for every occasion</li>
-        <li>Privacy-focused sharing experience</li>
-      </ul>
+            <ul style={{ marginTop: 12, paddingLeft: 20, lineHeight: 1.8 }}>
+              <li><strong>Zero Cost Forever:</strong> Meaningful celebrations shouldn't be gated behind paywalls or monthly subscriptions.</li>
+              <li><strong>Privacy by Default:</strong> No public feeds, no data harvesting. Your cards belong strictly between you and your recipient.</li>
+              <li><strong>Sensory Joy:</strong> From 3D ribbon unboxing to harmonic melodies and scratch-off foil, every card feels like an unwrappable gift.</li>
+              <li><strong>Effortless Expression:</strong> Solving writer's block with thoughtful prompts and warm tone guides so anyone can write an unforgettable message.</li>
+            </ul>
 
-      <h3 style={{ marginTop: 16 }}>Our Goal</h3>
+            <h3 style={{ marginTop: 22 }}>Our Promise</h3>
 
-      <p style={{ marginTop: 6, marginBottom: 0 }}>
-        We want to help people celebrate birthdays, festivals, achievements, 
-        friendships, and special moments with thoughtful wishes that feel personal and genuine.
-      </p>
-    </StaticPage>
-  }
-/>
+            <p style={{ marginTop: 6, marginBottom: 0, lineHeight: 1.7 }}>
+              Whether it’s a milestone 30th birthday, a quiet anniversary, or celebrating a friend who needs a smile today, Boltwish exists to make sure your loved ones feel truly seen, cherished, and celebrated.
+            </p>
+          </StaticPage>
+        }
+      />
       <Route path="/save" element={<SavePage templatesState={templatesState} />} />
       <Route path="/admin" element={<AdminPage templatesState={templatesState} />} />
       <Route path="/wish/:username" element={<WishViewPage templatesState={templatesState} />} />
@@ -837,12 +831,12 @@ function HomePage({ templatesState }) {
       <main className="landing-main">
         <section className="hero-grid home-grid landing-hero">
           <MotionPanel className="hero-card hero-accent hero-glass">
-            <div className="eyebrow"><Sparkles size={14} /> Make Any Occasion Unforgettable</div>
-            <h1>Create stunning, interactive wishes in 30 seconds.</h1>
-            <p className="lead">Answer a few thoughtful prompts and turn your memories into a polished, private wish—no writing or design skills required.</p>
+            <div className="eyebrow"><Sparkles size={14} /> The Modern Way to Send Celebrations</div>
+            <h1>Turn simple words into unforgettable 3D celebration cards.</h1>
+            <p className="lead">Deliver interactive 3D unboxing, festive melodies, and secret scratch-offs directly to their phone. 100% free, zero ads, no app needed.</p>
             <div className="actions-row" style={{ marginTop: 20 }}>
-              <AppButton onClick={() => navigate('/template-picker')}>Create Wish →</AppButton>
-              <AppButton variant="secondary" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>See how it works</AppButton>
+              <AppButton onClick={() => navigate('/template-picker')}>Create a Free 3D Card 🎁</AppButton>
+              <AppButton variant="secondary" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>See Live Demo ✨</AppButton>
             </div>
             {/* Benefit-focused stats */}
             <div className="hero-stats">
@@ -960,16 +954,16 @@ function HomePage({ templatesState }) {
 
         <section className="section-card glass-section" id="features">
           <SectionHeading
-            eyebrow="Features"
-            title="Built for quick, polished sharing."
-            description="Everything is designed to feel calm, fast, and premium on mobile and desktop."
+            eyebrow="Why Boltwish"
+            title="Every celebration deserves to feel like a real moment."
+            description="Ditch the boring blue text bubbles. Send an interactive gift card with real unboxing magic."
           />
           <div className="feature-grid">
             {[
-              { icon: Palette, title: 'Elegant templates', copy: 'Choose from 8 occasion-specific designs — birthday, love, friendship, anniversaries, and more.' },
-              { icon: Wand2, title: 'Live editing', copy: 'See the wish update instantly as you type. No guessing what the final card looks like.' },
-              { icon: Share2, title: 'One-tap sharing', copy: 'Share via WhatsApp, Telegram, Twitter, or copy a private link in seconds.' },
-              { icon: ShieldCheck, title: 'Private by default', copy: 'Unlisted, expiring links. Only people with your link can view the wish — ever.' },
+              { icon: Palette, title: 'Occasion-Crafted Designs', copy: 'Handcrafted color palettes and 3D animations for birthdays, anniversaries, weddings, love notes, and milestones.' },
+              { icon: Wand2, title: 'Real-Time Magic Preview', copy: 'Watch colors, typography, ribbons, and wax stamps animate dynamically with every single word you type.' },
+              { icon: Share2, title: 'One-Tap Instant Delivery', copy: 'Share instantly via WhatsApp, Telegram, or iMessage, or print a high-resolution QR gift tag for physical boxes.' },
+              { icon: ShieldCheck, title: 'Zero Ads, 100% Private', copy: 'No intrusive popups or tracking. Your private unlisted link opens exclusively for the recipient.' },
             ].map(({ icon: Icon, title, copy }) => (
               <MotionPanel key={title} className="feature-card glass-card">
                 <div className="feature-icon"><Icon size={20} /></div>
@@ -983,15 +977,15 @@ function HomePage({ templatesState }) {
         <section className="section-card glass-section" id="how-it-works">
           <SectionHeading
             eyebrow="How it works"
-            title="Four simple steps to a thoughtful wish."
-            description="A focused flow that keeps the experience calm and easy to use."
+            title="Four simple steps to an unforgettable moment."
+            description="A focused, delightful flow that turns your memories into a keepsake in 30 seconds."
           />
           <div className="steps-grid">
             {[
-              ['1', 'Pick a template', 'Start with a polished design for the occasion — birthday, wedding, love, and more.'],
-              ['2', 'Add recipient details', 'Enter the person\'s name, your personal message, and who it\'s from.'],
-              ['3', 'Choose a writing tone', 'Heartfelt, playful, poetic, or bold — the card adapts its language to match.'],
-              ['4', 'Preview and share', 'See the live card, then get a private link to share instantly.'],
+              ['1', 'Pick an occasion', 'Start with a stunning 3D design tailored for their special milestone.'],
+              ['2', 'Add personal touches', 'Type their name, your personal message, and who it’s from.'],
+              ['3', 'Choose your vibe & tone', 'Heartfelt, playful, elegant, or short & sweet — the card adapts its poetry to match.'],
+              ['4', 'Unwrap & share', 'Preview the ribbon unboxing, then get your private link or printable QR tag.'],
             ].map(([step, title, copy]) => (
               <MotionPanel key={step} className="step-card glass-card">
                 <div className="step-badge">{step}</div>
@@ -1001,7 +995,7 @@ function HomePage({ templatesState }) {
             ))}
           </div>
           <div style={{ textAlign: 'center', marginTop: 28 }}>
-            <AppButton onClick={() => navigate('/template-picker')}>Start creating for free →</AppButton>
+            <AppButton onClick={() => navigate('/template-picker')}>Create a Free 3D Card →</AppButton>
           </div>
         </section>
 
@@ -2725,7 +2719,7 @@ function WishViewPage({ templatesState }) {
                   type="button"
                   onClick={() => navigate('/template-picker')}
                 >
-                  Send a card back to {senderName} 💌 <ArrowRight size={16} />
+                  Send love back: surprise {senderName} with a card 💌 <ArrowRight size={16} />
                 </button>
               ) : null}
               <button
@@ -2745,7 +2739,7 @@ function WishViewPage({ templatesState }) {
                 type="button"
                 onClick={() => navigate('/template-picker')}
               >
-                Create your own free 3D wish <Sparkles size={16} />
+                Make a free 3D card for someone you love ✨
               </button>
             </div>
           </EnvelopeUnboxing>

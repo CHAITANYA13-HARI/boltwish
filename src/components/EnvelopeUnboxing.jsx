@@ -202,7 +202,7 @@ export function EnvelopeUnboxing({ preview, template, children }) {
                   <span className="giftcard-chip">
                     <Sparkles size={13} /> {currentTheme.badge}
                   </span>
-                  <span className="giftcard-kicker">A special delivery for</span>
+                  <span className="giftcard-kicker">Someone made something special for you... ✨</span>
                   <h2 className="giftcard-recipient-title">{displayName}</h2>
                   <p className="giftcard-subtitle">{currentTheme.tagline}</p>
 
@@ -217,7 +217,7 @@ export function EnvelopeUnboxing({ preview, template, children }) {
                       <span className="stamp-icon">{icon}</span>
                     </div>
                     <span className="stamp-label">
-                      <Gift size={14} /> Tap to Open Card
+                      <Gift size={14} /> Tap to Unwrap Your Card 🎁
                     </span>
                   </motion.div>
                 </div>
@@ -226,7 +226,7 @@ export function EnvelopeUnboxing({ preview, template, children }) {
               {/* Gentle prompt below card */}
               <div className="giftcard-tap-indicator">
                 <span className="pulse-dot" />
-                <span>Tap the card to unwrap your celebration</span>
+                <span>Tap the ribbon or card to unwrap your surprise</span>
               </div>
             </div>
           </motion.div>
