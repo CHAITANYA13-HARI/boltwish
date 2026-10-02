@@ -111,10 +111,11 @@ export function PasscodeGate({ passcodeHash, hashedPasscode, recipientName, wish
       const response = await fetch('/api/verify-pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // NOTE: clientHash intentionally omitted — server fetches its own
+        // hash from Firestore using wishId to prevent offline brute-force.
         body: JSON.stringify({
           wishId: wishId || 'wish',
           pin,
-          clientHash: actualHash,
         }),
       });
 

@@ -40,7 +40,8 @@ service cloud.firestore {
         && data.revealAt is timestamp
         && data.expiresAt is timestamp
         && data.expiresAt == data.revealAt + duration.value(7, 'd')
-        && validOptionalString(data, 'passcodeHash', 128)
+        // v2 salted format: "v2:{32hex}:{64hex}" = ~100 chars max
+        && validOptionalString(data, 'passcodeHash', 200)
         && recipient is map
         && recipient.keys().hasOnly([
           'name', 'age', 'eventDate', 'years', 'message', 'from',
@@ -92,6 +93,22 @@ service cloud.firestore {
         && snapshot.fields.size() <= 20;
     }
 
+    function validFeedbackData() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'type', 'name', 'rating', 'text', 'email', 'status', 'createdAt'
+        ])
+        && data.type in ['review', 'upgrade', 'template_idea', 'bug']
+        && data.status == 'pending'
+        && data.text is string
+        && data.text.size() > 0
+        && data.text.size() <= 1000
+        && validOptionalString(data, 'name', 80)
+        && validOptionalString(data, 'email', 120)
+        && (!data.keys().hasAny(['rating']) || (data.rating is int && data.rating >= 1 && data.rating <= 5))
+        && data.createdAt == request.time;
+    }
+
     match /admins/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, create, update, delete: if false;
@@ -132,6 +149,17 @@ service cloud.firestore {
         && request.resource.data.createdAt == resource.data.createdAt
         && validWishData(wishId);
       allow delete: if (signedIn() && resource.data.ownerUid == request.auth.uid) || isAdmin();
+    }
+
+    // Feedback: public can submit (create), only admins can read/moderate/delete
+    match /feedback/{feedbackId} {
+      allow create: if validFeedbackData();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Audit log: only admins can write and read — permanent record of moderation actions
+    match /audit_log/{logId} {
+      allow read, write: if isAdmin();
     }
 
     match /{document=**} {

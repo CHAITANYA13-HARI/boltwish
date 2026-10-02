@@ -76,7 +76,7 @@ const getDynamicSiteUrl = () => {
   return 'https://boltwish.vercel.app';
 };
 const SITE_URL = getDynamicSiteUrl();
-const DEFAULT_OG_IMAGE = `${SITE_URL}/brand-mark.svg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 function toAbsoluteUrl(pathname = '/') {
   const currentBase = typeof window !== 'undefined' && window.location.origin ? window.location.origin : SITE_URL;
@@ -273,16 +273,21 @@ function App() {
         Follow us on Instagram for updates, new features, and announcements:
       </p>
 
-      <p
+      <a
+        href="https://instagram.com/rlmsgames"
+        target="_blank"
+        rel="noopener noreferrer"
         style={{
           marginTop: 8,
-          color: "var(--muted)",
+          display: 'block',
+          color: "var(--brand)",
           fontSize: "0.95rem",
-          fontWeight: 500,
+          fontWeight: 600,
+          textDecoration: 'none',
         }}
       >
-        @rlmsgames
-      </p>
+        @rlmsgames ↗
+      </a>
 
       <h3 style={{ marginTop: 16 }}>Support Hours</h3>
       <p style={{ marginTop: 6, marginBottom: 0 }}>
@@ -296,7 +301,7 @@ function App() {
         element={
           <StaticPage title="Our Vision">
             <p style={{ marginTop: 6, fontSize: '1.05rem', lineHeight: 1.7 }}>
-              <strong>Traditional greeting cards are broken.</strong> A paper card in a grocery aisle costs \$6 to \$8, gets glanced at for ten seconds, and ends up forgotten in a drawer or recycling bin. Meanwhile, sending a plain blue text bubble on WhatsApp or iMessage feels rushed, cold, and forgettable.
+              <strong>Traditional greeting cards are broken.</strong> A paper card in a grocery aisle costs $6 to $8, gets glanced at for ten seconds, and ends up forgotten in a drawer or recycling bin. Meanwhile, sending a plain blue text bubble on WhatsApp or iMessage feels rushed, cold, and forgettable.
             </p>
 
             <p style={{ marginTop: 12, lineHeight: 1.7 }}>
@@ -316,6 +321,46 @@ function App() {
 
             <p style={{ marginTop: 6, marginBottom: 0, lineHeight: 1.7 }}>
               Whether it’s a milestone 30th birthday, a quiet anniversary, or celebrating a friend who needs a smile today, Boltwish exists to make sure your loved ones feel truly seen, cherished, and celebrated.
+            </p>
+          </StaticPage>
+        }
+      />
+      <Route
+        path="/privacy"
+        element={
+          <StaticPage title="Privacy Policy">
+            <p style={{ marginTop: 6 }}>
+              Your privacy matters to us. This policy explains what information Boltwish collects, how it is used, and your choices.
+            </p>
+
+            <h3 style={{ marginTop: 16 }}>What We Collect</h3>
+            <p style={{ marginTop: 6 }}>
+              Boltwish stores the wish content you create (recipient name, your personal message, event date) in our database so the shareable link works. No account, email address, or payment information is ever required.
+            </p>
+
+            <h3 style={{ marginTop: 16 }}>Local Storage</h3>
+            <p style={{ marginTop: 6 }}>
+              We save your recently created wishes in your browser's localStorage so you can find them again on the same device. This data never leaves your browser and is not linked to any account.
+            </p>
+
+            <h3 style={{ marginTop: 16 }}>Firebase &amp; Analytics</h3>
+            <p style={{ marginTop: 6 }}>
+              Wish data is stored in Google Firebase Firestore. We may use Firebase Analytics (Google Analytics) to understand aggregate usage patterns. No personal profile is built from this data.
+            </p>
+
+            <h3 style={{ marginTop: 16 }}>Wish Expiry</h3>
+            <p style={{ marginTop: 6 }}>
+              All wishes automatically expire and become inaccessible 7 days after the event date. You can delete your wish at any time from the management link sent to your device.
+            </p>
+
+            <h3 style={{ marginTop: 16 }}>Third Parties</h3>
+            <p style={{ marginTop: 6 }}>
+              We do not sell, rent, or share your data with third parties for advertising. Sharing integrations (WhatsApp, Telegram, etc.) open external apps with your wish link; their own privacy policies apply.
+            </p>
+
+            <h3 style={{ marginTop: 16 }}>Contact</h3>
+            <p style={{ marginTop: 6, marginBottom: 0 }}>
+              Questions about privacy? Email us at <a href="mailto:rlmsgames.help@gmail.com">rlmsgames.help@gmail.com</a>.
             </p>
           </StaticPage>
         }
@@ -1116,7 +1161,7 @@ function HomePage({ templatesState }) {
           </div>
         </section>
 
-        <TestimonialsSection />
+        <FeedbackSection />
 
         <FaqSection />
 
@@ -1126,52 +1171,295 @@ function HomePage({ templatesState }) {
   );
 }
 
-function TestimonialsSection() {
-  const reviews = [
-    {
-      name: 'Sarah M.',
-      location: 'London, UK',
-      stars: 5,
-      occasion: 'Birthday Unboxing',
-      quote: 'I sent the 3D unboxing birthday card to my sister overseas. She called me crying happy tears! The ribbon animation and background music made it feel like an unwrappable luxury gift.',
-    },
-    {
-      name: 'Priya & Arjun',
-      location: 'Mumbai, India',
-      stars: 5,
-      occasion: 'Anniversary Keepsake',
-      quote: 'Infinitely better than a plain WhatsApp text. The scratch-off reveal kept my partner guessing until the very end, and we printed the keepsake card for our scrapbook!',
-    },
-    {
-      name: 'Liam D.',
-      location: 'Sydney, Australia',
-      stars: 5,
-      occasion: 'Bouquet Gift Tag',
-      quote: 'Printed the mini QR gift tag and tied it directly onto a flower bouquet. Everyone at the dinner party scanned it and loved the interactive unboxing.',
-    },
-  ];
+function FeedbackSection() {
+  const [tab, setTab] = useState('reviews');
+  const [approvedReviews, setApprovedReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, text: '' });
+  const [suggestForm, setSuggestForm] = useState({ type: 'upgrade', text: '', email: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const { collection, getDocs, getFirestore, limit, orderBy, query, where } = await import('firebase/firestore');
+        const db = getFirestore(app);
+        const q = query(
+          collection(db, 'feedback'),
+          where('type', '==', 'review'),
+          where('status', '==', 'approved'),
+          orderBy('createdAt', 'desc'),
+          limit(6)
+        );
+        const snapshot = await getDocs(q);
+        if (active) setApprovedReviews(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+      } catch {
+        // Fallback if index is being built or collection empty
+      } finally {
+        if (active) setReviewsLoading(false);
+      }
+    };
+    load();
+    return () => { active = false; };
+  }, []);
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    if (honeypot || submitting) return;
+    if (!reviewForm.text.trim() || !reviewForm.name.trim()) return;
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const { addDoc, collection, getFirestore, serverTimestamp } = await import('firebase/firestore');
+      await addDoc(collection(getFirestore(app), 'feedback'), {
+        type: 'review',
+        name: reviewForm.name.trim().slice(0, 60),
+        rating: reviewForm.rating,
+        text: reviewForm.text.trim().slice(0, 500),
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err?.message || 'Could not submit your review. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const submitSuggestion = async (e) => {
+    e.preventDefault();
+    if (honeypot || submitting) return;
+    if (!suggestForm.text.trim()) return;
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const { addDoc, collection, getFirestore, serverTimestamp } = await import('firebase/firestore');
+      await addDoc(collection(getFirestore(app), 'feedback'), {
+        type: suggestForm.type,
+        text: suggestForm.text.trim().slice(0, 1000),
+        email: (suggestForm.email || '').trim().slice(0, 100),
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err?.message || 'Could not send your suggestion. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setSubmitted(false);
+    setSubmitError('');
+    setReviewForm({ name: '', rating: 5, text: '' });
+    setSuggestForm({ type: 'upgrade', text: '', email: '' });
+  };
 
   return (
-    <section className="section-card glass-section" id="stories">
+    <section className="section-card glass-section" id="feedback">
       <SectionHeading
-        eyebrow="Loved by Celebrators"
-        title="Real moments made unforgettable."
-        description="Here is how people are turning everyday words into cherished keepsakes."
+        eyebrow="Community & Upgrades"
+        title="Leave a Review or Suggest Ideas"
+        description="Tell us about your celebration experience or suggest new templates and feature upgrades. We read every submission!"
       />
-      <div className="testimonials-grid">
-        {reviews.map((r) => (
-          <MotionPanel key={r.name} className="testimonial-card glass-card">
-            <div className="testimonial-stars">{'★'.repeat(r.stars)}</div>
-            <p className="testimonial-quote">“{r.quote}”</p>
-            <div className="testimonial-footer">
-              <div className="testimonial-author">
-                <strong>{r.name}</strong>
-                <span>{r.location}</span>
+
+      {/* Community Approved Reviews */}
+      {!reviewsLoading && approvedReviews.length > 0 && (
+        <div className="testimonials-grid" style={{ marginBottom: '36px' }}>
+          {approvedReviews.map((r) => (
+            <MotionPanel key={r.id} className="testimonial-card glass-card">
+              <div className="testimonial-stars" style={{ color: '#f59e0b' }}>
+                {'★'.repeat(r.rating || 5)}{'☆'.repeat(Math.max(0, 5 - (r.rating || 5)))}
               </div>
-              <span className="chip" style={{ fontSize: '0.72rem' }}>{r.occasion}</span>
+              <p className="testimonial-quote">&ldquo;{r.text}&rdquo;</p>
+              <div className="testimonial-footer">
+                <div className="testimonial-author"><strong>{r.name || 'Boltwish user'}</strong></div>
+                <span className="chip" style={{ fontSize: '0.72rem' }}>Verified Review</span>
+              </div>
+            </MotionPanel>
+          ))}
+        </div>
+      )}
+
+      {/* Submission panel */}
+      <div className="feedback-panel glass-card">
+        {submitted ? (
+          <div style={{ textAlign: 'center', padding: '24px 12px' }}>
+            <div style={{ fontSize: '2.8rem', marginBottom: 12 }}>🎉</div>
+            <h3 style={{ margin: '0 0 8px' }}>Thank you so much!</h3>
+            <p style={{ color: 'var(--muted)', margin: 0, fontSize: '0.95rem', lineHeight: 1.6 }}>
+              {tab === 'reviews'
+                ? 'Your review was received and will appear on the wall once reviewed by our team!'
+                : 'Your idea has reached our team. We love building what our celebrators request!'}
+            </p>
+            <AppButton variant="secondary" onClick={resetForm} style={{ marginTop: 20 }}>
+              Submit Another Note
+            </AppButton>
+          </div>
+        ) : (
+          <>
+            <div className="feedback-tabs" role="tablist" aria-label="Feedback type">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tab === 'reviews'}
+                className={`feedback-tab-btn ${tab === 'reviews' ? 'active' : ''}`}
+                onClick={() => { setTab('reviews'); setSubmitError(''); }}
+              >
+                ⭐ Leave a Review
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tab === 'suggest'}
+                className={`feedback-tab-btn ${tab === 'suggest' ? 'active' : ''}`}
+                onClick={() => { setTab('suggest'); setSubmitError(''); }}
+              >
+                💡 Suggest Upgrade / Template
+              </button>
             </div>
-          </MotionPanel>
-        ))}
+
+            {tab === 'reviews' ? (
+              <form onSubmit={submitReview} className="feedback-form">
+                <label className="field-group floating-field">
+                  <span>Your Name *</span>
+                  <input
+                    type="text"
+                    value={reviewForm.name}
+                    onChange={(e) => setReviewForm((f) => ({ ...f, name: e.target.value }))}
+                    maxLength={60}
+                    placeholder="e.g. Alex M."
+                    required
+                  />
+                </label>
+                <div className="field-group">
+                  <div className="field-label-row"><span>Your Experience Rating *</span></div>
+                  <div className="star-rating-row">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className={`star-btn ${star <= reviewForm.rating ? 'active' : ''}`}
+                        onClick={() => setReviewForm((f) => ({ ...f, rating: star }))}
+                        aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                    <span style={{ marginLeft: 8, fontSize: '0.88rem', fontWeight: 600, color: 'var(--muted)' }}>
+                      {reviewForm.rating} / 5 Stars
+                    </span>
+                  </div>
+                </div>
+                <label className="field-group floating-field field-wide">
+                  <span>Your Review *</span>
+                  <textarea
+                    rows={4}
+                    value={reviewForm.text}
+                    onChange={(e) => setReviewForm((f) => ({ ...f, text: e.target.value }))}
+                    maxLength={500}
+                    placeholder="How did the recipient react to the 3D unboxing and melody? What made it memorable?"
+                    required
+                  />
+                </label>
+                <input
+                  type="text"
+                  name="feedback_trap"
+                  style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
+                {submitError && <div className="notice error" role="alert">{submitError}</div>}
+                <AppButton
+                  type="submit"
+                  disabled={submitting || !reviewForm.text.trim() || !reviewForm.name.trim()}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  {submitting ? 'Submitting...' : 'Post Public Review ⭐'}
+                </AppButton>
+              </form>
+            ) : (
+              <form onSubmit={submitSuggestion} className="feedback-form">
+                <div className="field-group">
+                  <div className="field-label-row"><span>What are you suggesting? *</span></div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                    {[
+                      { id: 'upgrade', label: '⚙️ Feature / Upgrade' },
+                      { id: 'template_idea', label: '🎨 Template Idea' },
+                      { id: 'bug', label: '🐛 Bug Report' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`action-btn action-secondary small ${suggestForm.type === opt.id ? 'active' : ''}`}
+                        style={{
+                          background: suggestForm.type === opt.id ? 'var(--brand)' : undefined,
+                          color: suggestForm.type === opt.id ? '#fff' : undefined,
+                          fontWeight: suggestForm.type === opt.id ? 700 : undefined,
+                        }}
+                        onClick={() => setSuggestForm((f) => ({ ...f, type: opt.id }))}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <label className="field-group floating-field field-wide">
+                  <span>Your Idea & Details *</span>
+                  <textarea
+                    rows={4}
+                    value={suggestForm.text}
+                    onChange={(e) => setSuggestForm((f) => ({ ...f, text: e.target.value }))}
+                    maxLength={1000}
+                    placeholder={
+                      suggestForm.type === 'template_idea'
+                        ? 'e.g. A Graduation Celebration template with a mortarboard unboxing and graduation march chime...'
+                        : suggestForm.type === 'bug'
+                        ? 'Describe what happened, your device model, and how we can reproduce it...'
+                        : 'Describe a new feature or design improvement that would make Boltwish even better...'
+                    }
+                    required
+                  />
+                </label>
+                <label className="field-group floating-field">
+                  <span>Your Email (Optional — so we can notify you when it is built!)</span>
+                  <input
+                    type="email"
+                    value={suggestForm.email}
+                    onChange={(e) => setSuggestForm((f) => ({ ...f, email: e.target.value }))}
+                    maxLength={100}
+                    placeholder="you@domain.com"
+                  />
+                </label>
+                <input
+                  type="text"
+                  name="suggest_trap"
+                  style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
+                {submitError && <div className="notice error" role="alert">{submitError}</div>}
+                <AppButton
+                  type="submit"
+                  disabled={submitting || !suggestForm.text.trim()}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  {submitting ? 'Sending...' : 'Send to Boltwish Team 💡'}
+                </AppButton>
+              </form>
+            )}
+          </>
+        )}
       </div>
     </section>
   );
@@ -1224,11 +1512,21 @@ function FaqSection() {
                 <span>{faq.q}</span>
                 <span className="faq-icon">{isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</span>
               </button>
-              {isOpen && (
-                <div className="faq-answer">
-                  <p>{faq.a}</p>
-                </div>
-              )}
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    key="faq-answer"
+                    className="faq-answer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <p>{faq.a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}
@@ -1277,6 +1575,7 @@ function Footer() {
         <div className="footer-links">
           <button className="footer-link" type="button" onClick={() => navigate('/template-picker')}>Templates</button>
           <button className="footer-link" type="button" onClick={() => navigate('/terms')}>Terms</button>
+          <button className="footer-link" type="button" onClick={() => navigate('/privacy')}>Privacy</button>
           <button className="footer-link" type="button" onClick={() => navigate('/contact')}>Contact</button>
           <button className="footer-link" type="button" onClick={() => navigate('/vision')}>Vision</button>
         </div>
@@ -1312,7 +1611,7 @@ function SocialPage() {
   return (
     <PageShell title="Social" description="Find and follow RLMS Games on social platforms." actions={<AppButton variant="secondary" onClick={() => navigate('/')}>Back</AppButton>}>
       <MotionPanel className="glass-card static-card">
-        <div className="eyebrow"><Sparkles size={14} /> Follow RLMS Games</div>
+        <div className="eyebrow"><Sparkles size={14} /> Follow Boltwish</div>
         <h2>Find us on these platforms</h2>
         <div style={{ marginTop: 12, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <a className="action-btn action-primary" href="https://instagram.com/rlmsgames?utm_source=boltwish&utm_medium=social_page&utm_campaign=follow" target="_blank" rel="noopener noreferrer">Instagram</a>
@@ -1517,6 +1816,9 @@ function AdminPage() {
   const [wishFilter, setWishFilter] = useState('all');
   const [revealedWishes, setRevealedWishes] = useState({});
   const [firestoreHealth, setFirestoreHealth] = useState({ status: 'checking', latencyMs: null, checkedAt: null });
+  const [feedbackItems, setFeedbackItems] = useState([]);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [feedbackTypeFilter, setFeedbackTypeFilter] = useState('all');
 
   const isUnlocked = authStatus === 'authorized';
 
@@ -1562,6 +1864,72 @@ function AdminPage() {
     }
   };
 
+  const loadFeedback = async () => {
+    setLoadingFeedback(true);
+    try {
+      const { collection, getDocs, getFirestore, orderBy, query } = await import('firebase/firestore');
+      const db = getFirestore(adminApp);
+      const snapshot = await getDocs(query(collection(db, 'feedback'), orderBy('createdAt', 'desc')));
+      setFeedbackItems(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      setNotice('Could not load feedback: ' + (err?.message || 'Error'));
+    } finally {
+      setLoadingFeedback(false);
+    }
+  };
+
+  const approveFeedback = async (feedbackId) => {
+    try {
+      const { addDoc, collection, doc, getFirestore, serverTimestamp, updateDoc } = await import('firebase/firestore');
+      const db = getFirestore(adminApp);
+      await updateDoc(doc(db, 'feedback', feedbackId), { status: 'approved' });
+      setFeedbackItems((prev) => prev.map((f) => (f.id === feedbackId ? { ...f, status: 'approved' } : f)));
+      try {
+        await addDoc(collection(db, 'audit_log'), {
+          action: 'approve_feedback',
+          feedbackId,
+          adminEmail: adminUser?.email,
+          timestamp: serverTimestamp(),
+        });
+      } catch {}
+      setNotice('Review approved! It will now appear on the community section.');
+    } catch (err) {
+      setNotice('Could not approve review: ' + (err?.message || 'Error'));
+    }
+  };
+
+  const hideFeedback = async (feedbackId) => {
+    try {
+      const { doc, getFirestore, updateDoc } = await import('firebase/firestore');
+      const db = getFirestore(adminApp);
+      await updateDoc(doc(db, 'feedback', feedbackId), { status: 'hidden' });
+      setFeedbackItems((prev) => prev.map((f) => (f.id === feedbackId ? { ...f, status: 'hidden' } : f)));
+      setNotice('Feedback status set to hidden.');
+    } catch (err) {
+      setNotice('Could not hide feedback: ' + (err?.message || 'Error'));
+    }
+  };
+
+  const deleteFeedback = async (feedbackId) => {
+    try {
+      const { addDoc, collection, deleteDoc, doc, getFirestore, serverTimestamp } = await import('firebase/firestore');
+      const db = getFirestore(adminApp);
+      await deleteDoc(doc(db, 'feedback', feedbackId));
+      setFeedbackItems((prev) => prev.filter((f) => f.id !== feedbackId));
+      try {
+        await addDoc(collection(db, 'audit_log'), {
+          action: 'delete_feedback',
+          feedbackId,
+          adminEmail: adminUser?.email,
+          timestamp: serverTimestamp(),
+        });
+      } catch {}
+      setNotice('Feedback entry deleted.');
+    } catch (err) {
+      setNotice('Could not delete feedback: ' + (err?.message || 'Error'));
+    }
+  };
+
   const deleteWishAsAdmin = async (wishId) => {
     const reason = window.prompt(`Enter moderation reason for deleting wish "${wishId}" (required for audit logging):`);
     if (!reason || !reason.trim()) {
@@ -1570,11 +1938,20 @@ function AdminPage() {
     }
 
     try {
-      const { doc, deleteDoc, getFirestore } = await import('firebase/firestore');
-      await deleteDoc(doc(getFirestore(adminApp), 'wishes', wishId));
+      const { addDoc, collection, deleteDoc, doc, getFirestore, serverTimestamp } = await import('firebase/firestore');
+      const db = getFirestore(adminApp);
+      await deleteDoc(doc(db, 'wishes', wishId));
       setLiveWishes((prev) => prev.filter((w) => w.id !== wishId));
       setNotice(`Wish "${wishId}" deleted. Reason recorded: "${reason.trim()}".`);
-      console.info(`[ADMIN AUDIT] Wish ${wishId} deleted by ${adminUser?.email} at ${new Date().toISOString()}. Reason: ${reason.trim()}`);
+      try {
+        await addDoc(collection(db, 'audit_log'), {
+          action: 'delete_wish',
+          wishId,
+          adminEmail: adminUser?.email,
+          reason: reason.trim(),
+          timestamp: serverTimestamp(),
+        });
+      } catch {}
     } catch (err) {
       setNotice('Failed to delete wish: ' + (err?.message || 'Error'));
     }
@@ -1584,7 +1961,14 @@ function AdminPage() {
     setRevealedWishes((prev) => {
       const next = !prev[wishId];
       if (next) {
-        console.info(`[ADMIN AUDIT] Sensitive content for wish ${wishId} inspected by ${adminUser?.email} at ${new Date().toISOString()}`);
+        import('firebase/firestore').then(({ addDoc, collection, getFirestore, serverTimestamp }) => {
+          addDoc(collection(getFirestore(adminApp), 'audit_log'), {
+            action: 'inspect_wish_content',
+            wishId,
+            adminEmail: adminUser?.email,
+            timestamp: serverTimestamp(),
+          }).catch(() => {});
+        });
       }
       return { ...prev, [wishId]: next };
     });
@@ -1956,6 +2340,13 @@ function AdminPage() {
         >
           📊 System Overview
         </button>
+        <button
+          type="button"
+          className={`admin-tab-btn ${adminTab === 'feedback' ? 'active' : ''}`}
+          onClick={() => { setAdminTab('feedback'); loadFeedback(); }}
+        >
+          📬 Reviews & Feedback ({feedbackItems.length || 'Browse'})
+        </button>
       </div>
 
       {adminTab === 'wishes' && (
@@ -2201,6 +2592,169 @@ function AdminPage() {
         </section>
       )}
 
+      {adminTab === 'feedback' && (
+        <section className="admin-wishes-panel glass-card">
+          <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h2>Community Reviews &amp; Feature Feedback</h2>
+              <p>Moderate public reviews for the homepage and review user-requested features, template ideas, and bug reports.</p>
+            </div>
+            <AppButton onClick={loadFeedback} disabled={loadingFeedback}>
+              {loadingFeedback ? 'Refreshing…' : '🔄 Refresh Feedback'}
+            </AppButton>
+          </div>
+
+          <div className="admin-filters-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '16px 0 14px' }}>
+            {[
+              { id: 'all', label: `All Entries (${feedbackItems.length})` },
+              { id: 'review', label: `⭐ Reviews (${feedbackItems.filter((f) => f.type === 'review').length})` },
+              { id: 'upgrade', label: `⚙️ Feature Upgrades (${feedbackItems.filter((f) => f.type === 'upgrade').length})` },
+              { id: 'template_idea', label: `🎨 Template Ideas (${feedbackItems.filter((f) => f.type === 'template_idea').length})` },
+              { id: 'bug', label: `🐛 Bug Reports (${feedbackItems.filter((f) => f.type === 'bug').length})` },
+            ].map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                className={`action-btn action-secondary small ${feedbackTypeFilter === f.id ? 'active' : ''}`}
+                style={{
+                  background: feedbackTypeFilter === f.id ? 'var(--brand)' : undefined,
+                  color: feedbackTypeFilter === f.id ? '#fff' : undefined,
+                  fontWeight: feedbackTypeFilter === f.id ? 700 : undefined,
+                }}
+                onClick={() => setFeedbackTypeFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {loadingFeedback ? (
+            <p style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)' }}>Loading feedback entries...</p>
+          ) : (
+            <div className="admin-wishes-table-wrap">
+              <table className="admin-wishes-table">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Feedback / Note</th>
+                    <th>Author / Email</th>
+                    <th>Rating</th>
+                    <th>Status</th>
+                    <th>Received</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {feedbackItems
+                    .filter((f) => feedbackTypeFilter === 'all' || f.type === feedbackTypeFilter)
+                    .map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          <span className="chip" style={{ fontSize: '0.72rem' }}>
+                            {item.type === 'review'
+                              ? '⭐ Review'
+                              : item.type === 'upgrade'
+                              ? '⚙️ Upgrade'
+                              : item.type === 'template_idea'
+                              ? '🎨 Template Idea'
+                              : '🐛 Bug Report'}
+                          </span>
+                        </td>
+                        <td style={{ maxWidth: 320 }}>
+                          <div style={{ fontSize: '0.88rem', lineHeight: 1.5, wordBreak: 'break-word', color: 'var(--text)' }}>
+                            {item.text}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontSize: '0.84rem' }}><strong>{item.name || 'Anonymous'}</strong></div>
+                          {item.email && (
+                            <a
+                              href={`mailto:${item.email}`}
+                              style={{ fontSize: '0.76rem', color: 'var(--brand)', textDecoration: 'none', display: 'block', marginTop: 2 }}
+                            >
+                              {item.email}
+                            </a>
+                          )}
+                        </td>
+                        <td>
+                          {item.rating ? (
+                            <span style={{ color: '#f59e0b', fontWeight: 700, fontSize: '0.9rem' }}>
+                              {'★'.repeat(item.rating)}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          <span
+                            className="chip"
+                            style={{
+                              fontSize: '0.68rem',
+                              background: item.status === 'approved' ? '#dcfce7' : item.status === 'hidden' ? '#f1f5f9' : '#fef3c7',
+                              color: item.status === 'approved' ? '#15803d' : item.status === 'hidden' ? '#64748b' : '#92400e',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {item.status === 'approved' ? '✓ Approved' : item.status === 'hidden' ? 'Hidden' : 'Pending Review'}
+                          </span>
+                        </td>
+                        <td>
+                          <small style={{ color: 'var(--muted)' }}>
+                            {item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString() : 'Recent'}
+                          </small>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            {item.type === 'review' && item.status !== 'approved' && (
+                              <button
+                                type="button"
+                                className="action-btn action-secondary small"
+                                style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac' }}
+                                onClick={() => approveFeedback(item.id)}
+                                title="Approve this review to appear on the homepage"
+                              >
+                                ✓ Approve
+                              </button>
+                            )}
+                            {item.status !== 'hidden' && (
+                              <button
+                                type="button"
+                                className="action-btn action-secondary small"
+                                onClick={() => hideFeedback(item.id)}
+                                title="Hide from public view"
+                              >
+                                Hide
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="action-btn small"
+                              style={{ background: '#fee2e2', color: '#b91c1c' }}
+                              onClick={() => {
+                                if (window.confirm('Delete this feedback submission permanently?')) {
+                                  deleteFeedback(item.id);
+                                }
+                              }}
+                              title="Delete permanently"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              {feedbackItems.filter((f) => feedbackTypeFilter === 'all' || f.type === feedbackTypeFilter).length === 0 && !loadingFeedback && (
+                <p style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
+                  No feedback items found. {feedbackItems.length === 0 ? 'Click Refresh to load or submit one from the homepage!' : 'Try switching the category filter above.'}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       {adminTab === 'templates' && (
         <>
           <section className="admin-dashboard-hero">
@@ -2325,12 +2879,14 @@ function WishFormPage({ templatesState }) {
   const [usePasscode, setUsePasscode] = useState(false);
   const [passcode, setPasscode] = useState('');
   const [honeypot, setHoneypot] = useState('');
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     if (!template) return;
     setRecipientData(buildRecipientDraft(template));
     setContentData(buildContentDraft(template));
     setTone('heartfelt');
+    setFormError('');
   }, [template?.id]);
 
   const isPinValid = !usePasscode || (passcode && passcode.length === 4 && /^\d{4}$/.test(passcode));
@@ -2338,9 +2894,14 @@ function WishFormPage({ templatesState }) {
     ? template.fields.every((field) => field.required === false || String(recipientData[field.key] || '').trim().length > 0) && isPinValid
     : false;
 
+  const preview = useMemo(
+    () => composeWishPreview(template || {}, { recipientData, content: contentData, tone }),
+    [template, recipientData, contentData, tone]
+  );
+
   useSeoMeta({
     title: template ? `${template.label} template | Boltwish` : 'Boltwish',
-    description: template?.summary || preview.subtitle || SITE_DESCRIPTION,
+    description: template?.summary || preview?.subtitle || SITE_DESCRIPTION,
     canonicalPath: template ? `/template/${template.id}` : '/template-picker',
     robots: 'noindex,follow',
   });
@@ -2367,7 +2928,7 @@ function WishFormPage({ templatesState }) {
 
     // 2. PIN completeness validation
     if (usePasscode && (!passcode || passcode.length !== 4 || !/^\d{4}$/.test(passcode))) {
-      alert('Please enter a full 4-digit PIN to lock your card, or uncheck the secret PIN option.');
+      setFormError('Please enter a full 4-digit PIN to lock your card, or uncheck the secret PIN option.');
       return;
     }
 
@@ -2375,13 +2936,14 @@ function WishFormPage({ templatesState }) {
     const recipientCheck = checkContentSafety(recipientData.name || '');
     const messageCheck = checkContentSafety(recipientData.message || '');
     if (!recipientCheck.valid) {
-      alert(recipientCheck.reason);
+      setFormError(recipientCheck.reason);
       return;
     }
     if (!messageCheck.valid) {
-      alert(messageCheck.reason);
+      setFormError(messageCheck.reason);
       return;
     }
+    setFormError('');
 
     setSaving(true);
 
@@ -2626,6 +3188,9 @@ function WishFormPage({ templatesState }) {
             </div>
           </div>
 
+          {formError && (
+            <div className="notice error" role="alert" style={{ marginTop: '16px' }}>{formError}</div>
+          )}
           <div className="wizard-actions actions-row form-actions" style={{ marginTop: '24px' }}>
             <AppButton variant="secondary" type="button" onClick={() => navigate('/template-picker')}>Back</AppButton>
             <AppButton type="submit" disabled={!canContinue || saving}>
@@ -3068,8 +3633,11 @@ function ManageWishPage({ templatesState }) {
     }
   };
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const deleteWish = async () => {
-    if (!username || !window.confirm('Delete this wish permanently? The shared link will stop working.')) return;
+    if (!username || !deleteConfirmOpen) { setDeleteConfirmOpen(true); return; }
+    setDeleteConfirmOpen(false);
     try {
       const { deleteDoc, doc, getFirestore } = await import('firebase/firestore');
       await deleteDoc(doc(getFirestore(app), 'wishes', username));
@@ -3114,7 +3682,16 @@ function ManageWishPage({ templatesState }) {
           <div className="share-settings-head"><ShieldCheck size={18} /><div><h3>Automatic seven-day access</h3><p>The shared link opens on the event date above and closes exactly seven days later.</p></div></div>
         </div>
         {notice ? <div className={`notice ${notice.includes('Could not') ? 'error' : ''}`} role="status">{notice}</div> : null}
-        <div className="manage-actions"><AppButton type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</AppButton><AppButton variant="secondary" type="button" onClick={deleteWish}>Delete wish</AppButton></div>
+        {deleteConfirmOpen && (
+          <div className="notice error" role="alert" style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <span>⚠️ Delete this wish permanently? The shared link will stop working.</span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button type="button" className="action-btn action-primary" style={{ background: '#dc2626', fontSize: '0.82rem', padding: '6px 12px' }} onClick={deleteWish}>Yes, Delete</button>
+              <button type="button" className="action-btn action-secondary" style={{ fontSize: '0.82rem', padding: '6px 12px' }} onClick={() => setDeleteConfirmOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
+        <div className="manage-actions"><AppButton type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</AppButton><AppButton variant="secondary" type="button" onClick={() => setDeleteConfirmOpen(true)}>Delete wish</AppButton></div>
       </form>
       {giftTagOpen && (
         <GiftTagModal

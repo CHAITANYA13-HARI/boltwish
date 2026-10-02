@@ -3,13 +3,19 @@ import { checkContentSafety, hashPasscode, verifyPasscode } from '../src/lib/sec
 async function runSecurityTests() {
   console.log('Running Boltwish Security & PIN Gate Verification Tests...\n');
 
-  // Test 1: PIN hashing produces expected deterministic sha256 output
+  // Test 1: PIN hashing produces expected secure hash output (v2 salted format: v2:{32hex}:{64hex})
   const pin = '1234';
   const hash = await hashPasscode(pin);
-  if (!hash || hash.length !== 64) {
-    throw new Error(`Test 1 Failed: Expected 64-char hex hash, got "${hash}"`);
+  if (!hash || (!hash.startsWith('v2:') && hash.length !== 64)) {
+    throw new Error(`Test 1 Failed: Expected valid hash, got "${hash}"`);
   }
-  console.log('✔ Test 1: 4-digit PIN generates 64-character SHA-256 hash');
+  if (hash.startsWith('v2:')) {
+    const parts = hash.split(':');
+    if (parts.length !== 3 || parts[1].length !== 32 || parts[2].length !== 64) {
+      throw new Error(`Test 1 Failed: Expected v2:{32hex}:{64hex}, got "${hash}"`);
+    }
+  }
+  console.log('✔ Test 1: 4-digit PIN generates secure per-wish salted hash (v2)');
 
   // Test 2: Incomplete or non-4-digit PIN is rejected by hashPasscode
   const shortHash = await hashPasscode('12');

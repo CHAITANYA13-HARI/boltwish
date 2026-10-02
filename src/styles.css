@@ -8218,3 +8218,177 @@ h1 {
   }
 }
 
+
+/* ============================================================
+   FEEDBACK SECTION — Review submission + Suggestions panel
+   ============================================================ */
+
+.feedback-panel {
+  max-width: 580px;
+  margin: 0 auto;
+  padding: 28px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(255, 107, 107, 0.12);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+}
+
+.feedback-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.feedback-tab-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.feedback-tab-btn.active {
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+}
+
+.feedback-tab-btn:hover:not(.active) {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field-label-row {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.star-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: #d1d5db;
+  transition: color 0.15s ease, transform 0.12s ease;
+  padding: 2px;
+}
+
+.star-btn.active,
+.star-btn:hover {
+  color: #f59e0b;
+  transform: scale(1.12);
+}
+
+/* ============================================================
+   ADMIN — Delete Confirm Inline
+   ============================================================ */
+
+.delete-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+  border-radius: 10px;
+  margin-top: 12px;
+}
+
+/* ============================================================
+   ADMIN — Feedback & Reviews Table
+   ============================================================ */
+
+.admin-feedback-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.admin-feedback-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  border-bottom: 1.5px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-feedback-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+  vertical-align: top;
+}
+
+.admin-feedback-table tr:hover td {
+  background: rgba(255, 107, 107, 0.03);
+}
+
+/* Reuse admin-wishes-table styles for feedback */
+.admin-wishes-table td {
+  font-size: 0.84rem;
+  vertical-align: top;
+}
+
+/* ============================================================
+   PRIVACY POLICY page
+   ============================================================ */
+
+.static-page-prose h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 20px 0 6px;
+}
+
+.static-page-prose a {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   MOBILE — Feedback panel
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .feedback-panel {
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+
+  .feedback-tab-btn {
+    font-size: 0.8rem;
+    padding: 8px 8px;
+  }
+
+  .star-btn {
+    font-size: 1.5rem;
+  }
+}
