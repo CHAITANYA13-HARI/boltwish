@@ -323,8 +323,8 @@ function App() {
 
 function useFirestoreTemplates() {
   const [state, setState] = useState({
-    templates: [],
-    loading: true,
+    templates: templateSeed,
+    loading: false,
     error: '',
   });
 
@@ -347,9 +347,9 @@ function useFirestoreTemplates() {
 
         if (active) {
           setState({
-            templates: initialTemplates,
+            templates: initialTemplates.length ? initialTemplates : templateSeed,
             loading: false,
-            error: initialTemplates.length ? '' : 'No templates found in Firebase yet.',
+            error: '',
           });
         }
 
@@ -363,28 +363,28 @@ function useFirestoreTemplates() {
 
             if (active) {
               setState({
-                templates,
+                templates: templates.length ? templates : templateSeed,
                 loading: false,
-                error: templates.length ? '' : 'No templates found in Firebase yet.',
+                error: '',
               });
             }
           },
-          (error) => {
+          () => {
             if (active) {
               setState({
-                templates: [],
+                templates: templateSeed,
                 loading: false,
-                error: error?.message || 'Showing built-in templates because Firebase templates could not be loaded.',
+                error: '',
               });
             }
           },
         );
-      } catch (error) {
+      } catch {
         if (active) {
           setState({
-            templates: [],
+            templates: templateSeed,
             loading: false,
-            error: error?.message || 'Showing built-in templates because Firebase templates could not be loaded.',
+            error: '',
           });
         }
       }
@@ -401,7 +401,8 @@ function useFirestoreTemplates() {
 }
 
 function resolveTemplate(templates, templateId) {
-  return templates.find((template) => template.id === templateId) || null;
+  const list = templates && templates.length > 0 ? templates : templateSeed;
+  return list.find((template) => template.id === templateId) || templateSeed.find((t) => t.id === templateId) || templateSeed[0] || null;
 }
 
 function prepareTemplateDocument(templateId, data = {}) {
@@ -1167,7 +1168,13 @@ function TemplatePickerPage({ templatesState }) {
                 </CardButton>
               ))}
         </div>
-        {!templatesState.loading && templatesState.templates.length === 0 ? <Panel className="empty-state"><h3>No templates yet</h3><p>Create documents in the Firebase <span>templates</span> collection to make this flow work.</p></Panel> : null}
+        {!templatesState.loading && templatesState.templates.length === 0 ? (
+          <Panel className="empty-state">
+            <h3>Loading celebrations...</h3>
+            <p>Our 3D celebration templates are getting ready. Please refresh to start creating.</p>
+            <AppButton onClick={() => window.location.reload()} style={{ marginTop: 12 }}>Reload Templates</AppButton>
+          </Panel>
+        ) : null}
       </section>
     </PageShell>
   );
