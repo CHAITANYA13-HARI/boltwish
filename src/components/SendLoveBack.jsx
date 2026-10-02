@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Send, Check, Copy } from 'lucide-react';
+import { Heart, Send, Check, Copy, Share2, MessageSquare } from 'lucide-react';
 import { celebrationAudio } from '../lib/celebrationAudio';
 import { fireFloatingHearts, fireReactionCannon } from '../lib/celebrationConfetti';
 
@@ -33,6 +33,7 @@ export function SendLoveBack({ fromName, title }) {
     : `Hey ${sender}! I just opened the Boltwish card you made for me ("${cleanTitle}"). It truly made my day! Thank you so much! ❤️`;
 
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(thankYouText)}`;
+  const smsUrl = `sms:?&body=${encodeURIComponent(thankYouText)}`;
 
   const handleCopy = async () => {
     try {
@@ -41,6 +42,21 @@ export function SendLoveBack({ fromName, title }) {
       setTimeout(() => setCopied(false), 2500);
     } catch {
       // clipboard fallback
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Thank you, ${sender}!`,
+          text: thankYouText,
+        });
+      } catch {
+        handleCopy();
+      }
+    } else {
+      handleCopy();
     }
   };
 
@@ -87,22 +103,41 @@ export function SendLoveBack({ fromName, title }) {
               <p className="preview-message">“{thankYouText}”</p>
             </div>
 
-            <div className="send-love-actions">
+            <div className="send-love-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {typeof navigator !== 'undefined' && navigator.share ? (
+                <button
+                  type="button"
+                  className="action-btn action-primary"
+                  onClick={handleNativeShare}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Share2 size={15} /> Send Reply (Any App)
+                </button>
+              ) : null}
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="action-btn action-whatsapp"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                <Send size={15} /> Send via WhatsApp
+                <Send size={15} /> WhatsApp
+              </a>
+              <a
+                href={smsUrl}
+                className="action-btn action-secondary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <MessageSquare size={15} /> Text / SMS
               </a>
               <button
                 type="button"
                 className="action-btn action-secondary"
                 onClick={handleCopy}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
                 {copied ? <Check size={15} /> : <Copy size={15} />}
-                <span>{copied ? 'Copied to clipboard!' : 'Copy thank-you text'}</span>
+                <span>{copied ? 'Copied!' : 'Copy Text'}</span>
               </button>
             </div>
           </motion.div>

@@ -5290,6 +5290,8 @@ h1 {
   .wish-viral-loop-banner,
   .wish-scroll-hint,
   .mobile-sticky-bar,
+  .wish-view-actions-grid,
+  .wish-ambient-glow,
   .gift-tag-overlay .gift-tag-dialog-head,
   .gift-tag-overlay .gift-tag-explainer,
   .gift-tag-overlay .gift-tag-actions {
@@ -8164,6 +8166,18 @@ h1 {
   background: linear-gradient(135deg, #1877F2 0%, #0d65d9 100%) !important;
   color: #ffffff !important;
   box-shadow: 0 4px 14px rgba(24, 119, 242, 0.28) !important;
+}
+
+.delivery-pill-btn.delivery-sms {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28) !important;
+}
+
+.delivery-pill-btn.delivery-email {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.28) !important;
 }
 
 .delivery-pill-btn.delivery-copy,

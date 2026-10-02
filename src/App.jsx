@@ -936,6 +936,7 @@ function HomePage({ templatesState }) {
   const navigate = useNavigate();
   const [recentWishes, setRecentWishes] = useState(() => readJson('recentWishes', []));
   const [selectedIds, setSelectedIds] = useState(() => readJson('recentSelected', {}));
+  const [confirmDeleteMode, setConfirmDeleteMode] = useState('none'); // 'none' | 'selected' | 'all'
 
   useEffect(() => {
     setRecentWishes(readJson('recentWishes', []));
@@ -1059,27 +1060,89 @@ function HomePage({ templatesState }) {
                       </div>
                     ))}
                   </div>
+                  {confirmDeleteMode === 'selected' && (
+                    <div className="notice error" role="alert" style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                      <span>⚠️ Delete selected wishes from this device?</span>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          type="button"
+                          className="action-btn action-primary"
+                          style={{ background: '#dc2626', fontSize: '0.8rem', padding: '4px 10px' }}
+                          onClick={() => {
+                            const selected = Object.keys(selectedIds || {}).filter((k) => selectedIds[k]);
+                            const next = recentWishes.filter((i) => !selected.includes(i.url));
+                            setRecentWishes(next);
+                            writeJson('recentWishes', next);
+                            const nextSelected = { ...(readJson('recentSelected', {})) };
+                            selected.forEach((k) => delete nextSelected[k]);
+                            writeJson('recentSelected', nextSelected);
+                            setSelectedIds(nextSelected);
+                            setConfirmDeleteMode('none');
+                          }}
+                        >
+                          Yes, Delete
+                        </button>
+                        <button
+                          type="button"
+                          className="action-btn action-secondary"
+                          style={{ fontSize: '0.8rem', padding: '4px 10px' }}
+                          onClick={() => setConfirmDeleteMode('none')}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {confirmDeleteMode === 'all' && (
+                    <div className="notice error" role="alert" style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                      <span>⚠️ Remove all saved cards from this device?</span>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          type="button"
+                          className="action-btn action-primary"
+                          style={{ background: '#dc2626', fontSize: '0.8rem', padding: '4px 10px' }}
+                          onClick={() => {
+                            setRecentWishes([]);
+                            writeJson('recentWishes', []);
+                            writeJson('recentSelected', {});
+                            setSelectedIds({});
+                            setConfirmDeleteMode('none');
+                          }}
+                        >
+                          Yes, Clear All
+                        </button>
+                        <button
+                          type="button"
+                          className="action-btn action-secondary"
+                          style={{ fontSize: '0.8rem', padding: '4px 10px' }}
+                          onClick={() => setConfirmDeleteMode('none')}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="actions-row" style={{ marginTop: 12 }}>
-                    <button className="action-btn action-secondary" type="button" style={{ fontSize: '0.82rem', padding: '8px 12px' }} disabled={Object.keys(selectedIds || {}).filter((k) => selectedIds[k]).length === 0} onClick={() => {
-                      const selected = Object.keys(selectedIds || {}).filter((k) => selectedIds[k]);
-                      if (!selected.length) return;
-                      if (!window.confirm(`Delete ${selected.length} selected wish(es)? This cannot be undone.`)) return;
-                      const next = recentWishes.filter((i) => !selected.includes(i.url));
-                      setRecentWishes(next);
-                      writeJson('recentWishes', next);
-                      const nextSelected = { ...(readJson('recentSelected', {})) };
-                      selected.forEach((k) => delete nextSelected[k]);
-                      writeJson('recentSelected', nextSelected);
-                      setSelectedIds(nextSelected);
-                    }}>Delete selected</button>
-                    <button className="action-btn" type="button" style={{ fontSize: '0.82rem', padding: '8px 12px' }} onClick={() => {
-                      if (!recentWishes.length) return;
-                      if (!window.confirm('Remove all saved wishes? This cannot be undone.')) return;
-                      setRecentWishes([]);
-                      writeJson('recentWishes', []);
-                      writeJson('recentSelected', {});
-                      setSelectedIds({});
-                    }}>Remove all</button>
+                    <button
+                      className="action-btn action-secondary"
+                      type="button"
+                      style={{ fontSize: '0.82rem', padding: '8px 12px' }}
+                      disabled={Object.keys(selectedIds || {}).filter((k) => selectedIds[k]).length === 0}
+                      onClick={() => setConfirmDeleteMode('selected')}
+                    >
+                      Delete selected
+                    </button>
+                    <button
+                      className="action-btn"
+                      type="button"
+                      style={{ fontSize: '0.82rem', padding: '8px 12px' }}
+                      disabled={!recentWishes.length}
+                      onClick={() => setConfirmDeleteMode('all')}
+                    >
+                      Remove all
+                    </button>
                   </div>
                 </div>
               </>
@@ -2880,6 +2943,7 @@ function WishFormPage({ templatesState }) {
   const [passcode, setPasscode] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [formError, setFormError] = useState('');
+  const [previousMessage, setPreviousMessage] = useState('');
 
   useEffect(() => {
     if (!template) return;
@@ -2972,13 +3036,42 @@ function WishFormPage({ templatesState }) {
     navigate('/save');
   };
 
+  const applyInspiration = (newText) => {
+    if (recipientData.message && recipientData.message !== newText) {
+      setPreviousMessage(recipientData.message);
+    }
+    updateRecipient('message', newText);
+  };
+
+  const undoMessage = () => {
+    if (previousMessage) {
+      updateRecipient('message', previousMessage);
+      setPreviousMessage('');
+    }
+  };
+
+  const randomizeMessage = () => {
+    const pool = [
+      defaultWishMessages[template?.id] || 'Wishing you all the joy and happiness in the world!',
+      "I'm so deeply grateful for you and everything you bring into our lives. May today and the entire year ahead surround you with genuine peace, immense joy, and unforgettable moments!",
+      "Another incredible chapter begins! Take a deep breath, smile wide, and soak in all the celebration you deserve today.",
+      "May this special occasion bring you reasons to smile, memories to cherish forever, and all the love your heart can hold. So happy to celebrate you!",
+    ];
+    const otherOptions = pool.filter((p) => p !== recipientData.message);
+    const chosen = otherOptions[Math.floor(Math.random() * otherOptions.length)] || pool[0];
+    applyInspiration(chosen);
+  };
+
   const fillSampleMessage = () => {
-    const sample = defaultWishMessages[template.id] || 'Wishing you all the joy and happiness in the world!';
-    updateRecipient('message', sample);
+    const sample = defaultWishMessages[template?.id] || 'Wishing you all the joy and happiness in the world!';
+    applyInspiration(sample);
   };
 
   const handleQuoteInsert = (quoteText) => {
     const existing = recipientData.message ? recipientData.message.trim() : '';
+    if (existing) {
+      setPreviousMessage(existing);
+    }
     const updated = existing ? `${existing}\n\n${quoteText}` : quoteText;
     updateRecipient('message', updated);
   };
@@ -3048,7 +3141,7 @@ function WishFormPage({ templatesState }) {
                     <span>{field.label}{field.required === false ? '' : ' *'}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       {field.key === 'message' && (
-                        <div style={{ display: 'flex', gap: '6px' }}>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                           <button
                             type="button"
                             className="topbar-link"
@@ -3062,11 +3155,22 @@ function WishFormPage({ templatesState }) {
                             type="button"
                             className="topbar-link"
                             style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                            onClick={fillSampleMessage}
-                            title="Insert pre-written celebration wish"
+                            onClick={randomizeMessage}
+                            title="Insert fresh inspiration"
                           >
-                            ✨ Sample wish
+                            🎲 Surprise me
                           </button>
+                          {previousMessage && (
+                            <button
+                              type="button"
+                              className="topbar-link"
+                              style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid var(--brand)', color: 'var(--brand)', borderRadius: '6px', fontWeight: 700 }}
+                              onClick={undoMessage}
+                              title="Restore previous text"
+                            >
+                              ↩️ Undo
+                            </button>
+                          )}
                         </div>
                       )}
                       <span className={`field-char-count ${charCount >= maxL ? 'at-limit' : charCount > maxL * 0.85 ? 'near-limit' : ''}`}>
@@ -3086,28 +3190,52 @@ function WishFormPage({ templatesState }) {
                       />
                       {field.key === 'message' && (
                         <div className="message-quick-prompts">
-                          <span className="quick-prompts-label">✨ Quick starters:</span>
+                          <span className="quick-prompts-label">✨ Starters:</span>
                           <button
                             type="button"
                             className="quick-prompt-btn"
-                            onClick={() => updateRecipient('message', "I'm so grateful to have you in my life. Wishing you endless joy, bright adventures, and all the happiness your heart can hold today and every day!")}
+                            onClick={() => applyInspiration("I'm so grateful to have you in my life. Wishing you endless joy, bright adventures, and all the happiness your heart can hold today and every day!")}
                           >
                             💖 Heartfelt
                           </button>
                           <button
                             type="button"
                             className="quick-prompt-btn"
-                            onClick={() => updateRecipient('message', "Another year older, wiser, and significantly more awesome! Don't count the candles—just enjoy the celebration!")}
+                            onClick={() => applyInspiration("Another year older, wiser, and significantly more awesome! Don't count the candles—just enjoy the celebration!")}
                           >
-                            😂 Playful
+                            🎉 Playful
                           </button>
                           <button
                             type="button"
                             className="quick-prompt-btn"
-                            onClick={() => updateRecipient('message', "May this special milestone bring you peace, sweet smiles, and wonderful memories that last forever.")}
+                            onClick={() => applyInspiration("May this special milestone bring you peace, sweet smiles, and wonderful memories that last forever.")}
                           >
-                            🌟 Warm & Sweet
+                            🌟 Warm
                           </button>
+                          <button
+                            type="button"
+                            className="quick-prompt-btn"
+                            onClick={() => applyInspiration("Sending you warmest wishes and endless smiles on your special day. Celebrating you today and always! ✨")}
+                          >
+                            💌 Sweet
+                          </button>
+                          <button
+                            type="button"
+                            className="quick-prompt-btn"
+                            onClick={randomizeMessage}
+                          >
+                            🎲 Surprise
+                          </button>
+                          {previousMessage && (
+                            <button
+                              type="button"
+                              className="quick-prompt-btn"
+                              onClick={undoMessage}
+                              style={{ borderColor: 'var(--brand)', color: 'var(--brand)', fontWeight: 700 }}
+                            >
+                              ↩️ Undo
+                            </button>
+                          )}
                         </div>
                       )}
                     </>
@@ -3519,8 +3647,14 @@ function ShareDialog({ message, link, onClose, onCopy, onOpenNative }) {
           <a className="delivery-pill-btn delivery-wa" href={`https://api.whatsapp.com/send?text=${encodedMsg}`} target="_blank" rel="noreferrer">
             <span>💬</span> WhatsApp
           </a>
+          <a className="delivery-pill-btn delivery-sms" href={`sms:?&body=${encodedMsg}`}>
+            <span>💬</span> Text / SMS
+          </a>
           <a className="delivery-pill-btn delivery-tg" href={`https://t.me/share/url?url=${encodedLink}&text=${encodedMsg}`} target="_blank" rel="noreferrer">
             <span>✈️</span> Telegram
+          </a>
+          <a className="delivery-pill-btn delivery-email" href={`mailto:?subject=${encodeURIComponent('A special celebration card for you!')}&body=${encodedMsg}`}>
+            <span>✉️</span> Email
           </a>
           <a className="delivery-pill-btn delivery-x" href={`https://twitter.com/intent/tweet?text=${encodedMsg}`} target="_blank" rel="noreferrer">
             <span>🐦</span> Twitter / X
@@ -3933,6 +4067,27 @@ function WishViewPage({ templatesState }) {
               </button>
               <button type="button" className="wish-action-pill" onClick={() => setGiftTagOpen(true)}>
                 <span>🎁</span> Mini Gift Tag
+              </button>
+              <button
+                type="button"
+                className="wish-action-pill"
+                onClick={async () => {
+                  if (typeof navigator !== 'undefined' && navigator.share) {
+                    try {
+                      await navigator.share({
+                        title: preview?.title || 'Celebration Wish',
+                        text: `Check out this celebration card for ${preview?.displayName || 'a special moment'}! ✨`,
+                        url: wishUrl,
+                      });
+                    } catch {
+                      handleCopyLink();
+                    }
+                  } else {
+                    handleCopyLink();
+                  }
+                }}
+              >
+                <span>📤</span> Share / Forward
               </button>
               {viewerUid && viewerUid === wishData.ownerUid ? (
                 <button type="button" className="wish-action-pill" onClick={() => navigate(`/manage/${username}`)}>
