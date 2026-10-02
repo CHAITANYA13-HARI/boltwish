@@ -7163,3 +7163,227 @@ h1 {
   background: rgba(255,250,252,0.82);
   border-bottom: 1px solid rgba(255,107,107,0.07);
 }
+
+/* ===================================================
+   SCRATCH-OFF CARD & ADMIN ANALYTICS STYLES
+   =================================================== */
+
+.scratch-card-container {
+  margin-top: 24px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 107, 107, 0.16);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .scratch-card-container {
+    background: rgba(30, 28, 42, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.scratch-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.scratch-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(232, 93, 4, 0.12), rgba(255, 107, 107, 0.12));
+  color: var(--brand);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.scratch-reveal-btn {
+  background: none;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.18s;
+}
+
+.scratch-reveal-btn:hover {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+.scratch-card-box {
+  position: relative;
+  width: 100%;
+  min-height: 140px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.scratch-secret-content {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #fff7ed 0%, #fff1f2 100%);
+  border: 1px solid rgba(251, 146, 60, 0.25);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .scratch-secret-content {
+    background: linear-gradient(135deg, #2a1b18 0%, #2e1422 100%);
+    border-color: rgba(251, 146, 60, 0.2);
+  }
+}
+
+.scratch-sparkle-orbit {
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+  animation: float-emoji 2.5s ease-in-out infinite;
+}
+
+.scratch-secret-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0;
+  max-width: 90%;
+}
+
+.scratch-secret-tag {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 8px;
+}
+
+.scratch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 16px;
+}
+
+.scratch-canvas:active {
+  cursor: grabbing;
+}
+
+.scratch-progress-bar {
+  margin-top: 10px;
+  height: 4px;
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.scratch-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand), #10b981);
+  transition: width 0.15s ease-out;
+}
+
+/* ── Admin Analytics Breakdown Charts ──────────────── */
+.admin-analytics-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-analytics-card {
+    background: rgba(30, 28, 42, 0.8);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.admin-analytics-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.admin-analytics-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.chart-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-bar-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 50px;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+}
+
+.chart-bar-label {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-bar-track {
+  width: 100%;
+  height: 12px;
+  background: rgba(15, 23, 42, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .chart-bar-track {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.chart-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  transition: width 0.6s ease-out;
+}
+
+.chart-bar-count {
+  text-align: right;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+

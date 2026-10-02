@@ -48,11 +48,52 @@ export function fireGrandConfetti() {
  * Floating hearts shower for "Send Love Back" reactions
  */
 export function fireFloatingHearts() {
+  if (typeof confetti.shapeFromText === 'function') {
+    const heartShape = confetti.shapeFromText({ text: '❤️', scalar: 2 });
+    confetti({
+      particleCount: 35,
+      spread: 60,
+      origin: { y: 0.75 },
+      shapes: [heartShape],
+      scalar: 2,
+    });
+  } else {
+    confetti({
+      particleCount: 45,
+      spread: 70,
+      origin: { y: 0.8 },
+      scalar: 1.2,
+      colors: ['#ff4d6d', '#ff758f', '#ff8fa3', '#ffb3c1', '#ffd166'],
+    });
+  }
+}
+
+/**
+ * Custom emoji confetti cannon for reactions & celebrations
+ */
+export function fireReactionCannon(emoji = '🎉') {
+  if (typeof confetti.shapeFromText === 'function') {
+    try {
+      const emojiShape = confetti.shapeFromText({ text: emoji, scalar: 2 });
+      confetti({
+        particleCount: 30,
+        spread: 80,
+        origin: { y: 0.7 },
+        shapes: [emojiShape],
+        scalar: 2,
+      });
+    } catch {
+      // fallback to regular confetti
+      fireCelebrationConfetti();
+    }
+  }
+
+  // Complementary colored sparkles
   confetti({
-    particleCount: 45,
-    spread: 70,
-    origin: { y: 0.8 },
-    scalar: 1.2,
-    colors: ['#ff4d6d', '#ff758f', '#ff8fa3', '#ffb3c1', '#ffd166'],
+    particleCount: 40,
+    spread: 90,
+    origin: { y: 0.7 },
+    colors: ['#ffd166', '#ff6b6b', '#06d6a0', '#118ab2', '#8338ec'],
   });
 }
+

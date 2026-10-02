@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Send, Check, Copy } from 'lucide-react';
 import { celebrationAudio } from '../lib/celebrationAudio';
-import { fireFloatingHearts } from '../lib/celebrationConfetti';
+import { fireFloatingHearts, fireReactionCannon } from '../lib/celebrationConfetti';
 
 export function SendLoveBack({ fromName, title }) {
   const [selectedReaction, setSelectedReaction] = useState(null);
@@ -21,7 +21,11 @@ export function SendLoveBack({ fromName, title }) {
   const handleSelect = (reaction) => {
     setSelectedReaction(reaction);
     celebrationAudio.playLoveReaction();
-    fireFloatingHearts();
+    if (reaction.emoji === '❤️') {
+      fireFloatingHearts();
+    } else {
+      fireReactionCannon(reaction.emoji);
+    }
   };
 
   const thankYouText = selectedReaction

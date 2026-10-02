@@ -32,15 +32,18 @@ import {
   MessageSquareMore,
   LockKeyhole,
   PartyPopper,
+  Calendar,
 } from 'lucide-react';
 // Firebase initialization (eager) — keep the original import to match existing usage.
 import { EnvelopeUnboxing } from './components/EnvelopeUnboxing';
 import { BirthdayCake } from './components/BirthdayCake';
 import { SendLoveBack } from './components/SendLoveBack';
+import { ScratchCard } from './components/ScratchCard';
 import { GiftTagModal } from './components/GiftTagModal';
 import { QuotesModal } from './components/QuotesModal';
 import { PasscodeGate } from './components/PasscodeGate';
 import { exportInstagramStory } from './lib/storyCanvasExporter';
+import { downloadCalendarInvite } from './lib/calendarExporter';
 import { checkContentSafety, hashPasscode } from './lib/securityFilter';
 import { triggerHaptic } from './lib/celebrationAudio';
 import { adminApp, app } from './lib/firebase';
@@ -873,6 +876,19 @@ function HomePage({ templatesState }) {
                         <div style={{ display: 'flex', gap: 4 }}>
                           <a className="action-btn action-secondary small" href={item.url} target="_blank" rel="noopener noreferrer" title="Open wish" aria-label="Open wish"><ExternalLink size={14} /></a>
                           <button className="action-btn action-secondary small" type="button" title="Copy link" aria-label="Copy link" onClick={() => { navigator.clipboard.writeText(item.url).catch(() => {}); }}><Copy size={14} /></button>
+                          <button
+                            className="action-btn action-secondary small"
+                            type="button"
+                            title="Remix / Create similar wish"
+                            aria-label="Remix wish"
+                            onClick={() => {
+                              const tId = item.metadata?.template || 'birthday';
+                              writeJson('selectedTemplateId', tId);
+                              navigate(`/template/${tId}`);
+                            }}
+                          >
+                            <Sparkles size={14} />
+                          </button>
                           <button className="action-btn small" type="button" title="Remove" aria-label="Remove" onClick={() => {
                             if (!window.confirm('Remove this saved wish?')) return;
                             const next = recentWishes.filter((i, j) => j !== idx);
@@ -1642,7 +1658,7 @@ function AdminPage() {
           <SectionHeading
             eyebrow="System Overview"
             title="Boltwish Health & Analytics"
-            description="Status of your database, templates, and active platform instances."
+            description="Real-time analytics of your database, templates, and active platform wishes."
           />
           <div className="stats-grid" style={{ margin: '20px 0' }}>
             <div className="stat-card">
@@ -1650,15 +1666,63 @@ function AdminPage() {
               <span>Active Templates</span>
             </div>
             <div className="stat-card">
-              <strong>{liveWishes.length || 'Active'}</strong>
-              <span>Live Wishes</span>
+              <strong>{liveWishes.length}</strong>
+              <span>Loaded Live Wishes</span>
             </div>
             <div className="stat-card">
               <strong style={{ color: '#059669' }}>Online</strong>
               <span>Firestore Status</span>
             </div>
+            <div className="stat-card">
+              <strong>{totalPrompts}</strong>
+              <span>Personal Prompts</span>
+            </div>
           </div>
-          <div className="admin-status-box" style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+
+          {/* Visual Template Popularity Breakdown */}
+          <div className="admin-analytics-card">
+            <div className="admin-analytics-head">
+              <div>
+                <h3>Template Usage Distribution</h3>
+                <small style={{ color: 'var(--muted)' }}>Breakdown of wishes created across occasions</small>
+              </div>
+              <button
+                type="button"
+                className="action-btn action-secondary small"
+                onClick={loadWishes}
+                disabled={loadingWishes}
+              >
+                {loadingWishes ? 'Refreshing…' : '🔄 Refresh Data'}
+              </button>
+            </div>
+
+            <div className="chart-bar-list">
+              {templates.map((tpl) => {
+                const count = liveWishes.filter((w) => w.templateId === tpl.id).length;
+                const total = Math.max(1, liveWishes.length);
+                const percent = Math.round((count / total) * 100);
+                return (
+                  <div key={tpl.id} className="chart-bar-row">
+                    <span className="chart-bar-label">
+                      <span>{tpl.icon}</span> <span>{tpl.label}</span>
+                    </span>
+                    <div className="chart-bar-track">
+                      <div
+                        className="chart-bar-fill"
+                        style={{
+                          width: `${Math.max(6, percent)}%`,
+                          background: `linear-gradient(90deg, ${tpl.theme?.accent || 'var(--brand)'}, ${tpl.theme?.accentSoft || 'var(--brand-2)'})`,
+                        }}
+                      />
+                    </div>
+                    <span className="chart-bar-count">{count} ({percent}%)</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="admin-status-box" style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: 20 }}>
             <p><strong>Admin Authenticated:</strong> {adminUser?.email}</p>
             <p><strong>Security Rules:</strong> Firestore Rules Active</p>
             <p><strong>Host Environment:</strong> Production Web Application</p>
@@ -2215,6 +2279,22 @@ function SavePage({ templatesState }) {
             </AppButton>
           </div>
           <div className="save-tertiary-actions">
+            <button
+              className="action-btn"
+              type="button"
+              onClick={() => {
+                downloadCalendarInvite({
+                  title: preview?.title || 'Celebration Wish',
+                  description: preview?.subtitle || 'Celebration with Boltwish',
+                  eventDate: wishData?.recipientData?.eventDate,
+                  url: savedLink,
+                });
+              }}
+              disabled={!savedLink}
+              title="Add event to Google / Apple Calendar"
+            >
+              📅 Add to Calendar
+            </button>
             <button className="action-btn" type="button" onClick={() => setGiftTagOpen(true)} disabled={!savedLink}>
               🏷️ Mini Gift Tag
             </button>
@@ -2603,6 +2683,20 @@ function WishViewPage({ templatesState }) {
                 >
                   {storyExporting ? 'Creating...' : '📸 Story Poster'}
                 </AppButton>
+                <AppButton
+                  variant="secondary"
+                  onClick={() => {
+                    downloadCalendarInvite({
+                      title: preview?.title || 'Celebration Wish',
+                      description: preview?.subtitle || 'Celebration card with Boltwish',
+                      eventDate: wishData?.recipientData?.eventDate,
+                      url: wishUrl,
+                    });
+                  }}
+                  title="Add celebration date to Calendar"
+                >
+                  📅 Add to Calendar
+                </AppButton>
                 <AppButton variant="secondary" onClick={() => setGiftTagOpen(true)}>
                   🎁 Mini Gift Tag
                 </AppButton>
@@ -2613,6 +2707,12 @@ function WishViewPage({ templatesState }) {
                 ) : null}
               </div>
             </WishExperience>
+
+            {/* Interactive Scratch-off Mystery Card */}
+            <ScratchCard
+              secretMessage={preview?.highlight || preview?.quote || 'Wishing you endless joy, bright adventures, and unforgettable memories! ✨'}
+              title="✨ Scratch to Reveal Secret Wish"
+            />
 
             {/* Gratitude & Reaction feedback bar */}
             <SendLoveBack fromName={preview?.fromLine} title={preview?.title} />
@@ -2628,6 +2728,18 @@ function WishViewPage({ templatesState }) {
                   Send a card back to {senderName} 💌 <ArrowRight size={16} />
                 </button>
               ) : null}
+              <button
+                className="wish-create-own"
+                type="button"
+                onClick={() => {
+                  const tId = wishData.templateId || 'birthday';
+                  writeJson('selectedTemplateId', tId);
+                  navigate(`/template/${tId}`);
+                }}
+                style={{ background: 'rgba(255, 255, 255, 0.9)', color: 'var(--text)' }}
+              >
+                ✨ Remix this wish template <ArrowRight size={15} />
+              </button>
               <button
                 className="wish-create-own"
                 type="button"

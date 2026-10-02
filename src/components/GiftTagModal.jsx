@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { Printer, X, Sparkles, Gift } from 'lucide-react';
+import { Printer, X, Sparkles, Gift, Download } from 'lucide-react';
+import { downloadGiftTagBadgePng } from '../lib/qrTagExporter';
 
 export function GiftTagModal({ url, recipientName, fromName, title, onClose }) {
   const [qrCodeData, setQrCodeData] = useState('');
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!url) return;
@@ -21,6 +23,22 @@ export function GiftTagModal({ url, recipientName, fromName, title, onClose }) {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPng = async () => {
+    setDownloading(true);
+    try {
+      await downloadGiftTagBadgePng({
+        url,
+        recipientName: recipientName || 'You',
+        fromName: fromName || '',
+        title: title || 'Celebration',
+      });
+    } catch (err) {
+      console.error('Error downloading PNG', err);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -48,7 +66,7 @@ export function GiftTagModal({ url, recipientName, fromName, title, onClose }) {
         </div>
 
         <p className="gift-tag-explainer">
-          Print this mini gift tag and tape it to a gift box, bouquet of flowers, or chocolate box. The recipient scans the QR code to open their digital card!
+          Print this mini gift tag or save it as an image to attach to a gift box, bouquet of flowers, or chocolate box.
         </p>
 
         {/* Printable Physical Tag Preview */}
@@ -90,13 +108,21 @@ export function GiftTagModal({ url, recipientName, fromName, title, onClose }) {
           </div>
         </div>
 
-        <div className="gift-tag-actions">
+        <div className="gift-tag-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button
             type="button"
             className="action-btn action-primary"
+            onClick={handleDownloadPng}
+            disabled={downloading}
+          >
+            <Download size={16} /> {downloading ? 'Saving Image...' : 'Save Tag as Image (PNG)'}
+          </button>
+          <button
+            type="button"
+            className="action-btn action-secondary"
             onClick={handlePrint}
           >
-            <Printer size={16} /> Print Gift Tag
+            <Printer size={16} /> Print Tag
           </button>
           <button
             type="button"
