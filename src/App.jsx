@@ -1725,7 +1725,7 @@ function FeedbackSection() {
   };
 
   return (
-    <section className="section-card glass-section" id="feedback">
+    <section className="section-card glass-section feedback-section-wrap" id="feedback">
       <SectionHeading
         eyebrow="Community & Upgrades"
         title="Leave a Review or Suggest Ideas"
@@ -1843,6 +1843,7 @@ function FeedbackSection() {
                 {submitError && <div className="notice error" role="alert">{submitError}</div>}
                 <AppButton
                   type="submit"
+                  className="feedback-submit-btn"
                   disabled={submitting || !reviewForm.text.trim() || !reviewForm.name.trim()}
                   style={{ width: '100%', marginTop: 8 }}
                 >
@@ -1853,7 +1854,7 @@ function FeedbackSection() {
               <form onSubmit={submitSuggestion} className="feedback-form">
                 <div className="field-group">
                   <div className="field-label-row"><span>What are you suggesting? *</span></div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                  <div className="feedback-type-row">
                     {[
                       { id: 'upgrade', label: '⚙️ Feature / Upgrade' },
                       { id: 'template_idea', label: '🎨 Template Idea' },
@@ -1862,12 +1863,7 @@ function FeedbackSection() {
                       <button
                         key={opt.id}
                         type="button"
-                        className={`action-btn action-secondary small ${suggestForm.type === opt.id ? 'active' : ''}`}
-                        style={{
-                          background: suggestForm.type === opt.id ? 'var(--brand)' : undefined,
-                          color: suggestForm.type === opt.id ? '#fff' : undefined,
-                          fontWeight: suggestForm.type === opt.id ? 700 : undefined,
-                        }}
+                        className={`feedback-type-btn ${suggestForm.type === opt.id ? 'active' : ''}`}
                         onClick={() => setSuggestForm((f) => ({ ...f, type: opt.id }))}
                       >
                         {opt.label}
@@ -1914,6 +1910,7 @@ function FeedbackSection() {
                 {submitError && <div className="notice error" role="alert">{submitError}</div>}
                 <AppButton
                   type="submit"
+                  className="feedback-submit-btn"
                   disabled={submitting || !suggestForm.text.trim()}
                   style={{ width: '100%', marginTop: 8 }}
                 >
@@ -2230,23 +2227,37 @@ function TemplatePickerPage({ templatesState }) {
         <div className="templates-grid templates-grid-showcase">
           {templatesState.loading
             ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="template-card skeleton-card tall" />)
-            : filtered.map((template) => (
+            : filtered.map((template) => {
+                let badge = null;
+                if (['birthday', 'love'].includes(template.id)) badge = '🔥 Popular';
+                else if (['wedding', 'anniversary'].includes(template.id)) badge = '✨ Favorite';
+                else if (['congrats', 'newbaby'].includes(template.id)) badge = '🎉 Trending';
+
+                return (
                 <CardButton
                   key={template.id}
                   className={`visual-template-card template-card-${slugify(template.theme?.background || template.id)}`}
                   style={{ '--template-accent': template.theme?.accent, '--template-soft': template.theme?.accentSoft }}
                   onClick={() => { writeJson('selectedTemplateId', template.id); navigate(`/template/${template.id}`); }}
                 >
-                  {['birthday', 'love'].includes(template.id) && <span className="template-badge">🔥 Popular</span>}
-                  {['wedding', 'anniversary'].includes(template.id) && <span className="template-badge">✨ Favorite</span>}
-                  {['congrats', 'newbaby'].includes(template.id) && <span className="template-badge">🎉 Trending</span>}
-                  <span className="template-card-art" aria-hidden="true"><i>{template.icon}</i></span>
-                  <span className="chip">{template.label}</span>
+                    <div className="template-card-topbar">
+                      <span className="chip">{template.label}</span>
+                      {badge && <span className="template-badge">{badge}</span>}
+                    </div>
+                    <div className="template-card-art" aria-hidden="true">
+                      <i>{template.icon}</i>
+                    </div>
+                    <div className="template-card-info">
                   <strong>{template.chip}</strong>
                   <span className="template-desc">{template.summary || 'A thoughtful wish for this occasion.'}</span>
-                  <span className="template-card-cta">Personalize this design <ArrowRight size={14} /></span>
-                </CardButton>
-              ))}
+                    </div>
+                    <div className="template-card-cta">
+                      <span>Personalize this design</span>
+                      <ArrowRight size={14} />
+                    </div>
+                  </CardButton>
+                );
+                })}
         </div>
 
         {!templatesState.loading && filtered.length === 0 ? (
