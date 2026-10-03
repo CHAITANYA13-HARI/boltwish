@@ -895,7 +895,7 @@ function TextButton({ className = '', ...props }) {
 }
 
 function CardButton({ className = '', ...props }) {
-  return <button className={`template-card ${className}`.trim()} {...props} />;
+  return <button type="button" className={`template-card ${className}`.trim()} {...props} />;
 }
 
 function Panel({ className = '', children, ...props }) {

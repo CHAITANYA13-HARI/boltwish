@@ -6556,132 +6556,8 @@ h1 {
   50% { transform: translateY(-5px); opacity: 1; }
 }
 
-/* ── 5. Template Card: Visual Gallery Style ─────────── */
-.visual-template-card {
-  border-radius: 20px;
-  padding: 0;
-  overflow: hidden;
-  position: relative;
-  min-height: 180px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  border: none;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
-  cursor: pointer;
-}
+/* ── 5. Template Card: Studio Celebration Cards (Styled in Master Polish section) ── */
 
-.visual-template-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: inherit;
-  transition: filter 0.22s ease;
-}
-
-.visual-template-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 28px 56px rgba(15,23,42,0.18);
-}
-
-.template-card-art {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -65%);
-  font-size: 3rem;
-  line-height: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  pointer-events: none;
-  user-select: none;
-}
-
-.template-card-art i {
-  font-style: normal;
-  font-size: 3.6rem;
-  display: block;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.18));
-  animation: card-icon-float 3.5s ease-in-out infinite;
-}
-
-.template-card-art b {
-  font-size: 0.7rem;
-  opacity: 0.55;
-  font-style: normal;
-  font-weight: 400;
-  color: rgba(255,255,255,0.8);
-  letter-spacing: 0.25em;
-}
-
-.template-card-art b:last-child {
-  font-size: 0.5rem;
-  letter-spacing: 0.4em;
-}
-
-@keyframes card-icon-float {
-  0%, 100% { transform: translateY(0) rotate(-3deg); }
-  50% { transform: translateY(-6px) rotate(3deg); }
-}
-
-.visual-template-card .chip {
-  position: relative;
-  z-index: 2;
-  background: rgba(255,255,255,0.25) !important;
-  color: rgba(255,255,255,0.95) !important;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.3);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
-.visual-template-card > strong {
-  position: relative;
-  z-index: 2;
-  font-size: 1.05rem;
-  color: #fff;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  font-family: 'Playfair Display', serif;
-}
-
-.visual-template-card > span {
-  position: relative;
-  z-index: 2;
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.82);
-  line-height: 1.4;
-}
-
-.template-card-cta {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: rgba(255,255,255,0.92) !important;
-  font-weight: 700;
-  font-size: 0.82rem;
-}
-
-.visual-template-card > * {
-  padding: 0 16px;
-}
-
-.visual-template-card > *:first-child { padding-top: 14px; }
-.visual-template-card > *:last-child { padding-bottom: 16px; }
-
-/* Theme backgrounds */
-.template-card-sunrise { background: linear-gradient(160deg, #ff9f5a 0%, #e85d04 60%, #c44500 100%); }
-.template-card-blush { background: linear-gradient(160deg, #fbcfe8 0%, #d94674 60%, #be185d 100%); }
-.template-card-rose { background: linear-gradient(160deg, #fda4af 0%, #ef4444 60%, #b91c1c 100%); }
-.template-card-violet { background: linear-gradient(160deg, #c4b5fd 0%, #7c3aed 60%, #5b21b6 100%); }
-.template-card-sky { background: linear-gradient(160deg, #7dd3fc 0%, #0ea5e9 60%, #0369a1 100%); }
-.template-card-peach { background: linear-gradient(160deg, #fbcfe8 0%, #db2777 60%, #9d174d 100%); }
-.template-card-mint { background: linear-gradient(160deg, #6ee7b7 0%, #059669 60%, #047857 100%); }
-.template-card-teal { background: linear-gradient(160deg, #99f6e4 0%, #0f766e 60%, #134e4a 100%); }
 
 /* Skeleton for no-templates state */
 .skeleton-card {
@@ -7472,11 +7348,20 @@ h1 {
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
+  gap: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
   box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04) !important;
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease !important;
   cursor: pointer !important;
   text-align: left !important;
   user-select: none !important;
+}
+
+.visual-template-card::before,
+.visual-template-card::after {
+  display: none !important;
+  content: none !important;
 }
 
 .visual-template-card:hover {
@@ -7602,6 +7487,8 @@ h1 {
 
 /* 4. Card Content Section (Bottom) */
 .template-card-body {
+  position: relative !important;
+  z-index: 2 !important;
   padding: 16px 18px 18px !important;
   display: flex !important;
   flex-direction: column !important;
@@ -7609,12 +7496,15 @@ h1 {
   justify-content: space-between !important;
   gap: 12px !important;
   background: #ffffff !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .template-card-text {
   display: flex !important;
   flex-direction: column !important;
   gap: 6px !important;
+  width: 100% !important;
 }
 
 .template-card-title {
@@ -7662,6 +7552,7 @@ h1 {
   align-items: center !important;
   justify-content: space-between !important;
   width: 100% !important;
+  box-sizing: border-box !important;
   padding: 11px 16px !important;
   border-radius: 12px !important;
   background: #f8fafc !important;
@@ -7671,6 +7562,10 @@ h1 {
   font-size: 0.88rem !important;
   transition: all 0.22s ease !important;
   margin-top: 4px !important;
+}
+
+.template-card-btn span {
+  color: inherit !important;
 }
 
 .template-btn-arrow {
@@ -7688,6 +7583,31 @@ h1 {
 .visual-template-card:hover .template-btn-arrow {
   color: #ffffff !important;
   transform: translateX(4px) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .visual-template-card {
+    background: #181622 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+  .template-card-body {
+    background: #181622 !important;
+  }
+  .template-card-title {
+    color: #f8fafc !important;
+  }
+  .template-feature-tag {
+    color: #cbd5e1 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+  .visual-template-card .template-desc {
+    color: #94a3b8 !important;
+  }
+  .template-card-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f8fafc !important;
+  }
 }
 
 /* 6. Occasion-specific Theme Stage Gradients (Matches both background theme slugs and occasion IDs) */
