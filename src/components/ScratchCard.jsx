@@ -16,41 +16,57 @@ export function ScratchCard({ secretMessage, title = 'Secret Blessing' }) {
     const canvas = canvasRef.current;
     if (!canvas || isRevealed) return;
 
-    const ctx = canvas.getContext('2d');
-    const width = canvas.offsetWidth;
-    const height = canvas.offsetHeight;
-    canvas.width = width;
-    canvas.height = height;
+    let animId;
+    const initCanvas = () => {
+      const width = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 340;
+      const height = canvas.offsetHeight || 140;
 
-    // Draw shimmering metallic foil
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, '#d1d5db');
-    gradient.addColorStop(0.3, '#f3f4f6');
-    gradient.addColorStop(0.5, '#9ca3af');
-    gradient.addColorStop(0.7, '#e5e7eb');
-    gradient.addColorStop(1, '#9ca3af');
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-
-    // Decorative pattern on foil
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    for (let i = 0; i < width; i += 24) {
-      for (let j = 0; j < height; j += 24) {
-        ctx.fillRect(i, j, 3, 3);
+      if (width === 0 || height === 0) {
+        animId = requestAnimationFrame(initCanvas);
+        return;
       }
-    }
 
-    // Centered foil instructions
-    ctx.fillStyle = '#4b5563';
-    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('✨ Scratch here with your finger/mouse ✨', width / 2, height / 2 - 8);
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#6b7280';
-    ctx.fillText('to reveal a hidden surprise', width / 2, height / 2 + 16);
+      // Draw shimmering metallic foil
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, '#d1d5db');
+      gradient.addColorStop(0.3, '#f3f4f6');
+      gradient.addColorStop(0.5, '#9ca3af');
+      gradient.addColorStop(0.7, '#e5e7eb');
+      gradient.addColorStop(1, '#9ca3af');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // Decorative pattern on foil
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      for (let i = 0; i < width; i += 24) {
+        for (let j = 0; j < height; j += 24) {
+          ctx.fillRect(i, j, 3, 3);
+        }
+      }
+
+      // Centered foil instructions
+      ctx.fillStyle = '#4b5563';
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✨ Scratch here with your finger/mouse ✨', width / 2, height / 2 - 8);
+
+      ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#6b7280';
+      ctx.fillText('to reveal a hidden surprise', width / 2, height / 2 + 16);
+    };
+
+    animId = requestAnimationFrame(initCanvas);
+
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
   }, [isRevealed]);
 
   const scratch = (clientX, clientY) => {
@@ -107,6 +123,9 @@ export function ScratchCard({ secretMessage, title = 'Secret Blessing' }) {
   };
 
   const handlePointerDown = (e) => {
+    try {
+      e.target?.setPointerCapture?.(e.pointerId);
+    } catch {}
     setIsScratching(true);
     scratch(e.clientX, e.clientY);
   };
@@ -116,7 +135,10 @@ export function ScratchCard({ secretMessage, title = 'Secret Blessing' }) {
     scratch(e.clientX, e.clientY);
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e) => {
+    try {
+      e?.target?.releasePointerCapture?.(e.pointerId);
+    } catch {}
     setIsScratching(false);
   };
 

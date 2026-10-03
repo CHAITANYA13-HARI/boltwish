@@ -840,10 +840,9 @@ function cleanForFirestore(value) {
 }
 
 async function ensureWishOwner() {
-  const { getAuth, signInAnonymously, signOut } = await import('firebase/auth');
+  const { getAuth, signInAnonymously } = await import('firebase/auth');
   const auth = getAuth(app);
-  if (auth.currentUser?.isAnonymous) return auth.currentUser;
-  if (auth.currentUser) await signOut(auth).catch(() => {});
+  if (auth.currentUser) return auth.currentUser;
   try {
     const credential = await signInAnonymously(auth);
     return credential.user;
@@ -876,9 +875,15 @@ function valueToDateInput(value) {
 const WISH_ACCESS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function createWishSchedule(Timestamp, eventDate) {
+  const now = Date.now();
   const today = new Date().toISOString().slice(0, 10);
-  const effectiveDate = eventDate || today;
-  const revealMillis = valueToMillis(effectiveDate) || Date.now();
+  let revealMillis = now - 60000;
+  if (eventDate && eventDate > today) {
+    const scheduled = valueToMillis(eventDate);
+    if (scheduled > now) {
+      revealMillis = scheduled;
+    }
+  }
 
   return {
     revealAt: Timestamp.fromMillis(revealMillis),

@@ -130,10 +130,15 @@ class CelebrationAudio {
     const melodies = {
       birthday: [523.25, 523.25, 587.33, 523.25, 698.46, 659.25], // Happy Birthday motif
       love: [440, 554.37, 659.25, 830.61, 880], // Romantic arpeggio
-      anniversary: [392, 493.88, 587.33, 783.99, 987.77],
-      wedding: [523.25, 659.25, 783.99, 1046.50],
-      congrats: [523.25, 659.25, 783.99, 1046.50, 1318.51],
-      friendship: [440, 523.25, 659.25, 880],
+      anniversary: [392, 493.88, 587.33, 783.99, 987.77], // Harmonious partnership
+      wedding: [523.25, 659.25, 783.99, 1046.50], // Wedding chime
+      congrats: [523.25, 659.25, 783.99, 1046.50, 1318.51], // Victory fanfare
+      friendship: [440, 523.25, 659.25, 880], // Bright warm friendship
+      graduation: [392.00, 523.25, 659.25, 783.99, 1046.50], // Triumphant academic fanfare
+      farewell: [523.25, 440.00, 392.00, 349.23, 392.00, 523.25], // Warm journey farewell
+      newbaby: [659.25, 659.25, 783.99, 659.25, 523.25, 587.33], // Gentle lullaby motif
+      thankyou: [440.00, 554.37, 659.25, 880.00, 1108.73], // Heartfelt grateful chord
+      celebration: [523.25, 659.25, 783.99, 1046.50, 1318.51],
     };
     const notes = melodies[themeId] || melodies.birthday;
     notes.forEach((freq, idx) => {
