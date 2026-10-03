@@ -64,6 +64,7 @@ import {
   defaultContentOrder,
   normalizeTemplateDoc,
   normalizeWishDocument,
+  parseField,
   wishTones,
 } from './data/templates';
 import { templateSeed } from './data/templateSeed';
@@ -2162,13 +2163,17 @@ function TemplatePickerPage({ templatesState }) {
 
   const filtered = useMemo(() => {
     return templatesState.templates.filter((tpl) => {
-      const matchesCat = selectedCat === 'all' || tpl.id === selectedCat;
+      const matchesCat = selectedCat === 'all'
+        || tpl.id === selectedCat
+        || tpl.category === selectedCat
+        || (Array.isArray(tpl.categories) && tpl.categories.includes(selectedCat));
       const q = searchQuery.trim().toLowerCase();
       const matchesSearch = !q || (
         (tpl.label || '').toLowerCase().includes(q) ||
         (tpl.chip || '').toLowerCase().includes(q) ||
         (tpl.summary || '').toLowerCase().includes(q) ||
-        (tpl.id || '').toLowerCase().includes(q)
+        (tpl.id || '').toLowerCase().includes(q) ||
+        (tpl.category || '').toLowerCase().includes(q)
       );
       return matchesCat && matchesSearch;
     });
@@ -2260,13 +2265,16 @@ function TemplatePickerPage({ templatesState }) {
         </div>
 
         <div className="templates-grid templates-grid-showcase">
-          {templatesState.loading
-            ? Array.from({ length: 8 }).map((_, index) => <div key={index} className="template-card skeleton-card tall" />)
-            : filtered.map((template) => {
-                let badge = null;
-                if (['birthday', 'love'].includes(template.id)) badge = '🔥 Popular';
-                else if (['wedding', 'anniversary'].includes(template.id)) badge = '✨ Favorite';
-                else if (['congrats', 'newbaby', 'graduation'].includes(template.id)) badge = '🎉 Trending';
+          {templatesState.loading ? (
+            Array.from({ length: 8 }).map((_, index) => <div key={index} className="template-card skeleton-card tall" />)
+          ) : (
+            filtered.map((template) => {
+                let badge = template.badge || null;
+                if (!badge) {
+                  if (['birthday', 'love'].includes(template.id)) badge = '🔥 Popular';
+                  else if (['wedding', 'anniversary'].includes(template.id)) badge = '✨ Favorite';
+                  else if (['congrats', 'newbaby', 'graduation'].includes(template.id)) badge = '🎉 Trending';
+                }
 
                 let features = ['🎵 Custom Melody', '🎁 3D Unwrap', '✨ Scratch-Off'];
                 if (template.id === 'birthday') features = ['🎵 Birthday Song', '🎁 3D Box', '✨ Scratch-Off'];
@@ -2327,7 +2335,7 @@ function TemplatePickerPage({ templatesState }) {
                     </div>
                   </CardButton>
                 );
-              })}
+              }))}
         </div>
 
         {!templatesState.loading && filtered.length === 0 ? (
@@ -2344,6 +2352,241 @@ function TemplatePickerPage({ templatesState }) {
     </PageShell>
   );
 }
+
+const COLOR_PALETTES = [
+  { name: 'Sunrise Orange', accent: '#e85d04', accentSoft: '#fb8500', background: 'sunrise', waxSeal: '#e85d04' },
+  { name: 'Rose Romance', accent: '#e11d48', accentSoft: '#fda4af', background: 'rose', waxSeal: '#e11d48' },
+  { name: 'Blush Pink', accent: '#db2777', accentSoft: '#fbcfe8', background: 'blush', waxSeal: '#db2777' },
+  { name: 'Royal Violet', accent: '#7c3aed', accentSoft: '#c4b5fd', background: 'violet', waxSeal: '#7c3aed' },
+  { name: 'Ocean Sky', accent: '#0284c7', accentSoft: '#7dd3fc', background: 'sky', waxSeal: '#0284c7' },
+  { name: 'Mint Fresh', accent: '#059669', accentSoft: '#6ee7b7', background: 'mint', waxSeal: '#059669' },
+  { name: 'Deep Teal', accent: '#0d9488', accentSoft: '#5eead4', background: 'teal', waxSeal: '#0d9488' },
+  { name: 'Golden Amber', accent: '#d97706', accentSoft: '#fcd34d', background: 'sunrise', waxSeal: '#d97706' },
+  { name: 'Peach Glow', accent: '#f97316', accentSoft: '#fed7aa', background: 'peach', waxSeal: '#f97316' },
+];
+
+const PROMPT_FIELD_PRESETS = [
+  { key: 'name', label: "Recipient's Name", placeholder: 'e.g., Alex, Maya, Mom', type: 'text', required: true },
+  { key: 'from', label: 'Your Name (Sender)', placeholder: 'What do they call you?', type: 'text', required: true },
+  { key: 'message', label: 'Personal Message', placeholder: 'Write your heartfelt message or wishes...', type: 'textarea', required: true },
+  { key: 'eventDate', label: 'Celebration Date', placeholder: 'YYYY-MM-DD', type: 'date', required: false },
+  { key: 'achievement', label: 'Milestone / Achievement', placeholder: 'e.g., Landing Google, Graduating with Honors', type: 'text', required: true },
+  { key: 'partnerOne', label: 'Partner 1 Name', placeholder: 'e.g., Aisha', type: 'text', required: true },
+  { key: 'partnerTwo', label: 'Partner 2 Name', placeholder: 'e.g., Rohan', type: 'text', required: true },
+  { key: 'bride', label: "Bride's Name", placeholder: 'e.g., Emily', type: 'text', required: true },
+  { key: 'groom', label: "Groom's Name", placeholder: 'e.g., James', type: 'text', required: true },
+  { key: 'babyName', label: "Baby's Name", placeholder: 'e.g., Baby Liam', type: 'text', required: true },
+  { key: 'parentName', label: "Parents' Name", placeholder: 'e.g., Sarah & Tom', type: 'text', required: true },
+  { key: 'age', label: 'Age', placeholder: 'e.g., 25', type: 'number', required: false },
+  { key: 'years', label: 'Years / Number', placeholder: 'e.g., 10', type: 'number', required: false },
+  { key: 'customText', label: 'Custom Detail', placeholder: 'e.g., Favorite Memory, Nickname', type: 'text', required: false },
+  { key: 'customNote', label: 'Custom Story / Note', placeholder: 'Share a special memory or inside joke...', type: 'textarea', required: false },
+];
+
+const TEMPLATE_PRESETS = [
+  {
+    id: 'milestone-birthday',
+    label: 'Milestone Birthday',
+    chip: 'Milestone Birthday',
+    icon: '🎉',
+    category: 'birthday',
+    badge: '🔥 Popular',
+    summary: 'A major milestone celebration (18th, 21st, 30th, 50th) honoring their life journey.',
+    theme: { accent: '#f59e0b', accentSoft: '#fbbf24', background: 'sunrise', waxSeal: '#f59e0b' },
+    fields: [
+      { key: 'name', label: "Birthday Person's Name", placeholder: 'e.g., Alex, Mom', type: 'text', required: true },
+      { key: 'age', label: 'Milestone Age', placeholder: 'e.g., 21, 30, 50', type: 'number', required: true },
+      { key: 'message', label: 'Your Birthday Message', placeholder: 'Write your heartfelt message or favorite memories...', type: 'textarea', required: true },
+      { key: 'eventDate', label: 'Celebration Date', type: 'date', required: false },
+      { key: 'from', label: 'Your Name (Sender)', placeholder: 'What do they call you?', type: 'text', required: true },
+    ],
+    content: {
+      title: 'Cheers to Your {{ageOrdinal}} Birthday, {{name}}! 🥂',
+      subtitle: 'A major milestone celebration of the wisdom, laughter, and light you bring to the world.',
+      body: 'Dear {{name}},\n\nTurning {{age}} is a big deal! Today we celebrate every high, every lesson, and the wonderful human you continue to become.\n\n{{message}}',
+      highlight: 'May this new decade bring fearless dreams, deep laughter, and unforgettable adventures.',
+      quote: 'Count your age by friends, not years. Count your life by smiles, not tears.',
+      footer: 'Cheering for you on your milestone day',
+    },
+    tones: {
+      playful: {
+        title: 'Level {{age}} Unlocked, {{name}}! 🎮',
+        subtitle: 'Officially older, definitely wiser, and still the life of the party.',
+        highlight: 'Eat the extra cake and celebrate loudly—you earned every single candle.',
+      },
+      elegant: {
+        title: 'Honoring Your {{ageOrdinal}} Milestone, {{name}} ✨',
+        subtitle: 'A milestone birthday is a beautiful reflection of a life richly lived.',
+        highlight: 'May the years ahead be illuminated by peace, purpose, and enduring happiness.',
+      },
+    },
+  },
+  {
+    id: 'parents-day',
+    label: "Mother's & Father's Day",
+    chip: 'Parent Appreciation',
+    icon: '💐',
+    category: 'love',
+    badge: '✨ Heartfelt',
+    summary: 'A deeply touching note of gratitude and love for a parent or parental figure.',
+    theme: { accent: '#e11d48', accentSoft: '#fda4af', background: 'rose', waxSeal: '#e11d48' },
+    fields: [
+      { key: 'name', label: "Parent's Name / Title", placeholder: 'e.g., Mom, Dad, Mama Rosa', type: 'text', required: true },
+      { key: 'message', label: 'Your Message of Love & Gratitude', placeholder: 'Tell them what you admire most or share a cherished childhood memory...', type: 'textarea', required: true },
+      { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Your Loving Daughter Maya', type: 'text', required: true },
+    ],
+    content: {
+      title: 'With All My Heart, {{name}} 💐',
+      subtitle: 'For the unconditional love, patience, and warmth that built the foundation of my life.',
+      body: 'Dearest {{name}},\n\nThank you for every quiet sacrifice, every word of reassurance, and for always being my safe haven.\n\n{{message}}',
+      highlight: 'No matter how much time passes, your love remains my greatest treasure.',
+      quote: 'A parent’s love is the quiet compass that guides us through every storm.',
+      footer: 'With everlasting love and gratitude',
+    },
+  },
+  {
+    id: 'housewarming',
+    label: 'New Home & Housewarming',
+    chip: 'New Home Wish',
+    icon: '🏡',
+    category: 'congrats',
+    badge: '🎉 Trending',
+    summary: 'Warm blessings and congratulations on moving into a new home or apartment.',
+    theme: { accent: '#059669', accentSoft: '#6ee7b7', background: 'mint', waxSeal: '#059669' },
+    fields: [
+      { key: 'name', label: "New Homeowner's Name(s)", placeholder: 'e.g., David & Emily, The Kapoors', type: 'text', required: true },
+      { key: 'achievement', label: 'Milestone (e.g., New Apartment, Dream Home)', placeholder: 'e.g., Your Dream Home in Austin', type: 'text', required: true },
+      { key: 'message', label: 'Housewarming Blessings', placeholder: 'Share your warm wishes for cozy nights, happy gatherings, and peaceful living...', type: 'textarea', required: true },
+      { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Alex & Sarah', type: 'text', required: true },
+    ],
+    content: {
+      title: 'Welcome to Your Beautiful New Home, {{name}}! 🏡',
+      subtitle: 'Celebrating your milestone move to {{achievement}}.',
+      body: 'Dear {{name}},\n\nA house is built of walls and beams, but a home is built of love and dreams.\n\n{{message}}',
+      highlight: 'May your doors always welcome warm friends, loud laughter, and boundless blessings.',
+      quote: 'May your home be a place where peace finds rest and love never ends.',
+      footer: 'Warmest congratulations on your new sanctuary',
+    },
+  },
+  {
+    id: 'promotion',
+    label: 'Promotion & New Job',
+    chip: 'Career Victory',
+    icon: '💼',
+    category: 'congrats',
+    badge: '🏆 Achievement',
+    summary: 'Celebrate a promotion, landing a dream job, or career milestone.',
+    theme: { accent: '#6366f1', accentSoft: '#a5b4fc', background: 'violet', waxSeal: '#6366f1' },
+    fields: [
+      { key: 'name', label: "Colleague / Friend's Name", placeholder: 'e.g., Jessica, Dr. Marcus', type: 'text', required: true },
+      { key: 'achievement', label: 'Role / Promotion Title', placeholder: 'e.g., Senior Vice President, Landing at Google', type: 'text', required: true },
+      { key: 'message', label: 'Your Congratulations Note', placeholder: 'Share your pride in their dedication, leadership, and talent...', type: 'textarea', required: true },
+      { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Your Proud Mentors / Team', type: 'text', required: true },
+    ],
+    content: {
+      title: 'Congratulations on Your Promotion, {{name}}! 🚀',
+      subtitle: 'Celebrating your well-deserved appointment as {{achievement}}.',
+      body: 'Dear {{name}},\n\nYour intelligence, tenacity, and leadership have led to this huge win!\n\n{{message}}',
+      highlight: 'Here is to setting new bars, inspiring those around you, and thriving in this next chapter.',
+      quote: 'Opportunities don’t just happen; you created them through pure commitment.',
+      footer: 'Cheering for your continued brilliance',
+    },
+  },
+  {
+    id: 'retirement',
+    label: 'Retirement & Life Chapter',
+    chip: 'Retirement Wish',
+    icon: '🏖️',
+    category: 'farewell',
+    badge: '⭐ Milestone',
+    summary: 'Honor a stellar career and celebrate the exciting freedom of retirement.',
+    theme: { accent: '#0d9488', accentSoft: '#5eead4', background: 'teal', waxSeal: '#0d9488' },
+    fields: [
+      { key: 'name', label: "Retiree's Name", placeholder: 'e.g., Robert, Professor Davis', type: 'text', required: true },
+      { key: 'years', label: 'Years of Dedication (optional)', placeholder: 'e.g., 35', type: 'number', required: false },
+      { key: 'message', label: 'Your Farewell & Retirement Wishes', placeholder: 'Thank them for their wisdom, leadership, and share wishes for their leisure...', type: 'textarea', required: true },
+      { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., The Entire Engineering Team', type: 'text', required: true },
+    ],
+    content: {
+      title: 'Happy Retirement, {{name}}! 🏖️',
+      subtitle: 'Honoring an extraordinary career and the wide-open adventures ahead.',
+      body: 'Dear {{name}},\n\nAfter years of excellence, patience, and leadership, it is time to enjoy life on your own schedule.\n\n{{message}}',
+      highlight: 'May your retirement bring restful mornings, long travels, and time for everything you love.',
+      quote: 'Retirement is not the end of the road; it is the beginning of the open highway.',
+      footer: 'With utmost respect and warmest wishes',
+    },
+  },
+  {
+    id: 'get-well',
+    label: 'Get Well & Healing',
+    chip: 'Healing Wish',
+    icon: '🌸',
+    category: 'friendship',
+    badge: '💛 Comfort',
+    summary: 'Gentle, comforting wishes for recovery, health, and restorative rest.',
+    theme: { accent: '#0284c7', accentSoft: '#7dd3fc', background: 'sky', waxSeal: '#0284c7' },
+    fields: [
+      { key: 'name', label: "Patient's Name", placeholder: 'e.g., Maya, Uncle David', type: 'text', required: true },
+      { key: 'message', label: 'Your Gentle Healing Note', placeholder: 'Send comfort, warm thoughts, and reminders to rest without pressure...', type: 'textarea', required: true },
+      { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., The Patel Family', type: 'text', required: true },
+    ],
+    content: {
+      title: 'Sending Warm Healing Wishes, {{name}} 🌸',
+      subtitle: 'Holding you in our thoughts and sending peace and strength your way.',
+      body: 'Dearest {{name}},\n\nPlease take all the time you need to rest and recharge. You are surrounded by love and support.\n\n{{message}}',
+      highlight: 'May each sunrise bring renewed comfort, lighter spirits, and restoring health.',
+      quote: 'Rest when you are weary. Refresh and renew yourself, your body, and your spirit.',
+      footer: 'Sending gentle love and strength every day',
+    },
+  },
+  {
+    id: 'engagement',
+    label: 'Engagement & Proposal',
+    chip: 'Engagement Note',
+    icon: '💍',
+    category: 'wedding',
+    badge: '💎 Romantic',
+    summary: 'Celebrate the proposal, the ring, and the exciting journey toward marriage.',
+    theme: { accent: '#db2777', accentSoft: '#f472b6', background: 'peach', waxSeal: '#db2777' },
+    fields: [
+      { key: 'partnerOne', label: 'Fiancé 1 Name', placeholder: 'e.g., Liam', type: 'text', required: true },
+      { key: 'partnerTwo', label: 'Fiancé 2 Name', placeholder: 'e.g., Sophia', type: 'text', required: true },
+      { key: 'message', label: 'Engagement Congratulations', placeholder: 'Share your excitement for their upcoming wedding journey...', type: 'textarea', required: true },
+      { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., Your College Besties', type: 'text', required: true },
+    ],
+    content: {
+      title: 'Congratulations on Your Engagement, {{coupleName}}! 💍',
+      subtitle: 'Two best friends making the easiest and best promise in the world.',
+      body: 'Dear {{partnerOne}} and {{partnerTwo}},\n\nSeeing you two take this beautiful step together brings pure joy!\n\n{{message}}',
+      highlight: 'Here is to wedding planning, loud toasts, and a lifetime of shared happiness.',
+      quote: 'Whatever our souls are made of, his and mine are the same.',
+      footer: 'Cheering for your love story',
+    },
+  },
+  {
+    id: 'holiday',
+    label: 'Holiday & New Year',
+    chip: 'Festive Note',
+    icon: '✨',
+    category: 'thankyou',
+    badge: '🎄 Festive',
+    summary: 'Festive wishes for Christmas, New Year, Diwali, Eid, or seasonal warmth.',
+    theme: { accent: '#b91c1c', accentSoft: '#f87171', background: 'rose', waxSeal: '#b91c1c' },
+    fields: [
+      { key: 'name', label: "Recipient's Name", placeholder: 'e.g., The Johnson Family, Maya', type: 'text', required: true },
+      { key: 'message', label: 'Your Holiday Greetings', placeholder: 'Share warm wishes for cozy nights, good health, and joyful moments...', type: 'textarea', required: true },
+      { key: 'from', label: 'Your Name (Sender)', placeholder: 'e.g., The Miller Family', type: 'text', required: true },
+    ],
+    content: {
+      title: 'Warmest Holiday Greetings, {{name}}! ✨',
+      subtitle: 'May the beauty and joy of this season illuminate your home.',
+      body: 'Dear {{name}},\n\nSending our warmest wishes for a peaceful, bright, and cheerful holiday season.\n\n{{message}}',
+      highlight: 'May the coming year unfold with good health, grand adventures, and reasons to smile.',
+      quote: 'The best of all gifts around any holiday tree is the presence of a happy family all wrapped up in each other.',
+      footer: 'With festive cheer and love',
+    },
+  },
+];
 
 function AdminPage() {
   const navigate = useNavigate();
@@ -2369,6 +2612,10 @@ function AdminPage() {
   const [feedbackItems, setFeedbackItems] = useState([]);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [feedbackTypeFilter, setFeedbackTypeFilter] = useState('all');
+  const [testValues, setTestValues] = useState({});
+  const [showTestValues, setShowTestValues] = useState(false);
+  const [showPresetsModal, setShowPresetsModal] = useState(false);
+  const [activeToneTab, setActiveToneTab] = useState('playful');
 
   const isUnlocked = authStatus === 'authorized';
 
@@ -2698,28 +2945,87 @@ function AdminPage() {
     });
   }, [searchQuery, statusFilter, templates]);
 
+  useEffect(() => {
+    if (selectedTemplate) {
+      const draft = {};
+      (selectedTemplate.fields || []).map(parseField).filter(Boolean).forEach((f) => {
+        if (f.key === 'name') draft.name = 'Maya';
+        else if (f.key === 'from') draft.from = 'Sarah';
+        else if (f.key === 'eventDate') draft.eventDate = getTodayDateValue();
+        else if (f.key === 'achievement') draft.achievement = 'Finishing Finals';
+        else if (f.key === 'partnerOne') draft.partnerOne = 'Aisha';
+        else if (f.key === 'partnerTwo') draft.partnerTwo = 'Rohan';
+        else if (f.key === 'bride') draft.bride = 'Emily';
+        else if (f.key === 'groom') draft.groom = 'James';
+        else if (f.key === 'babyName') draft.babyName = 'Baby Liam';
+        else if (f.key === 'parentName') draft.parentName = 'Neha & Vikram';
+        else if (f.key === 'age') draft.age = '30';
+        else if (f.key === 'years') draft.years = '10';
+        else if (f.key === 'message') draft.message = defaultWishMessages[selectedTemplate.id] || 'Wishing you endless happiness and joy!';
+        else draft[f.key] = 'Sample detail';
+      });
+      setTestValues(draft);
+    }
+  }, [selectedTemplate?.id]);
+
+  const availableTokens = useMemo(() => {
+    if (!selectedTemplate) return [];
+    const fieldTokens = (selectedTemplate.fields || []).map(parseField).filter(Boolean).map((f) => `{{${f.key}}}`);
+    const specialTokens = ['{{coupleName}}', '{{ageOrdinal}}', '{{ageCelebration}}', '{{yearsCelebration}}'];
+    return Array.from(new Set([...fieldTokens, ...specialTokens]));
+  }, [selectedTemplate]);
+
   const preview = useMemo(() => {
     if (!selectedTemplate) return null;
-    const recipientDraft = buildRecipientDraft(selectedTemplate);
+    const recipientDraft = {
+      ...buildRecipientDraft(selectedTemplate),
+      ...testValues,
+    };
     const contentDraft = selectedTemplate.content || buildContentDraft(selectedTemplate);
     return composeWishPreview(selectedTemplate, { recipientData: recipientDraft, content: contentDraft, tone: previewTone });
-  }, [previewTone, selectedTemplate]);
+  }, [previewTone, selectedTemplate, testValues]);
 
   const saveTemplate = async (template) => {
-    if (!template?.id || !template?.label?.trim()) {
-      setAdminError('Every template needs a name before it can be saved.');
+    if (!template?.id?.trim() || !template?.label?.trim()) {
+      setAdminError('Every template needs a valid ID and card name before saving.');
       return;
     }
-    setSavingId(template.id);
+    const cleanId = template.id.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+    const duplicate = templates.find((t) => t.id === cleanId && t !== template && (!template.originalId || t.id !== template.originalId));
+    if (duplicate) {
+      setAdminError(`A template with ID "${cleanId}" already exists. Please choose a unique ID.`);
+      return;
+    }
+
+    setSavingId(cleanId);
     setNotice('');
     setAdminError('');
     try {
-      const { doc, getFirestore, setDoc } = await import('firebase/firestore');
-      const cleanTemplate = cleanForFirestore(template);
-      await setDoc(doc(getFirestore(adminApp), 'templates', template.id), cleanTemplate, { merge: true });
-      setTemplates((current) => current.map((item) => (item.id === template.id ? template : item)).sort(sortTemplates));
-      setSavedTemplates((current) => ({ ...current, [template.id]: cloneTemplate(template) }));
-      setNotice(`${template.label} is saved and ready.`);
+      const { doc, getFirestore, setDoc, deleteDoc } = await import('firebase/firestore');
+      const db = getFirestore(adminApp);
+      const cleanTemplate = cleanForFirestore({
+        ...template,
+        id: cleanId,
+        fields: (template.fields || []).map(parseField).filter(Boolean),
+        personalizationVersion: Math.max(3, Number(template.personalizationVersion || 3)),
+        originalId: undefined,
+      });
+
+      await setDoc(doc(db, 'templates', cleanId), cleanTemplate, { merge: true });
+
+      if (template.originalId && template.originalId !== cleanId && savedTemplates[template.originalId]) {
+        await deleteDoc(doc(db, 'templates', template.originalId)).catch(() => {});
+        setSavedTemplates((current) => {
+          const next = { ...current };
+          delete next[template.originalId];
+          return next;
+        });
+      }
+
+      setTemplates((current) => current.map((item) => (item.id === template.id || item.id === template.originalId ? cleanTemplate : item)).sort(sortTemplates));
+      setSavedTemplates((current) => ({ ...current, [cleanId]: cloneTemplate(cleanTemplate) }));
+      setEditingId(cleanId);
+      setNotice(`"${cleanTemplate.label}" (${cleanId}) is saved and live in Firestore.`);
     } catch (error) {
       setAdminError(error?.code === 'permission-denied'
         ? 'Firebase blocked this save. Publish the latest Firestore rules and confirm this UID is in admins.'
@@ -2777,8 +3083,19 @@ function AdminPage() {
   };
 
   const updateSelected = (field, value) => {
-    if (!selectedTemplate || field === 'id') return;
+    if (!selectedTemplate) return;
     setTemplates((current) => current.map((item) => (item.id === selectedTemplate.id ? { ...item, [field]: value } : item)));
+  };
+
+  const updateId = (newId) => {
+    if (!selectedTemplate) return;
+    const sanitized = newId.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+    setTemplates((current) => current.map((item) => (item.id === selectedTemplate.id ? {
+      ...item,
+      id: sanitized,
+      originalId: item.originalId || item.id,
+    } : item)));
+    setEditingId(sanitized);
   };
 
   const updateContent = (field, value) => {
@@ -2810,23 +3127,130 @@ function AdminPage() {
   };
 
   const addTemplate = () => {
-    if (isDirty && !window.confirm('Discard the current unsaved changes and create a new template?')) return;
+    if (isDirty && !window.confirm('Discard current unsaved changes to create a new template?')) return;
+    const id = `occasion-${createSecureId(6)}`;
     const draft = {
-      id: `template-${createSecureId(8)}`,
+      id,
       label: 'New occasion',
-      chip: 'A special wish',
+      chip: 'Special Wish',
       icon: '✨',
-      summary: 'Describe when people should choose this template.',
-      theme: { accent: '#7c3aed', accentSoft: '#ec4899', background: 'violet' },
-      fields: ['name', 'message', 'eventDate', 'from'],
+      category: 'custom',
+      badge: '✨ New',
+      summary: 'A heartfelt wish designed for a special milestone or moment.',
+      theme: { accent: '#7c3aed', accentSoft: '#c4b5fd', background: 'violet', waxSeal: '#7c3aed' },
+      fields: [
+        { key: 'name', label: "Recipient's Name", placeholder: 'e.g., Alex', type: 'text', required: true },
+        { key: 'message', label: 'Personal Message', placeholder: 'Write your heartfelt wish...', type: 'textarea', required: true },
+        { key: 'from', label: 'Your Name (Sender)', placeholder: 'What do they call you?', type: 'text', required: true },
+      ],
       content: buildContentDraft({ label: 'New occasion', summary: 'A thoughtful wish made just for you.' }),
-      personalizationVersion: 3,
+      personalizationVersion: 5,
       order: templates.length + 1,
       enabled: false,
     };
     setTemplates((current) => [draft, ...current]);
     setEditingId(draft.id);
-    setNotice('New templates start hidden. Finish the copy, then switch it live.');
+    setNotice('New template created as draft. Edit the slug, copy, and prompts, then toggle live.');
+  };
+
+  const duplicateTemplate = (template) => {
+    if (!template) return;
+    const newId = `${template.id}-copy-${createSecureId(4)}`;
+    const cloned = {
+      ...cloneTemplate(template),
+      id: newId,
+      label: `${template.label} (Copy)`,
+      chip: `${template.chip || template.label} Copy`,
+      enabled: false,
+      order: (template.order ?? 0) + 1,
+      originalId: undefined,
+    };
+    setTemplates((current) => [cloned, ...current]);
+    setEditingId(newId);
+    setNotice(`Cloned "${template.label}" as "${cloned.label}". You can customize its ID and content now.`);
+  };
+
+  const applyPreset = (preset) => {
+    const existing = templates.find((t) => t.id === preset.id);
+    const newId = existing ? `${preset.id}-${createSecureId(4)}` : preset.id;
+    const newTemplate = {
+      ...cloneTemplate(preset),
+      id: newId,
+      order: templates.length + 1,
+      enabled: false,
+      personalizationVersion: 5,
+      originalId: undefined,
+    };
+    setTemplates((current) => [newTemplate, ...current]);
+    setEditingId(newId);
+    setShowPresetsModal(false);
+    setNotice(`Added preset "${preset.label}". Review the copy and switch to "Live in picker" when ready!`);
+  };
+
+  const addPromptField = (fieldPreset) => {
+    if (!selectedTemplate) return;
+    const currentFields = (selectedTemplate.fields || []).map(parseField).filter(Boolean);
+    let key = fieldPreset.key || 'customField';
+    if (currentFields.some((f) => f.key === key)) {
+      key = `${key}_${createSecureId(3)}`;
+    }
+    const newField = {
+      key,
+      label: fieldPreset.label || key,
+      placeholder: fieldPreset.placeholder || '',
+      type: fieldPreset.type || 'text',
+      required: fieldPreset.required !== false,
+    };
+    updateSelected('fields', [...currentFields, newField]);
+  };
+
+  const removePromptField = (index) => {
+    if (!selectedTemplate) return;
+    const currentFields = (selectedTemplate.fields || []).map(parseField).filter(Boolean);
+    updateSelected('fields', currentFields.filter((_, i) => i !== index));
+  };
+
+  const movePromptField = (index, direction) => {
+    if (!selectedTemplate) return;
+    const currentFields = [...(selectedTemplate.fields || []).map(parseField).filter(Boolean)];
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= currentFields.length) return;
+    const [moved] = currentFields.splice(index, 1);
+    currentFields.splice(targetIndex, 0, moved);
+    updateSelected('fields', currentFields);
+  };
+
+  const updatePromptField = (index, prop, value) => {
+    if (!selectedTemplate) return;
+    const currentFields = [...(selectedTemplate.fields || []).map(parseField).filter(Boolean)];
+    if (!currentFields[index]) return;
+    currentFields[index] = { ...currentFields[index], [prop]: value };
+    updateSelected('fields', currentFields);
+  };
+
+  const insertToken = (targetField, token) => {
+    if (!selectedTemplate) return;
+    const currentVal = selectedTemplate.content?.[targetField] || '';
+    updateContent(targetField, currentVal ? `${currentVal} ${token}` : token);
+  };
+
+  const applyPalette = (palette) => {
+    if (!selectedTemplate) return;
+    updateSelected('theme', {
+      ...(selectedTemplate.theme || {}),
+      accent: palette.accent,
+      accentSoft: palette.accentSoft,
+      background: palette.background,
+      waxSeal: palette.waxSeal || palette.accent,
+    });
+  };
+
+  const updateToneCopy = (toneId, field, value) => {
+    if (!selectedTemplate) return;
+    const currentTones = selectedTemplate.tones || {};
+    const toneData = currentTones[toneId] || {};
+    const updatedTone = { ...toneData, [field]: value };
+    updateSelected('tones', { ...currentTones, [toneId]: updatedTone });
   };
 
   const logoutAdmin = async () => {
@@ -3314,6 +3738,7 @@ function AdminPage() {
               <p>Manage every occasion, refine the writing, and preview the exact experience before it goes live.</p>
             </div>
             <div className="admin-hero-actions">
+              <AppButton variant="secondary" type="button" onClick={() => setShowPresetsModal(true)}><Sparkles size={16} /> From occasion preset</AppButton>
               <AppButton variant="secondary" type="button" onClick={seedTemplates} disabled={Boolean(savingId)}>Install starter set</AppButton>
               <AppButton type="button" onClick={addTemplate}><Plus size={17} /> New template</AppButton>
             </div>
@@ -3354,10 +3779,24 @@ function AdminPage() {
             <>
               <div className="admin-editor-head">
                 <div>
-                  <div className="admin-editor-title-line"><h2>{selectedTemplate.icon} {selectedTemplate.label}</h2>{isDirty ? <span className="admin-unsaved-badge">Unsaved</span> : <span className="admin-saved-badge">Saved</span>}</div>
-                  <p>Template ID: <code>{selectedTemplate.id}</code></p>
+                  <div className="admin-editor-title-line">
+                    <h2>{selectedTemplate.icon} {selectedTemplate.label}</h2>
+                    {isDirty ? <span className="admin-unsaved-badge">Unsaved</span> : <span className="admin-saved-badge">Saved</span>}
+                  </div>
+                  <div className="admin-slug-edit-row">
+                    <span className="admin-slug-prefix">Slug: <code>/template/</code></span>
+                    <input
+                      type="text"
+                      className="admin-slug-input"
+                      value={selectedTemplate.id || ''}
+                      onChange={(e) => updateId(e.target.value)}
+                      placeholder="e.g. birthday"
+                      title="Template unique ID / URL slug"
+                    />
+                  </div>
                 </div>
                 <div className="admin-editor-actions">
+                  <AppButton variant="secondary" type="button" onClick={() => duplicateTemplate(selectedTemplate)} title="Duplicate template"><Copy size={16} /> Duplicate</AppButton>
                   <button className="admin-icon-button" type="button" onClick={resetSelected} disabled={!isDirty} title="Reset unsaved changes"><RotateCcw size={17} /></button>
                   <AppButton variant="secondary" type="button" className="admin-delete-button" onClick={() => deleteTemplate(selectedTemplate)} disabled={Boolean(savingId)}><Trash2 size={16} /> Delete</AppButton>
                   <AppButton type="button" onClick={() => saveTemplate(selectedTemplate)} disabled={!isDirty || Boolean(savingId)}><Save size={16} /> {savingId === selectedTemplate.id ? 'Saving…' : 'Save changes'}</AppButton>
@@ -3365,10 +3804,28 @@ function AdminPage() {
               </div>
 
               <section className="admin-form-section">
-                <div className="admin-form-section-head"><span>1</span><div><h3>Picker details</h3><p>How this occasion appears before someone starts writing.</p></div></div>
+                <div className="admin-form-section-head"><span>1</span><div><h3>Picker details</h3><p>How this occasion appears in the gallery before someone starts writing.</p></div></div>
                 <div className="admin-form-grid">
                   <label className="field-group"><span>Card name</span><input value={selectedTemplate.label || ''} maxLength={80} onChange={(event) => updateSelected('label', event.target.value)} placeholder="Birthday" /></label>
-                  <label className="field-group"><span>Badge text</span><input value={selectedTemplate.chip || ''} maxLength={80} onChange={(event) => updateSelected('chip', event.target.value)} placeholder="Birthday wish" /></label>
+                  <label className="field-group"><span>Category</span>
+                    <select
+                      value={selectedTemplate.category || selectedTemplate.id || 'all'}
+                      onChange={(event) => updateSelected('category', event.target.value)}
+                    >
+                      <option value="birthday">Birthday</option>
+                      <option value="anniversary">Anniversary</option>
+                      <option value="wedding">Wedding</option>
+                      <option value="baby">Baby Shower</option>
+                      <option value="congratulations">Congratulations</option>
+                      <option value="gratitude">Thank You / Appreciation</option>
+                      <option value="love">Romantic & Love</option>
+                      <option value="holiday">Holidays & Festivals</option>
+                      <option value="sympathy">Sympathy & Get Well</option>
+                      <option value="custom">Other / Custom</option>
+                    </select>
+                  </label>
+                  <label className="field-group"><span>Gallery Ribbon Badge</span><input value={selectedTemplate.badge || ''} maxLength={40} onChange={(event) => updateSelected('badge', event.target.value)} placeholder="e.g. Popular, New, Milestone" /></label>
+                  <label className="field-group"><span>Badge tag (chip)</span><input value={selectedTemplate.chip || ''} maxLength={80} onChange={(event) => updateSelected('chip', event.target.value)} placeholder="Birthday wish" /></label>
                   <label className="field-group"><span>Emoji</span><input value={selectedTemplate.icon || ''} maxLength={8} onChange={(event) => updateSelected('icon', event.target.value)} placeholder="🎂" /></label>
                   <label className="field-group"><span>Sort order</span><input type="number" min="0" value={selectedTemplate.order ?? 0} onChange={(event) => updateSelected('order', Number(event.target.value))} /></label>
                   <label className="field-group field-span-2"><span>Short description</span><textarea rows={3} maxLength={180} value={selectedTemplate.summary || ''} onChange={(event) => updateSelected('summary', event.target.value)} placeholder="Tell people when to choose this template." /></label>
@@ -3376,11 +3833,153 @@ function AdminPage() {
               </section>
 
               <section className="admin-form-section">
-                <div className="admin-form-section-head"><span>2</span><div><h3>Wish writing</h3><p>The starting copy that personalization shapes for each recipient.</p></div></div>
+                <div className="admin-form-section-head">
+                  <span>2</span>
+                  <div>
+                    <h3>Personalization Prompts ({(selectedTemplate.fields || []).length})</h3>
+                    <p>Form fields the sender fills out to personalize this occasion.</p>
+                  </div>
+                </div>
+
+                <div className="admin-field-presets-wrap">
+                  <span className="admin-preset-label">Quick-add field:</span>
+                  <div className="admin-preset-chips">
+                    {PROMPT_FIELD_PRESETS.map((preset) => (
+                      <button
+                        key={preset.key}
+                        type="button"
+                        className="admin-preset-chip-btn"
+                        onClick={() => addPromptField(preset)}
+                      >
+                        + {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="admin-prompt-builder">
+                  {(selectedTemplate.fields || []).map((field, idx) => {
+                    const parsed = typeof field === 'string'
+                      ? { key: field, label: field.charAt(0).toUpperCase() + field.slice(1), type: 'text', required: true }
+                      : { ...field };
+                    return (
+                      <div key={parsed.key || idx} className="admin-prompt-field-card">
+                        <div className="admin-prompt-field-top">
+                          <span className="admin-prompt-field-idx">#{idx + 1}</span>
+                          <div className="admin-prompt-field-inputs">
+                            <input
+                              type="text"
+                              placeholder="Key (e.g. name)"
+                              value={parsed.key || ''}
+                              onChange={(e) => updatePromptField(idx, 'key', e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+                              className="admin-field-key-input"
+                              title="Dynamic placeholder key (used as {{key}})"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Display Label"
+                              value={parsed.label || ''}
+                              onChange={(e) => updatePromptField(idx, 'label', e.target.value)}
+                              className="admin-field-label-input"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Placeholder hint..."
+                              value={parsed.placeholder || ''}
+                              onChange={(e) => updatePromptField(idx, 'placeholder', e.target.value)}
+                              className="admin-field-placeholder-input"
+                            />
+                            <select
+                              value={parsed.type || 'text'}
+                              onChange={(e) => updatePromptField(idx, 'type', e.target.value)}
+                              className="admin-field-type-select"
+                            >
+                              <option value="text">Single-line text</option>
+                              <option value="textarea">Multi-line text</option>
+                              <option value="date">Date picker</option>
+                              <option value="number">Number</option>
+                            </select>
+                            <label className="admin-field-req-toggle" title="Is this field required?">
+                              <input
+                                type="checkbox"
+                                checked={parsed.required !== false}
+                                onChange={(e) => updatePromptField(idx, 'required', e.target.checked)}
+                              />
+                              <span>Req</span>
+                            </label>
+                          </div>
+                          <div className="admin-prompt-field-actions">
+                            <button
+                              type="button"
+                              className="admin-mini-btn"
+                              disabled={idx === 0}
+                              onClick={() => movePromptField(idx, -1)}
+                              title="Move up"
+                            >
+                              <ChevronUp size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-mini-btn"
+                              disabled={idx === (selectedTemplate.fields?.length || 0) - 1}
+                              onClick={() => movePromptField(idx, 1)}
+                              title="Move down"
+                            >
+                              <ChevronDown size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-mini-btn delete"
+                              onClick={() => removePromptField(idx)}
+                              title="Remove prompt field"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    className="admin-add-custom-field-btn"
+                    onClick={() => addPromptField({ key: `custom_${Date.now().toString(36)}`, label: 'Custom Detail', placeholder: 'Enter details...', type: 'text', required: false })}
+                  >
+                    <Plus size={15} /> Add Custom Field
+                  </button>
+                </div>
+              </section>
+
+              <section className="admin-form-section">
+                <div className="admin-form-section-head">
+                  <span>3</span>
+                  <div>
+                    <h3>Wish writing</h3>
+                    <p>The starting copy that personalization shapes for each recipient.</p>
+                  </div>
+                </div>
+
+                <div className="admin-token-bar">
+                  <span className="admin-token-bar-label"><Sparkles size={14} /> Click to insert token into Main Message:</span>
+                  <div className="admin-token-chips">
+                    {availableTokens.map((token) => (
+                      <button
+                        key={token}
+                        type="button"
+                        className="admin-token-btn"
+                        onClick={() => insertToken('body', token)}
+                        title={`Insert {{${token}}} into message`}
+                      >
+                        &#123;&#123;{token}&#125;&#125;
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="admin-form-grid">
                   <label className="field-group"><span>Headline</span><input value={selectedTemplate.content?.title || ''} maxLength={90} onChange={(event) => updateContent('title', event.target.value)} placeholder="A beautiful day for {{name}}" /></label>
                   <label className="field-group"><span>Subtitle</span><input value={selectedTemplate.content?.subtitle || ''} maxLength={140} onChange={(event) => updateContent('subtitle', event.target.value)} placeholder="A personal opening line" /></label>
-                  <label className="field-group field-span-2"><span>Main message</span><textarea rows={8} maxLength={1800} value={selectedTemplate.content?.body || ''} onChange={(event) => updateContent('body', event.target.value)} placeholder="Write the main wish message here." /></label>
+                  <label className="field-group field-span-2"><span>Main message</span><textarea rows={8} maxLength={1800} value={selectedTemplate.content?.body || ''} onChange={(event) => updateContent('body', event.target.value)} placeholder="Write the main wish message here. Use {{name}}, {{from}}, etc." /></label>
                   <label className="field-group field-span-2"><span>Highlight</span><textarea rows={2} maxLength={180} value={selectedTemplate.content?.highlight || ''} onChange={(event) => updateContent('highlight', event.target.value)} placeholder="A short line that deserves attention." /></label>
                   <label className="field-group"><span>Optional quote</span><textarea rows={3} maxLength={180} value={selectedTemplate.content?.quote || ''} onChange={(event) => updateContent('quote', event.target.value)} /></label>
                   <label className="field-group"><span>Closing line</span><textarea rows={3} maxLength={90} value={selectedTemplate.content?.footer || ''} onChange={(event) => updateContent('footer', event.target.value)} /></label>
@@ -3388,14 +3987,35 @@ function AdminPage() {
               </section>
 
               <section className="admin-form-section">
-                <div className="admin-form-section-head"><span>3</span><div><h3>Style and publishing</h3><p>Control the look and decide when it is ready for users.</p></div></div>
+                <div className="admin-form-section-head"><span>4</span><div><h3>Style and publishing</h3><p>Control the visual aesthetic, wax seal, and visibility.</p></div></div>
+
+                <div className="field-group field-span-2" style={{ marginBottom: '14px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>1-Click Color Harmonies</span>
+                  <div className="admin-palette-presets">
+                    {COLOR_PALETTES.map((pal) => (
+                      <button
+                        key={pal.name}
+                        type="button"
+                        className="admin-palette-btn"
+                        onClick={() => applyPalette(pal)}
+                        title={`${pal.name} palette`}
+                      >
+                        <span className="admin-palette-swatch" style={{ background: pal.accent }} />
+                        <span className="admin-palette-swatch" style={{ background: pal.accentSoft }} />
+                        <span className="admin-palette-swatch" style={{ background: pal.waxSeal || pal.accent }} />
+                        <span>{pal.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="admin-form-grid admin-appearance-grid">
                   <label className="field-group"><span>Accent color</span><div className="admin-color-field"><input type="color" value={selectedTemplate.theme?.accent || '#7c3aed'} onChange={(event) => updateTheme('accent', event.target.value)} /><code>{selectedTemplate.theme?.accent || '#7c3aed'}</code></div></label>
                   <label className="field-group"><span>Soft accent</span><div className="admin-color-field"><input type="color" value={selectedTemplate.theme?.accentSoft || '#ec4899'} onChange={(event) => updateTheme('accentSoft', event.target.value)} /><code>{selectedTemplate.theme?.accentSoft || '#ec4899'}</code></div></label>
+                  <label className="field-group"><span>Wax Seal Color</span><div className="admin-color-field"><input type="color" value={selectedTemplate.theme?.waxSeal || selectedTemplate.theme?.accent || '#dc2626'} onChange={(event) => updateTheme('waxSeal', event.target.value)} /><code>{selectedTemplate.theme?.waxSeal || selectedTemplate.theme?.accent || '#dc2626'}</code></div></label>
                   <label className="field-group"><span>Background style</span><input list="admin-backgrounds" value={selectedTemplate.theme?.background || ''} onChange={(event) => updateTheme('background', event.target.value)} placeholder="violet" /><datalist id="admin-backgrounds"><option value="sunrise" /><option value="blush" /><option value="rose" /><option value="violet" /><option value="sky" /><option value="peach" /><option value="mint" /><option value="teal" /></datalist></label>
-                  <label className="admin-publish-toggle"><input type="checkbox" checked={selectedTemplate.enabled !== false} onChange={(event) => updateSelected('enabled', event.target.checked)} /><span><strong>{selectedTemplate.enabled === false ? 'Hidden draft' : 'Live in picker'}</strong><small>{selectedTemplate.enabled === false ? 'Only admins can work on it.' : 'People can choose this template now.'}</small></span></label>
+                  <label className="admin-publish-toggle field-span-2"><input type="checkbox" checked={selectedTemplate.enabled !== false} onChange={(event) => updateSelected('enabled', event.target.checked)} /><span><strong>{selectedTemplate.enabled === false ? 'Hidden draft' : 'Live in picker'}</strong><small>{selectedTemplate.enabled === false ? 'Only admins can work on it.' : 'People can choose this template now.'}</small></span></label>
                 </div>
-                <div className="admin-prompt-summary"><span>Personalization prompts</span><div>{(selectedTemplate.fields || []).map((field) => { const key = typeof field === 'string' ? field : field.key; const label = typeof field === 'string' ? field : field.label || field.key; return <span key={key}>{label}</span>; })}</div><small>Prompts stay occasion-specific so the final wish feels personal.</small></div>
               </section>
             </>
           ) : <div className="empty-state"><h3>No template selected</h3><p>Create or choose a template from the list.</p></div>}
@@ -3405,10 +4025,89 @@ function AdminPage() {
           <Panel className="admin-preview panel">
             <div className="section-head compact-head"><div><h2>Live preview</h2><p>Updates while you type</p></div><span className="admin-live-dot">Live</span></div>
             <ToneSelector value={previewTone} onChange={setPreviewTone} />
+
+            <div className="admin-preview-test-controls">
+              <button
+                type="button"
+                className="admin-test-toggle-btn"
+                onClick={() => setShowTestValues((prev) => !prev)}
+              >
+                🧪 {showTestValues ? 'Hide sample simulator' : 'Test with sample values'}
+              </button>
+              {showTestValues && (
+                <div className="admin-test-values-box">
+                  <p className="admin-test-help">Type values below to see how dynamic tokens render live in the preview card:</p>
+                  <div className="admin-test-inputs-grid">
+                    {availableTokens.map((t) => (
+                      <label key={t} className="admin-test-field">
+                        <span>&#123;&#123;{t}&#125;&#125;</span>
+                        <input
+                          type="text"
+                          placeholder={`Sample ${t}`}
+                          value={testValues[t] || ''}
+                          onChange={(e) => setTestValues((prev) => ({ ...prev, [t]: e.target.value }))}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {preview ? <div className="admin-preview-stage" style={{ '--wish-accent': selectedTemplate?.theme?.accent || '#7c3aed', '--wish-accent-soft': selectedTemplate?.theme?.accentSoft || '#ec4899' }}><WishExperience preview={preview} template={selectedTemplate} compact /></div> : <div className="empty-state"><p>No template selected.</p></div>}
           </Panel>
         ) : null}
       </main>
+
+      {showPresetsModal && (
+        <div className="admin-presets-dialog-overlay" onClick={() => setShowPresetsModal(false)}>
+          <div className="admin-presets-dialog glass-card" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-presets-dialog-head">
+              <div>
+                <h2>Occasion Presets & Starters</h2>
+                <p>Choose an occasion starter blueprint. It will create a fully customized template complete with prompts, copy, and matching colors.</p>
+              </div>
+              <button
+                type="button"
+                className="admin-icon-button"
+                onClick={() => setShowPresetsModal(false)}
+                aria-label="Close presets modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="admin-presets-grid">
+              {TEMPLATE_PRESETS.map((p) => (
+                <div key={p.id} className="admin-preset-card">
+                  <div className="admin-preset-card-top">
+                    <span className="admin-preset-icon">{p.icon}</span>
+                    <div>
+                      <h4>{p.label}</h4>
+                      <span className="admin-preset-badge">{p.badge}</span>
+                    </div>
+                  </div>
+                  <p className="admin-preset-desc">{p.summary}</p>
+                  <div className="admin-preset-fields-preview">
+                    <small>Prompts ({p.fields.length}):</small>
+                    <div className="admin-preset-tags">
+                      {p.fields.map((f) => (
+                        <span key={f.key}>{f.label}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-use-preset-btn"
+                    onClick={() => applyPreset(p)}
+                  >
+                    Use this blueprint <ArrowRight size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
         </>
       )}
     </div>

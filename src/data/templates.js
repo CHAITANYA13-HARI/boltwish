@@ -450,6 +450,7 @@ export function normalizeTemplateDoc(docId, data = {}) {
     accent: data.theme?.accent || data.accent || '#e85d04',
     accentSoft: data.theme?.accentSoft || data.accentSoft || '#fb8500',
     background: data.theme?.background || data.background || 'sunrise',
+    waxSeal: data.theme?.waxSeal || data.waxSeal || data.theme?.accent || data.accent || '#e85d04',
   };
 
   return {
@@ -463,6 +464,9 @@ export function normalizeTemplateDoc(docId, data = {}) {
     content,
     order: data.order ?? 0,
     enabled: data.enabled !== false,
+    category: data.category || docId,
+    badge: data.badge || '',
+    tones: data.tones || {},
     personalizationVersion: data.personalizationVersion ?? 0,
   };
 }
@@ -512,7 +516,7 @@ export function composeWishPreview(template, wishData = {}) {
   const safeTemplate = template || {};
   const recipientData = wishData.recipientData || {};
   const tone = wishData.tone || 'heartfelt';
-  const toneContent = toneContentByTemplate[safeTemplate.id]?.[tone] || {};
+  const toneContent = safeTemplate.tones?.[tone] || toneContentByTemplate[safeTemplate.id]?.[tone] || {};
   const content = { ...getContentFieldDefaults(safeTemplate), ...(wishData.content || {}), ...toneContent };
 
   const defaultMsg = defaultWishMessages[safeTemplate.id] || 'Wishing you a wonderful celebration and great happiness!';
@@ -551,6 +555,7 @@ export function composeWishPreview(template, wishData = {}) {
     || recipientData.babyName
     || (weddingCouple || anniversaryCouple)
     || recipientData.parentName
+    || Object.values(recipientData).find((v) => typeof v === 'string' && v.trim().length > 0 && v.length < 40)
     || 'there';
 
   const countdown = getCountdownInfo(recipientData.eventDate);
